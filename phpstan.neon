@@ -1,0 +1,22 @@
+# Static analysis. Requires larastan, which is not in composer.json yet:
+#
+#   composer require --dev larastan/larastan
+#
+# Level 6 is the floor (SPEC §31.2). Raise it as the codebase settles; never
+# lower it to make a commit pass.
+
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - app
+        - database
+        - routes
+
+    excludePaths:
+        - app/Http/Middleware/*
+
+    checkMissingIterableValueType: false
