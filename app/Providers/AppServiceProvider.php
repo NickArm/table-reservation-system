@@ -16,8 +16,10 @@ use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -38,13 +40,27 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        /*
+         * Indexed strings are 191 characters, not 255.
+         *
+         * InnoDB's older index limit is 767 bytes per column, and utf8mb4
+         * spends four bytes a character — so a varchar(255) in an index needs
+         * 1020 and the migration fails outright. Newer servers allow 3072, but
+         * "newer" is not something shared hosting guarantees, and the failure
+         * happens on the first deploy rather than in testing (SPEC §21.2).
+         *
+         * 191 × 4 = 764. Long enough for every email, slug and label here, and
+         * columns that genuinely need more state their own length.
+         */
+        Schema::defaultStringLength(191);
+
         // Fail loudly in development instead of silently returning null for a
         // relation nobody loaded, or quietly dropping a typo'd attribute.
         Model::shouldBeStrict(! $this->app->isProduction());
 
         // Stored in UTC, always. Display converts to the venue's zone at the
         // boundary (SPEC §3.5).
-        Date::use(\Illuminate\Support\Carbon::class);
+        Date::use(Carbon::class);
         date_default_timezone_set('UTC');
 
         $this->registerListeners();

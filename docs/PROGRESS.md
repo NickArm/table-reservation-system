@@ -19,6 +19,16 @@
 
 **Απόφαση stack:** το dashboard **μένει σε Blade** — το Inertia + React δεν μπήκε. Το σκεπτικό στο §3.3· το τίμημα είναι ότι το drag-n-drop ημερολόγιο πάει στο Phase 2.
 
+🚀 **Πρώτο deploy:** `https://table.armenisnick.gr/` σε cPanel με MySQL. Οδηγίες βήμα-βήμα στο `docs/DEPLOY.md`, production env template στο `.env.production.example`.
+
+Τρία πράγματα που χρειάστηκαν για το MySQL και αξίζει να λέγονται:
+
+- **`Schema::defaultStringLength(191)`** — το utf8mb4 ξοδεύει 4 bytes/χαρακτήρα και το παλιό όριο index της InnoDB είναι 767 bytes ανά στήλη. Ένα `varchar(255)` σε index θέλει 1020 και η migration **σκάει**. Βρέθηκαν 22 τέτοιες στήλες· μία γραμμή τις λύνει όλες
+- **Τα compiled assets μπαίνουν στο git** (`public/build`, 204K). Το shared hosting δεν έχει Node, και deploy που θέλει `npm run build` είναι deploy που βγάζει λευκή σελίδα. Το τίμημα είναι θόρυβος στα diffs όταν αλλάζει το CSS — το φθηνότερο από τα δύο προβλήματα
+- **Δύο cron jobs είναι υποχρεωτικά**, αλλιώς το σύστημα *φαίνεται* να δουλεύει και σιωπηλά δεν στέλνει τίποτα: `schedule:run` και ένας queue worker. Αν ο host δεν δέχεται worker, `QUEUE_CONNECTION=sync` — ο πελάτης περιμένει 2-3'' περισσότερο και δεν χάνεται τίποτα
+
+⚠️ **Αυτό το deploy είναι για να το βλέπουμε, όχι για πελάτη.** Λείπουν: συνδρομές & χρέωση (M9) — οποιοσδήποτε βρει το `/register` ανοίγει λογαριασμό χωρίς να πληρώσει· νομικά κείμενα (M10)· widget (M8)· ελληνικά. Προσωρινό μέτρο: κωδικός στο `/register` από cPanel → Directory Privacy.
+
 **Μπλοκάρει:** τίποτα. Τα concurrency tests των 50 ταυτόχρονων requests θέλουν MariaDB — σε SQLite δεν υπάρχει `SELECT … FOR UPDATE`, οπότε τρέχουν όταν στηθεί το staging.
 
 **Χρειάζεται ένα composer require:** το PDF του αποδεικτικού θέλει `dompdf/dompdf`. Χωρίς αυτό όλα δουλεύουν — το email φεύγει με QR και `.ics`, απλώς χωρίς το συνημμένο PDF.

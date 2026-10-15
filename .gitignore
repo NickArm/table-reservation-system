@@ -14,7 +14,11 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+
+# The compiled CSS and JS are committed on purpose. Shared hosting has no Node,
+# and a deploy that needs `npm run build` is a deploy that fails with a white
+# page (docs/DEPLOY.md). Run the build locally and commit what changes.
+# /public/build
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
