@@ -11,6 +11,7 @@ use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\Mime\Email;
 use Tests\Concerns\ActsAsVenueOwner;
 use Tests\Concerns\BuildsVenueStructure;
 use Tests\TestCase;
@@ -62,7 +63,10 @@ final class VoucherEmailTest extends TestCase
         $this->fire($this->reload($reservation) ?? $reservation);
         $this->fire($this->reload($reservation) ?? $reservation);
 
-        Mail::assertSentCount(1);
+        // Counted by mailable, not in total: the same event also alerts the
+        // venue, and that alert is supposed to go out. What must not happen
+        // twice is the guest's voucher.
+        Mail::assertSent(BookingVoucher::class, 1);
     }
 
     #[Test]
@@ -76,9 +80,26 @@ final class VoucherEmailTest extends TestCase
         // this checks the rendered email rather than our intentions about it.
         $messages = Mail::mailer()->getSymfonyTransport()->messages();
 
-        $this->assertCount(1, $messages);
+        // The same event also alerts the venue, so the guest's message is
+        // picked by its recipient rather than by being the only one in the
+        // transport.
+        $email = null;
 
-        $email = $messages[0]->getOriginalMessage();
+        foreach ($messages as $sent) {
+            $message = $sent->getOriginalMessage();
+
+            if (! $message instanceof Email) {
+                continue;
+            }
+
+            foreach ($message->getTo() as $to) {
+                if ($to->getAddress() === (string) $reservation->customer_email) {
+                    $email = $message;
+                }
+            }
+        }
+
+        $this->assertNotNull($email, 'The guest was not sent a voucher.');
 
         // From is ours, the display name is the venue's, and a reply reaches
         // the venue rather than us (SPEC §10.3).

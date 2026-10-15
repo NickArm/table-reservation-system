@@ -53,6 +53,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Defaults for a new account
+    |--------------------------------------------------------------------------
+    |
+    | The migrations carry the same values as column defaults, which keeps a
+    | row written outside the application sane. They are repeated here because
+    | a column default is applied by the database and never appears on the
+    | model that `create()` hands back: reading `$tenant->timezone` straight
+    | after creating the tenant returns null, and anything derived from it —
+    | the venue's own timezone, every opening hour, every slot — inherits the
+    | null. So a value the application reads back is passed in explicitly, and
+    | the column default stays as the floor rather than the source.
+    |
+    */
+
+    'default_timezone' => env('TENANCY_DEFAULT_TIMEZONE', 'Europe/Athens'),
+
+    'default_locale' => env('TENANCY_DEFAULT_LOCALE', 'en'),
+
+    'default_currency' => env('TENANCY_DEFAULT_CURRENCY', 'EUR'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Reserved slugs
     |--------------------------------------------------------------------------
     |

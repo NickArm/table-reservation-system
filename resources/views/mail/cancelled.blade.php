@@ -9,7 +9,12 @@
 @extends('mail.layout', ['venue' => $voucher->venue])
 
 @section('preheader')
-    {{ $voucher->when() }} · cancelled@if ($refundedCents > 0) · {{ \App\Support\Money::formatExact($refundedCents) }} refunded @endif
+    {{-- The @if must not touch the word before it: Blade only recognises a
+         directive where the character in front of the @ is not a word
+         character, so `cancelled@if` stays literal text while its @endif
+         still compiles, and the view dies with "unexpected endif". --}}
+    {{ $voucher->when() }} · cancelled
+    @if ($refundedCents > 0) · {{ \App\Support\Money::formatExact($refundedCents) }} refunded @endif
 @endsection
 
 @section('content')

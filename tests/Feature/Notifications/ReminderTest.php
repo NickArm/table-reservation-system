@@ -50,7 +50,7 @@ final class ReminderTest extends TestCase
 
         $reservation = $this->booking(CarbonImmutable::parse('2026-07-05 09:00', 'Europe/Athens'));
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertSent(
             BookingReminder::class,
@@ -64,7 +64,7 @@ final class ReminderTest extends TestCase
 
         // Run again a minute later — and nothing more goes out.
         $this->travel(1)->minutes();
-        $this->run();
+        $this->sweep();
 
         Mail::assertSentCount(1);
     }
@@ -76,7 +76,7 @@ final class ReminderTest extends TestCase
 
         $this->booking(CarbonImmutable::parse('2026-07-20 09:00', 'Europe/Athens'));
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertNothingSent();
     }
@@ -93,7 +93,7 @@ final class ReminderTest extends TestCase
         // system that is broken.
         $this->asTenant(fn () => $reservation->forceFill(['created_at' => now()->subMinutes(10)])->save());
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertNothingSent();
     }
@@ -109,7 +109,7 @@ final class ReminderTest extends TestCase
         $this->booking($startsAt, ['status' => ReservationStatus::NoShow]);
         $this->booking($startsAt->subDays(3), ['status' => ReservationStatus::Completed]);
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertNothingSent();
     }
@@ -123,7 +123,7 @@ final class ReminderTest extends TestCase
 
         $this->booking(CarbonImmutable::parse('2026-07-05 09:00', 'Europe/Athens'));
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertNothingSent();
     }
@@ -147,7 +147,7 @@ final class ReminderTest extends TestCase
     /**
      * Run it the way the scheduler does: no tenant bound, every venue at once.
      */
-    private function run(): void
+    private function sweep(): void
     {
         app(TenantContext::class)->forget();
 

@@ -176,7 +176,7 @@ final class TenantIsolationTest extends TestCase
      */
     public static function models(): array
     {
-        $directory = app_path('Models');
+        $directory = self::appPath().DIRECTORY_SEPARATOR.'Models';
 
         if (! is_dir($directory)) {
             return [];
@@ -204,12 +204,24 @@ final class TenantIsolationTest extends TestCase
     }
 
     /**
+     * PHPUnit resolves a data provider before the application is created, so
+     * `app_path()` is not available here: the container exists but has no
+     * paths bound to it yet, and asking for one is a fatal error that PHPUnit
+     * reports as "invalid data provider" rather than as the real problem.
+     * The path is derived from this file's own location instead.
+     */
+    private static function appPath(): string
+    {
+        return dirname(__DIR__, 3).DIRECTORY_SEPARATOR.'app';
+    }
+
+    /**
      * @return class-string|null
      */
     private static function classFromFile(SplFileInfo $file): ?string
     {
         $relative = Str::of($file->getRealPath())
-            ->after(realpath(app_path()).DIRECTORY_SEPARATOR)
+            ->after(realpath(self::appPath()).DIRECTORY_SEPARATOR)
             ->replace(DIRECTORY_SEPARATOR, '\\')
             ->replace('.php', '')
             ->value();

@@ -111,7 +111,7 @@
 @endsection
 
 @section('footer')
-    <strong style="color:#44403c;">This is a booking confirmation and NOT a tax document.</strong><br>
+    <strong style="color:#44403c;">This is a booking confirmation, not a tax document.</strong><br>
     {{ $voucher->venue->name }}@if ($voucher->address() !== null), {{ $voucher->address() }}@endif
     @if (filled($voucher->venue->phone))<br>{{ $voucher->venue->phone }}@endif
     <br><br>

@@ -6,6 +6,7 @@ namespace Tests\Feature\Notifications;
 
 use App\Events\ReservationWasConfirmed;
 use App\Jobs\EmailVenueAlert;
+use App\Listeners\AlertTheVenue;
 use App\Mail\VenueBookingAlert;
 use App\Models\Reservation;
 use App\Notifications\BookingArrived;
@@ -119,7 +120,7 @@ final class VenueAlertTest extends TestCase
             'quiet_hours_to' => '08:00',
         ]);
 
-        $this->fire($reservation);
+        $this->fireDirectly($reservation);
 
         Bus::assertDispatched(EmailVenueAlert::class, static function (EmailVenueAlert $job): bool {
             // Held back until the quiet hours end, not dropped.
@@ -142,7 +143,7 @@ final class VenueAlertTest extends TestCase
             'quiet_hours_to' => '08:00',
         ]);
 
-        $this->fire($reservation);
+        $this->fireDirectly($reservation);
 
         Bus::assertDispatched(
             EmailVenueAlert::class,
@@ -185,6 +186,27 @@ final class VenueAlertTest extends TestCase
         app(TenantContext::class)->forget();
 
         return $reservation;
+    }
+
+    /**
+     * Runs the listener itself rather than firing the event.
+     *
+     * `AlertTheVenue` is a queued listener, so `Bus::fake()` and
+     * `Queue::fake()` both swallow it: the listener is never executed and the
+     * job it would have dispatched is never reached — the assertion then fails
+     * for a reason that has nothing to do with quiet hours. Calling `handle`
+     * keeps the queue out of it, so the fake sees only the inner job, which is
+     * what these two tests are about.
+     */
+    private function fireDirectly(Reservation $reservation): void
+    {
+        app(TenantContext::class)->forget();
+
+        app(AlertTheVenue::class)->handle(new ReservationWasConfirmed(
+            tenantId: (int) $reservation->tenant_id,
+            reservationId: (int) $reservation->getKey(),
+            uuid: (string) $reservation->uuid,
+        ));
     }
 
     private function fire(Reservation $reservation): void

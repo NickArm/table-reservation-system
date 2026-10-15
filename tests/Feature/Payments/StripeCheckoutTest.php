@@ -237,7 +237,12 @@ final class StripeCheckoutTest extends TestCase
         $reservation = $this->asVenue(static fn (): Reservation => Reservation::query()->orderBy('id')->firstOrFail());
 
         $this->assertSame(2500, (int) $payment->refunded_amount_cents);
-        $this->assertSame(ReservationStatus::CancelledByVenue, $reservation->status);
+
+        // Two steps, one outcome: the booking is cancelled by the venue, and
+        // the full refund that follows promotes it to Refunded so the
+        // dashboard says both "we cancelled this" and "the money is back"
+        // rather than leaving the owner to work the second part out.
+        $this->assertSame(ReservationStatus::Refunded, $reservation->status);
 
         Http::assertSent(static fn ($request): bool => $request->url() === 'https://api.stripe.com/v1/refunds');
     }
@@ -349,8 +354,14 @@ final class StripeCheckoutTest extends TestCase
 
         $this->book();
 
-        Http::fake();  // reset, so each test states its own expectations
-
+        // Deliberately no `Http::fake()` here. It does not reset anything: it
+        // appends a catch-all stub that answers every later request with an
+        // empty 200, and because stubs are tried in the order they were
+        // registered that catch-all answered before the stub the test itself
+        // sets up — so the gateway received an empty body and reported that
+        // Stripe had sent something that was not JSON. The stub above matches
+        // the create-session address exactly and cannot shadow the retrieve
+        // address a test adds afterwards.
         return $this->asVenue(static fn (): Payment => Payment::query()->firstOrFail());
     }
 

@@ -47,7 +47,12 @@ class ResourceFactory extends Factory
         ];
     }
 
-    public function set(): static
+    /**
+     * A sunbed set: the thing the guest books as one unit, two sunbeds and an
+     * umbrella. Named `composite` rather than `set` because `Factory::set()`
+     * already exists and overriding it is a fatal error.
+     */
+    public function composite(): static
     {
         return $this->state(fn (): array => [
             'is_composite' => true,

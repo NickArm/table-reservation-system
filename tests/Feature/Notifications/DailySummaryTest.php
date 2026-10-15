@@ -40,7 +40,7 @@ final class DailySummaryTest extends TestCase
         $this->venueWith(8);
         $this->bookingAt('2026-07-04 20:00');
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertSent(
             VenueDailySummary::class,
@@ -59,7 +59,7 @@ final class DailySummaryTest extends TestCase
         $this->venueWith(8);
         $this->bookingAt('2026-07-04 20:00');
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertNothingSent();
     }
@@ -73,7 +73,7 @@ final class DailySummaryTest extends TestCase
 
         $this->venueWith(8);
 
-        $this->run();
+        $this->sweep();
 
         // Silence is indistinguishable from a system that has stopped working.
         Mail::assertSent(
@@ -102,7 +102,7 @@ final class DailySummaryTest extends TestCase
         // Last night: gone.
         $this->bookingAt('2026-07-03 21:00');
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertSent(
             VenueDailySummary::class,
@@ -121,7 +121,7 @@ final class DailySummaryTest extends TestCase
         $this->bookingAt('2026-07-04 20:00', 2);
         $this->bookingAt('2026-07-04 20:30', 4);
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertSent(
             VenueDailySummary::class,
@@ -139,7 +139,7 @@ final class DailySummaryTest extends TestCase
         $this->venueWith(null);
         $this->bookingAt('2026-07-04 20:00');
 
-        $this->run();
+        $this->sweep();
 
         Mail::assertNothingSent();
     }
@@ -169,7 +169,7 @@ final class DailySummaryTest extends TestCase
             ]));
     }
 
-    private function run(): void
+    private function sweep(): void
     {
         app(TenantContext::class)->forget();
 

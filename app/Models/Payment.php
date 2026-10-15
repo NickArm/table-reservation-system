@@ -57,6 +57,23 @@ class Payment extends Model
     }
 
     /**
+     * Money actually changed hands at some point.
+     *
+     * Deliberately wider than isPaid(): a partial refund moves the status to
+     * PartiallyRefunded, and the remainder is still refundable. Guarding a
+     * refund on isPaid() alone left the rest of a part-refunded charge stuck
+     * with the venue for good.
+     */
+    public function hasSettled(): bool
+    {
+        return in_array($this->status, [
+            PaymentStatus::Paid,
+            PaymentStatus::PartiallyRefunded,
+            PaymentStatus::Refunded,
+        ], true);
+    }
+
+    /**
      * What is still refundable. Checked here rather than trusted from a form,
      * because several partial refunds must never add up to more than the
      * charge (SPEC §8.3).

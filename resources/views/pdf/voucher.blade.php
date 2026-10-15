@@ -135,7 +135,7 @@
     @endif
 
     <div class="disclaimer">
-        <strong>This is a booking confirmation and NOT a tax document.</strong>
+        <strong>This is a booking confirmation, not a tax document.</strong>
         Any receipt or invoice for money paid is issued by {{ $voucher->venue->name }}.
     </div>
 

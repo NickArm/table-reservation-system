@@ -32,11 +32,19 @@ final readonly class RegisterVenueAccount
                 'password' => $password,
             ]);
 
+            // The timezone, locale and currency are passed rather than left to
+            // the column defaults: a default is applied by the database and
+            // does not appear on the model `create()` returns, so the venue
+            // below would inherit a null timezone and every slot it ever
+            // computes would be wrong.
             $tenant = Tenant::create([
                 'name' => $venueName,
                 'slug' => $this->uniqueSlug($venueName),
                 'status' => TenantStatus::Trialing,
                 'trial_ends_at' => now()->addDays(config('tenancy.trial_days')),
+                'timezone' => config('tenancy.default_timezone'),
+                'locale' => config('tenancy.default_locale'),
+                'currency' => config('tenancy.default_currency'),
             ]);
 
             $tenant->users()->attach($user, ['role' => TenantRole::Owner->value]);
@@ -48,7 +56,12 @@ final readonly class RegisterVenueAccount
                 ]);
             });
 
-            return $user;
+            // An action that creates a row hands back the row as it is, not
+            // only the columns it happened to set. Without this the caller
+            // holds a half-filled model: logging the new owner out reads
+            // `remember_token`, which was never selected, and strict mode
+            // refuses it.
+            return $user->refresh();
         });
     }
 

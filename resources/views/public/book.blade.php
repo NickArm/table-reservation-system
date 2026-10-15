@@ -50,7 +50,15 @@
 
                 @if ($area !== null)
                     <dt>Where</dt>
-                    <dd>{{ $area->name }}</dd>
+                    <dd>
+                        {{ $area->name }}
+                        {{-- The line that sold them the spot, repeated here so
+                             the last screen before paying confirms they picked
+                             the row they meant. --}}
+                        @if (filled($area->description))
+                            <span class="muted">{{ $area->description }}</span>
+                        @endif
+                    </dd>
                 @endif
 
                 @if ($resource->componentSummary() !== '')

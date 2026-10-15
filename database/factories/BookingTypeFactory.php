@@ -35,7 +35,14 @@ class BookingTypeFactory extends Factory
             'tenant_id' => $this->currentTenantId(),
             'venue_id' => fn () => Venue::query()->first()?->id ?? Venue::factory(),
             'name' => Str::title($name),
-            'slug' => Str::slug($name).'-'.Str::lower(Str::random(4)),
+
+            // Derived from whatever name ends up on the model, so a test that
+            // asks for 'Sunbeds' gets the address a real venue would get:
+            // CreateBookingType slugs the name and only adds a suffix on a
+            // collision. A random suffix here made the factory disagree with
+            // production, and every test hitting /search?type=sunbeds got a
+            // 404 that said nothing about why.
+            'slug' => fn (array $attributes): string => Str::slug((string) $attributes['name']),
             'resource_type' => ResourceType::Table,
             'booking_mode' => BookingMode::Slot,
             'slot_duration_minutes' => 90,

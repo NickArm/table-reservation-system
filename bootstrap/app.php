@@ -17,6 +17,17 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    /*
+     * Listeners are declared, not discovered.
+     *
+     * Discovery is on by default, and scanning app/Listeners would register
+     * every handler a second time alongside the explicit map in
+     * AppServiceProvider — every voucher emailed twice, every alert sent
+     * twice. The map stays the single place where "what happens after a
+     * booking is confirmed" can be read rather than inferred from a directory
+     * listing (SPEC §31.1).
+     */
+    ->withEvents(discover: false)
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'tenant.path' => IdentifyTenantFromPath::class,

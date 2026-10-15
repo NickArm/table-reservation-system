@@ -72,13 +72,22 @@ final class BulkCreateResources
                     continue;
                 }
 
-                $created->push(Resource::create([
+                $resource = Resource::make([
                     ...$base,
-                    'booking_type_id' => $area->booking_type_id,
-                    'area_id' => $area->id,
                     'label' => $label,
                     'sort_order' => ++$sortOrder,
-                ]));
+                ]);
+
+                // The two structural keys are deliberately absent from the
+                // model's fillable list and are set here instead: a request
+                // must never be able to move a resource to another booking
+                // type or area by posting an id with the rest of the form.
+                $resource->booking_type_id = $area->booking_type_id;
+                $resource->area_id = $area->id;
+
+                $resource->save();
+
+                $created->push($resource);
             }
 
             return $created;

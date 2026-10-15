@@ -44,8 +44,12 @@ class PriceRule extends Model
             'scope' => StructureScope::class,
             'price_type' => PriceRuleType::class,
             'days_of_week' => 'array',
-            'date_from' => 'date',
-            'date_to' => 'date',
+
+            // Explicit format on purpose — see BookingClosure. Without it the
+            // season dates are stored with a time component and a season
+            // stops matching its own first day.
+            'date_from' => 'immutable_date:Y-m-d',
+            'date_to' => 'immutable_date:Y-m-d',
             'is_active' => 'boolean',
         ];
     }

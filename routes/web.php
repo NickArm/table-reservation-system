@@ -260,6 +260,7 @@ Route::prefix('dashboard')
 */
 
 Route::post('webhooks/{gateway}/{tenantUuid}', WebhookController::class)
+    ->whereIn('gateway', ['stripe', 'paypal'])
     ->name('webhooks');
 
 /*
@@ -267,6 +268,11 @@ Route::post('webhooks/{gateway}/{tenantUuid}', WebhookController::class)
  * path because providers post these as plain JSON with no signature of their
  * own, and because the endpoint reveals nothing: it matches message ids we
  * recorded ourselves and answers 200 to everything else.
+ *
+ * The gateway route above is constrained to the gateways that actually exist
+ * for this reason: `webhooks/{gateway}/{tenantUuid}` otherwise matches this
+ * address too, with `mail` read as the gateway, and every delivery notice is
+ * answered by the wrong controller.
  */
 Route::post('webhooks/mail/{secret}', MailWebhookController::class)
     ->name('webhooks.mail');

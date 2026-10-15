@@ -32,12 +32,34 @@ All three land in the same commit as the work.
 - Backed enums for every state. Never bare strings scattered through the code.
 - Money as integer cents. Never a float.
 - Timestamps in UTC; convert only when displaying (§3.5).
+- **Date columns are `$table->datetime(...)`, never `$table->timestamp(...)`.**
+  SQLite treats them the same, so the suite stays green either way; MySQL does
+  not. With `explicit_defaults_for_timestamp` off — the default — the server
+  hands the first `TIMESTAMP` column in a table an implicit
+  `DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` and every later
+  `NOT NULL` one a zero date, which strict mode rejects: the migration fails on
+  the *second* date column with `1067 Invalid default value`. `datetime` also
+  has no 2038 ceiling and no server-side timezone conversion. `$table->timestamps()`
+  is fine — those two are nullable.
 - `config()` everywhere, `env()` only inside `config/` files — with a cached
   config, `env()` returns null and production breaks quietly. Note that
   `Config::string()` throws on a null value *even with a default*, because the
   key exists; for settings that may be unset, use `(string) config(...)`.
 - A new date column needs a cast. Without `immutable_datetime` the value comes
   back as a plain string and the first `->format()` blows up.
+- **A date-only column is cast with an explicit format:
+  `'immutable_date:Y-m-d'`, never a bare `'date'`.** Eloquent writes any date
+  cast using the *connection's* format, so a bare `date` cast puts
+  `'2026-07-04 00:00:00'` into the column. MySQL truncates it and nobody
+  notices; SQLite keeps it, and every `where('date_from', '<=', $date)`
+  compares the two as text and quietly matches nothing.
+- **A column default never appears on the model `create()` hands back.** The
+  database applies it on write; the in-memory instance still has no such
+  attribute, so reading it returns null and anything derived from it inherits
+  the null. Any value the application reads back right after creating a row is
+  passed in explicitly, from `config()`; the column default stays as the floor
+  for rows written outside the application. `config/tenancy.php` holds the
+  `default_*` keys for exactly this reason.
 
 ## Tenancy
 
@@ -91,31 +113,33 @@ Two consequences worth stating:
 - Use `ShouldQueueAfterCommit` whenever the job concerns a row that was just
   written, or a fast worker will not find it.
 
-**Listeners are declared, not discovered.** `bootstrap/app.php` does not call
-`withEvents()`, so automatic discovery is off — and that is deliberate. The map
-lives in `AppServiceProvider::registerListeners()`, where "what happens after a
-booking is confirmed" can be read rather than inferred from a directory
-listing. Adding a listener means adding a line there.
+**Listeners are declared, not discovered.** `bootstrap/app.php` calls
+`->withEvents(discover: false)`, because discovery is on by default and would
+register every handler in `app/Listeners` a *second* time alongside the
+explicit map — every voucher emailed twice, every alert sent twice, which is
+exactly what the suite caught. The map lives in
+`AppServiceProvider::registerListeners()`, where "what happens after a booking
+is confirmed" can be read rather than inferred from a directory listing.
+Adding a listener means adding a line there; dropping the `withEvents` line
+means sending everything twice.
 
 Queue configuration goes on the class as attributes, not properties:
 `#[Tries(3)]`, `#[Backoff(30, 300)]`.
 
-## Derived counters
+**Testing a job that a queued listener dispatches: call the listener, do not
+fire the event.** `Bus::fake()` and `Queue::fake()` both swallow the listener
+itself — it is queued too — so the event fires, nothing runs, and the
+assertion fails for a reason unrelated to what is being tested:
 
-A guest's counters (`bookings_count`, `no_show_count`, …) are **recomputed from
-the reservations**, never incremented. `ReservationObserver` calls
-`RecountGuest` whenever a watched column changes, and `php artisan
-guests:recount` rebuilds all of them.
+```php
+Bus::fake();
+app(AlertTheVenue::class)->handle(new ReservationWasConfirmed(...));
+Bus::assertDispatched(EmailVenueAlert::class, ...);
+```
 
-The reason is not efficiency, which would favour incrementing. It is that an
-incremented counter drifts — a status changed by a console command, a row
-deleted, an event that never fired — and nobody notices until an owner argues
-with a number on their own screen. Recomputing makes the reservations the truth
-and the counters a cache of them, so the worst a missed hook can do is leave the
-cache briefly stale.
-
-Any new denormalised figure follows the same rule: derive it, and ship the
-command that rebuilds it.
+Firing the event is right when the listener's own effects are what matter —
+`Mail::fake()` leaves the queue alone, so on the `sync` connection the
+listener runs for real.
 
 ## Extensibility
 

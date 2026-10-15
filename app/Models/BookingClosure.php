@@ -40,8 +40,15 @@ class BookingClosure extends Model
     {
         return [
             'scope' => StructureScope::class,
-            'date_from' => 'date',
-            'date_to' => 'date',
+
+            // The `:Y-m-d` is load-bearing, not decoration. A plain `date`
+            // cast is written with the *connection's* format, so the column
+            // receives '2026-07-04 00:00:00': MySQL truncates that to a date
+            // and nobody notices, SQLite stores it verbatim and every
+            // `where('date_from', '<=', '2026-07-04')` compares the two as
+            // text and loses. Closures then silently stop closing anything.
+            'date_from' => 'immutable_date:Y-m-d',
+            'date_to' => 'immutable_date:Y-m-d',
             'is_quick_stop' => 'boolean',
         ];
     }

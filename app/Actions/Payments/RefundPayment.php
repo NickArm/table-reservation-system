@@ -30,11 +30,19 @@ final readonly class RefundPayment
 
     public function handle(Payment $payment, int $amountCents, ?string $reason = null): RefundResult
     {
-        if (! $payment->isPaid()) {
+        if ($payment->status === PaymentStatus::RefundPending) {
+            return RefundResult::failed('A refund on this payment is still going through. Try again shortly.');
+        }
+
+        if (! $payment->hasSettled()) {
             return RefundResult::failed('That payment never completed, so there is nothing to refund.');
         }
 
         $refundable = $payment->refundableCents();
+
+        if ($refundable === 0) {
+            return RefundResult::failed('This payment has already been refunded in full.');
+        }
 
         if ($amountCents <= 0 || $amountCents > $refundable) {
             return RefundResult::failed(sprintf(

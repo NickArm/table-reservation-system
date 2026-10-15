@@ -112,16 +112,19 @@ final class PaymentSettingsTest extends TestCase
     {
         $this->asTenant(fn () => PaymentGatewaySetting::factory()->stripe()->create());
 
-        Http::fake(['api.stripe.com/v1/balance' => Http::response(['object' => 'balance'])]);
+        // One sequence rather than two `Http::fake()` calls: a second fake for
+        // the same address does not replace the first, it is appended, and the
+        // first stub still answers — so the second request got the success
+        // response again and the failure branch was never exercised.
+        Http::fake([
+            'api.stripe.com/v1/balance' => Http::sequence()
+                ->push(['object' => 'balance'])
+                ->push(['error' => ['message' => 'Invalid API Key provided.']], 401),
+        ]);
 
         $this->post(route('dashboard.payments.test', Gateway::Stripe->value))
             ->assertRedirect()
             ->assertSessionHas('status', 'Connected to Stripe.');
-
-        Http::fake(['api.stripe.com/v1/balance' => Http::response(
-            ['error' => ['message' => 'Invalid API Key provided.']],
-            401,
-        )]);
 
         $this->post(route('dashboard.payments.test', Gateway::Stripe->value))
             ->assertRedirect()
