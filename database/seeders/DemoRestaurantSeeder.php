@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Actions\Closures\CloseBookings;
+use App\Actions\Guests\RecordGuest;
 use App\Actions\Structure\BulkCreateResources;
 use App\Actions\Structure\CreateBookingType;
 use App\Actions\Structure\SetResourceAvailability;
@@ -25,6 +26,7 @@ use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
 use App\Models\Area;
 use App\Models\BookingType;
+use App\Models\Guest;
 use App\Models\PaymentGatewaySetting;
 use App\Models\PriceRule;
 use App\Models\Reservation;
@@ -71,6 +73,15 @@ class DemoRestaurantSeeder extends Seeder
     private const TIMEZONE = 'Europe/Athens';
 
     private Faker $faker;
+
+    /**
+     * The people who book at this venue. A fixed pool rather than a fresh
+     * stranger per booking, because the guest list is only worth looking at if
+     * somebody in it has come back (SPEC §28).
+     *
+     * @var list<array{name: string, email: string, phone: string}>
+     */
+    private array $regulars = [];
 
     /** @var array<int, Area|null> */
     private array $areaCache = [];
@@ -132,6 +143,7 @@ class DemoRestaurantSeeder extends Seeder
             $this->createClosures();
             $this->createReservations($venue);
             $this->fillTheBell($venue, [$owner, $staff]);
+            $this->annotateGuests();
         });
 
         $this->report();
@@ -434,6 +446,8 @@ class DemoRestaurantSeeder extends Seeder
      */
     private function createReservations(Venue $venue): void
     {
+        $this->regulars = $this->buildGuestPool();
+
         $sunbeds = BookingType::query()->where('name', 'Sunbeds')->firstOrFail();
         $tables = BookingType::query()->where('name', 'Tables')->firstOrFail();
 
@@ -454,7 +468,7 @@ class DemoRestaurantSeeder extends Seeder
 
         $this->seedLiveHold($sunbeds, $today);
 
-        $this->command?->line("  Seeded {$created} reservations.");
+        $this->command?->line("  Seeded {$created} reservations for ".Guest::query()->count().' guests.');
     }
 
     /**
@@ -554,10 +568,12 @@ class DemoRestaurantSeeder extends Seeder
 
         $reservation = new Reservation;
 
+        $person = $this->someone();
+
         $reservation->fill([
-            'customer_name' => $this->faker->name(),
-            'customer_email' => $this->faker->unique()->safeEmail(),
-            'customer_phone' => $this->faker->randomElement(['+4477', '+3069', '+4915', '+3933']).$this->faker->numerify('########'),
+            'customer_name' => $person['name'],
+            'customer_email' => $person['email'],
+            'customer_phone' => $person['phone'],
             'locale' => 'en',
             'party_size' => $partySize,
             'starts_at' => $startsAt,
@@ -591,6 +607,11 @@ class DemoRestaurantSeeder extends Seeder
         $reservation->checked_in_at = $checkedInAt;
         $reservation->created_at = $startsAt->subDays($this->faker->numberBetween(1, 10));
 
+        // Matched into the venue's guest list exactly as a real booking would
+        // be, so the demo's regulars really are the same person each time
+        // (SPEC §28.2). The observer works the counters out from here.
+        app(RecordGuest::class)->handle($reservation);
+
         if ($status === ReservationStatus::CancelledByVenue) {
             $reservation->cancelled_at = $startsAt->subDay();
             $reservation->cancellation_reason = 'Guest called to cancel';
@@ -613,6 +634,44 @@ class DemoRestaurantSeeder extends Seeder
         }
 
         $reservation->save();
+    }
+
+    /**
+     * Forty people, a few of whom will book again and again.
+     *
+     * @return list<array{name: string, email: string, phone: string}>
+     */
+    private function buildGuestPool(): array
+    {
+        $pool = [];
+
+        foreach (range(1, 40) as $ignored) {
+            $name = $this->faker->name();
+
+            $pool[] = [
+                'name' => $name,
+                'email' => Str::slug($name).'@example.test',
+                'phone' => $this->faker->randomElement(['+4477', '+3069', '+4915', '+3933'])
+                    .$this->faker->numerify('########'),
+            ];
+        }
+
+        return $pool;
+    }
+
+    /**
+     * Weighted towards the first few, so the demo has regulars at the top of
+     * the guest list and one-off visitors below them.
+     *
+     * @return array{name: string, email: string, phone: string}
+     */
+    private function someone(): array
+    {
+        $index = $this->faker->boolean(45)
+            ? $this->faker->numberBetween(0, 7)
+            : $this->faker->numberBetween(0, count($this->regulars) - 1);
+
+        return $this->regulars[$index];
     }
 
     /**
@@ -677,6 +736,31 @@ class DemoRestaurantSeeder extends Seeder
             'session_token' => Str::random(40),
             'expires_at' => now()->addMinutes(9),
         ]);
+    }
+
+    /**
+     * Private notes and tags on a couple of guests, so the card shows what the
+     * field is for rather than an empty box (SPEC §28.3).
+     */
+    private function annotateGuests(): void
+    {
+        $notes = [
+            'Always asks for the front row. Worth keeping one back on Saturdays.' => ['regular'],
+            'Coeliac — the kitchen knows. Brings her mother in August.' => ['regular', 'allergy'],
+            'Books for six and turns up with nine. Ask before confirming.' => ['careful'],
+        ];
+
+        $guests = Guest::query()->orderByDesc('bookings_count')->limit(3)->get();
+
+        foreach ($guests as $index => $guest) {
+            $note = array_keys($notes)[$index] ?? null;
+
+            if ($note === null) {
+                continue;
+            }
+
+            $guest->fill(['internal_notes' => $note, 'tags' => $notes[$note]])->save();
+        }
     }
 
     /**

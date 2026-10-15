@@ -8,11 +8,15 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Dashboard\AreaController;
 use App\Http\Controllers\Dashboard\BookingTypeController;
+use App\Http\Controllers\Dashboard\CalendarController;
 use App\Http\Controllers\Dashboard\ClosureController;
+use App\Http\Controllers\Dashboard\GuestController;
+use App\Http\Controllers\Dashboard\ManualBookingController;
 use App\Http\Controllers\Dashboard\NotificationController;
 use App\Http\Controllers\Dashboard\PaymentSettingsController;
 use App\Http\Controllers\Dashboard\PriceRuleController;
 use App\Http\Controllers\Dashboard\ReservationController as DashboardReservationController;
+use App\Http\Controllers\Dashboard\ReservationListController;
 use App\Http\Controllers\Dashboard\ResourceController;
 use App\Http\Controllers\Dashboard\TodayController;
 use App\Http\Controllers\MailWebhookController;
@@ -145,11 +149,47 @@ Route::prefix('dashboard')
     ->group(function (): void {
         Route::get('/', [TodayController::class, 'index'])->name('today');
 
+        // Taking a booking over the telephone (SPEC §13.1).
+        Route::get('bookings/new', [ManualBookingController::class, 'create'])
+            ->name('bookings.create');
+        Route::post('bookings', [ManualBookingController::class, 'store'])
+            ->name('bookings.store');
+
+        /*
+         * The venue's own guest list (SPEC §28). Scoped to one venue by the
+         * guests table's own unique key, and to one account by the tenant
+         * scope — no screen here shows one venue another's guests.
+         */
+        Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
+        Route::get('guests/export', [GuestController::class, 'export'])->name('guests.export');
+        Route::get('guests/suggest', [GuestController::class, 'suggest'])
+            ->middleware('throttle:60,1')
+            ->name('guests.suggest');
+        Route::get('guests/{guest}', [GuestController::class, 'show'])->name('guests.show');
+        Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
+        Route::delete('guests/{guest}', [GuestController::class, 'erase'])->name('guests.erase');
+
+        // The shape of the week, for the Monday question (SPEC §13.1).
+        Route::get('calendar', CalendarController::class)->name('calendar');
+
+        /*
+         * Every booking, searchable. The export is a separate literal route
+         * and comes first, so "export" is never read as a reservation.
+         */
+        Route::get('reservations', [ReservationListController::class, 'index'])
+            ->name('reservations.index');
+        Route::get('reservations/export', [ReservationListController::class, 'export'])
+            ->name('reservations.export');
+
         // What a venue takes bookings for, and the things it has to give out.
         Route::get('reservations/{reservation}', [DashboardReservationController::class, 'show'])
             ->name('reservations.show');
         Route::patch('reservations/{reservation}/check-in', [DashboardReservationController::class, 'checkIn'])
             ->name('reservations.check-in');
+        Route::patch('reservations/{reservation}/no-show', [DashboardReservationController::class, 'noShow'])
+            ->name('reservations.no-show');
+        Route::patch('reservations/{reservation}/came-anyway', [DashboardReservationController::class, 'undoNoShow'])
+            ->name('reservations.came-anyway');
         Route::post('reservations/{reservation}/cancel', [DashboardReservationController::class, 'cancel'])
             ->name('reservations.cancel');
 

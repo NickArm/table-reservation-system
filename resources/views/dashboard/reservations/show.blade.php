@@ -8,7 +8,29 @@
             <p class="muted" style="margin:0 0 4px">
                 <a href="{{ route('dashboard.today') }}">Today</a>
             </p>
-            <h1>{{ $reservation->customer_name }}</h1>
+            <h1>
+                @if ($guest !== null)
+                    <a href="{{ route('dashboard.guests.show', $guest) }}" style="color:inherit">
+                        {{ $reservation->customer_name }}
+                    </a>
+                @else
+                    {{ $reservation->customer_name }}
+                @endif
+            </h1>
+
+            @if ($guest?->warning())
+                <p style="margin:2px 0 0">
+                    <span class="flag flag--warn">{{ $guest->warning() }}</span>
+                    <a class="muted" href="{{ route('dashboard.guests.show', $guest) }}"
+                       style="font-size:var(--step--1)">see their history</a>
+                </p>
+            @elseif ($guest?->visitLabel())
+                <p style="margin:2px 0 0">
+                    <span class="flag">{{ $guest->visitLabel() }}</span>
+                    <a class="muted" href="{{ route('dashboard.guests.show', $guest) }}"
+                       style="font-size:var(--step--1)">see their history</a>
+                </p>
+            @endif
             <p class="muted">
                 {{ $reservation->startsAtLocal($timezone)->format('l j F · H:i') }}
                 · {{ $reservation->code }}
@@ -107,14 +129,36 @@
             </dd>
         </dl>
 
-        @if (! $reservation->isCheckedIn() && ! $reservation->status->isCancelled())
-            <form method="POST" action="{{ route('dashboard.reservations.check-in', $reservation) }}"
-                  style="margin-top:18px">
-                @csrf
-                @method('PATCH')
-                <button type="submit" class="btn">Check in</button>
-            </form>
-        @endif
+        @unless ($reservation->status->isCancelled())
+            <div class="row" style="margin-top:18px">
+                @unless ($reservation->isCheckedIn())
+                    <form method="POST" action="{{ route('dashboard.reservations.check-in', $reservation) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn">Check in</button>
+                    </form>
+                @endunless
+
+                {{--
+                    A no-show feeds the number an owner will act on later, so it
+                    is reversible: staff mark it from across a busy room and are
+                    sometimes wrong (SPEC §28.3).
+                --}}
+                @if ($reservation->status === \App\Enums\ReservationStatus::NoShow)
+                    <form method="POST" action="{{ route('dashboard.reservations.came-anyway', $reservation) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn--ghost">They came after all</button>
+                    </form>
+                @elseif ($reservation->starts_at->isPast())
+                    <form method="POST" action="{{ route('dashboard.reservations.no-show', $reservation) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn--ghost">Nobody came</button>
+                    </form>
+                @endif
+            </div>
+        @endunless
     </section>
 
     @if ($payment?->refund_failure_reason)

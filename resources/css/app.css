@@ -904,3 +904,383 @@ details.advanced > summary {
 .bell__clear:hover {
     color: var(--ink);
 }
+
+/* --- Guest flags (SPEC §28.3) ------------------------------------------- */
+
+.flag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: var(--step--2);
+    font-weight: 500;
+    vertical-align: 1px;
+    white-space: nowrap;
+}
+
+.flag--warn {
+    border-color: var(--warn-line);
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
+/* --- Guest list --------------------------------------------------------- */
+
+.guests {
+    display: grid;
+    gap: 0;
+}
+
+.guest {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 16px;
+    align-items: center;
+    padding: 13px 0;
+    border-top: 1px solid var(--line);
+}
+
+.guest:first-child {
+    border-top: 0;
+}
+
+.guest__name {
+    min-width: 0;
+}
+
+.guest__name strong a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.guest__name strong a:hover {
+    text-decoration: underline;
+}
+
+.guest__name small {
+    display: block;
+    color: var(--muted);
+    font-size: var(--step--2);
+    overflow-wrap: anywhere;
+}
+
+.guest__counts {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    color: var(--muted);
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.guest__counts b {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.filters .field {
+    min-width: 0;
+}
+
+.history {
+    display: grid;
+    gap: 0;
+}
+
+.history__row {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+    gap: 4px 14px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+    font-size: var(--step--1);
+}
+
+.history__row:first-child {
+    border-top: 0;
+}
+
+.history__row time {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.history__row p {
+    grid-column: 2 / -1;
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: var(--step--2);
+}
+
+/* The autocomplete under the manual-booking name field. */
+.suggest {
+    position: relative;
+}
+
+.suggest__list {
+    position: absolute;
+    z-index: 15;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+}
+
+.suggest__list:empty {
+    display: none;
+}
+
+.suggest__item {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.suggest__item:last-child {
+    border-bottom: 0;
+}
+
+.suggest__item:hover,
+.suggest__item[aria-selected='true'] {
+    background: var(--surface);
+}
+
+.suggest__item small {
+    display: block;
+    color: var(--muted);
+    font-size: var(--step--2);
+}
+
+/* --- Paging ------------------------------------------------------------- */
+
+.pager {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.pager__link {
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    color: var(--ink);
+    font-size: var(--step--1);
+    text-decoration: none;
+}
+
+.pager__link:hover {
+    background: var(--surface);
+}
+
+.pager__link--off {
+    color: var(--faint);
+    border-color: var(--line);
+}
+
+.pager__count {
+    color: var(--muted);
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- Reservations ledger (SPEC §13.1) ----------------------------------- */
+
+.ledger {
+    display: grid;
+}
+
+.ledger__row {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) auto auto;
+    gap: 6px 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    color: inherit;
+    text-decoration: none;
+}
+
+.ledger__row:first-child {
+    border-top: 0;
+}
+
+.ledger__row:hover {
+    background: var(--surface);
+}
+
+.ledger__when {
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.ledger__when small {
+    display: block;
+    color: var(--muted);
+    font-size: var(--step--2);
+}
+
+.ledger__who {
+    min-width: 0;
+}
+
+.ledger__who small {
+    display: block;
+    color: var(--muted);
+    font-size: var(--step--2);
+    overflow-wrap: anywhere;
+}
+
+.ledger__money {
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.ledger__money small {
+    display: block;
+    font-size: var(--step--2);
+}
+
+@media (max-width: 640px) {
+    .ledger__row {
+        grid-template-columns: 70px minmax(0, 1fr) auto;
+    }
+
+    .ledger__status {
+        grid-column: 2 / -1;
+    }
+}
+
+/* --- Week view ---------------------------------------------------------- */
+
+.week {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.week__day {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+}
+
+.week__day--today {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.week__day--past {
+    background: var(--surface);
+}
+
+.week__head {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.week__head span {
+    font-size: var(--step--1);
+}
+
+.week__meter {
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    overflow: hidden;
+}
+
+.week__meter > span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+
+.week__totals {
+    margin: 0;
+    font-size: var(--step--1);
+}
+
+.week__list {
+    display: grid;
+    gap: 1px;
+}
+
+.week__item {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 8px;
+    padding: 7px 0;
+    border-top: 1px solid var(--line);
+    color: inherit;
+    font-size: var(--step--1);
+    text-decoration: none;
+}
+
+.week__item:hover {
+    background: var(--surface-2);
+}
+
+.week__item time {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.week__item small {
+    display: block;
+    color: var(--muted);
+    font-size: var(--step--2);
+    overflow-wrap: anywhere;
+}
+
+.week__add {
+    margin-top: auto;
+    padding-top: 8px;
+    color: var(--muted);
+    font-size: var(--step--2);
+    text-decoration: none;
+}
+
+.week__add:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.nav__sep {
+    width: 1px;
+    align-self: stretch;
+    margin-inline: 4px;
+    background: var(--line);
+}

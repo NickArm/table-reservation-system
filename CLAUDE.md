@@ -100,6 +100,23 @@ listing. Adding a listener means adding a line there.
 Queue configuration goes on the class as attributes, not properties:
 `#[Tries(3)]`, `#[Backoff(30, 300)]`.
 
+## Derived counters
+
+A guest's counters (`bookings_count`, `no_show_count`, …) are **recomputed from
+the reservations**, never incremented. `ReservationObserver` calls
+`RecountGuest` whenever a watched column changes, and `php artisan
+guests:recount` rebuilds all of them.
+
+The reason is not efficiency, which would favour incrementing. It is that an
+incremented counter drifts — a status changed by a console command, a row
+deleted, an event that never fired — and nobody notices until an owner argues
+with a number on their own screen. Recomputing makes the reservations the truth
+and the counters a cache of them, so the worst a missed hook can do is leave the
+cache briefly stale.
+
+Any new denormalised figure follows the same rule: derive it, and ship the
+command that rebuilds it.
+
 ## Extensibility
 
 Anything likely to get a second implementation sits behind an interface from

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Reservations;
 
+use App\Actions\Guests\RecordGuest;
 use App\Availability\AvailabilityEngine;
 use App\Availability\Exceptions\SpotNotAvailable;
 use App\Enums\Channel;
@@ -35,6 +36,7 @@ final readonly class ConfirmReservation
     public function __construct(
         private AvailabilityEngine $engine,
         private GatewayManager $gateways,
+        private RecordGuest $guests,
     ) {}
 
     /**
@@ -108,6 +110,11 @@ final readonly class ConfirmReservation
             // defence if a cancellation is ever disputed (SPEC §12).
             $reservation->terms_accepted_at = now();
             $reservation->terms_accepted_ip = $guest['ip'] ?? null;
+
+            // The venue's own guest list, matched on email within this venue
+            // and nowhere wider (SPEC §28.1). Inside the transaction, so a
+            // booking that rolls back leaves no stranded guest behind.
+            $this->guests->handle($reservation);
 
             $reservation->save();
 

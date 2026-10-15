@@ -8,9 +8,11 @@ use App\Enums\Channel;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Models\Concerns\BelongsToTenant;
+use App\Observers\ReservationObserver;
 use Carbon\CarbonImmutable;
 use Database\Factories\ReservationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +22,7 @@ use Illuminate\Support\Str;
 /**
  * One booking (SPEC §8).
  */
+#[ObservedBy([ReservationObserver::class])]
 #[Fillable([
     'customer_name', 'customer_email', 'customer_phone', 'locale',
     'party_size', 'starts_at', 'ends_at', 'notes',
@@ -84,6 +87,14 @@ class Reservation extends Model
     public function bookingType(): BelongsTo
     {
         return $this->belongsTo(BookingType::class);
+    }
+
+    /**
+     * @return BelongsTo<Guest, $this>
+     */
+    public function guest(): BelongsTo
+    {
+        return $this->belongsTo(Guest::class);
     }
 
     /**

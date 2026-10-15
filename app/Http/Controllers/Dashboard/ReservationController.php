@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\Reservations\CancelReservation;
+use App\Enums\ReservationStatus;
 use App\Enums\TenantRole;
 use App\Http\Controllers\Controller;
 use App\Models\Area;
 use App\Models\BookingType;
+use App\Models\Guest;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Venue;
@@ -47,6 +49,11 @@ final class ReservationController extends Controller
                 && $payment->refundableCents() > 0
                 && $this->isOwner($request, $tenant),
             'refundableCents' => $payment?->refundableCents() ?? 0,
+            // Their whole history with this venue is one click away
+            // (SPEC §28.3).
+            'guest' => $reservation->guest_id === null
+                ? null
+                : Guest::query()->find($reservation->guest_id),
         ]);
     }
 
@@ -60,11 +67,47 @@ final class ReservationController extends Controller
         if (! $reservation->isCheckedIn()) {
             $reservation->forceFill([
                 'checked_in_at' => now(),
-                'status' => \App\Enums\ReservationStatus::CheckedIn,
+                'status' => ReservationStatus::CheckedIn,
             ])->save();
         }
 
         return back()->with('status', "{$reservation->customer_name} is in.");
+    }
+
+    /**
+     * Nobody came.
+     *
+     * Idempotent for the same reason as check-in, and reversible for a
+     * different one: staff mark a no-show from across a busy room and are
+     * sometimes wrong, and the number this feeds — the guest's no-show count —
+     * is one an owner will act on (SPEC §28.3).
+     */
+    public function noShow(Reservation $reservation): RedirectResponse
+    {
+        if ($reservation->status !== ReservationStatus::NoShow) {
+            $reservation->forceFill([
+                'status' => ReservationStatus::NoShow,
+                'checked_in_at' => null,
+            ])->save();
+        }
+
+        return back()->with('status', 'Marked as a no-show. Undo it from this page if they walk in.');
+    }
+
+    /**
+     * They turned up after all.
+     */
+    public function undoNoShow(Reservation $reservation): RedirectResponse
+    {
+        if ($reservation->status === ReservationStatus::NoShow) {
+            $reservation->forceFill([
+                'status' => $reservation->starts_at->isPast()
+                    ? ReservationStatus::Completed
+                    : ReservationStatus::Confirmed,
+            ])->save();
+        }
+
+        return back()->with('status', 'Put back.');
     }
 
     public function cancel(

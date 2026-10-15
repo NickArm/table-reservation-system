@@ -44,6 +44,13 @@ final class AlertTheVenue implements ShouldQueueAfterCommit
                 return;
             }
 
+            // A booking the venue typed in itself needs no announcement: the
+            // person who entered it already knows, and an email about it is
+            // the kind of noise that gets a sender filtered.
+            if ($reservation->created_by !== null) {
+                return;
+            }
+
             $venue = Venue::query()->find($reservation->venue_id);
 
             if ($venue === null) {

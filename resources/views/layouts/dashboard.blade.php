@@ -8,6 +8,20 @@
             <nav class="nav" aria-label="Main">
                 <a href="{{ route('dashboard.today') }}"
                    @if (request()->routeIs('dashboard.today')) aria-current="page" @endif>Today</a>
+                <a href="{{ route('dashboard.calendar') }}"
+                   @if (request()->routeIs('dashboard.calendar')) aria-current="page" @endif>Calendar</a>
+                <a href="{{ route('dashboard.reservations.index') }}"
+                   @if (request()->routeIs('dashboard.reservations.index')) aria-current="page" @endif>Bookings</a>
+                <a href="{{ route('dashboard.guests.index') }}"
+                   @if (request()->routeIs('dashboard.guests.*')) aria-current="page" @endif>Guests</a>
+                {{--
+                    Everything to the left is daily work; everything to the
+                    right is touched once and forgotten (§1.1). The divider is
+                    there so the eye does not have to read seven words to find
+                    the two it needs.
+                --}}
+                <span class="nav__sep" aria-hidden="true"></span>
+
                 <a href="{{ route('dashboard.booking-types.index') }}"
                    @if (request()->routeIs('dashboard.booking-types.*')) aria-current="page" @endif>Setup</a>
                 <a href="{{ route('dashboard.payments.edit') }}"

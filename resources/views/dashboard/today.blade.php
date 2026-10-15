@@ -22,12 +22,17 @@
         </div>
 
         @if ($hasStructure)
-            <nav class="nav" aria-label="When">
-                @foreach (['today' => 'Today', 'tomorrow' => 'Tomorrow', 'week' => 'This week', 'upcoming' => 'All upcoming'] as $key => $label)
-                    <a href="{{ route('dashboard.today', ['when' => $key]) }}"
-                       @if ($range === $key) aria-current="page" @endif>{{ $label }}</a>
-                @endforeach
-            </nav>
+            <div class="row" style="align-items:center">
+                <nav class="nav" aria-label="When">
+                    @foreach (['today' => 'Today', 'tomorrow' => 'Tomorrow', 'week' => 'This week', 'upcoming' => 'All upcoming'] as $key => $label)
+                        <a href="{{ route('dashboard.today', ['when' => $key]) }}"
+                           @if ($range === $key) aria-current="page" @endif>{{ $label }}</a>
+                    @endforeach
+                </nav>
+
+                {{-- The phone rings during service; this is one tap away. --}}
+                <a class="btn" href="{{ route('dashboard.bookings.create') }}">New booking</a>
+            </div>
         @endif
     </div>
 
@@ -71,11 +76,27 @@
                             @endif
                         </span>
 
+                        @php $guest = $guests[$reservation->guest_id] ?? null; @endphp
+
                         <span class="booking__who">
                             <strong>
                                 <a href="{{ route('dashboard.reservations.show', $reservation) }}"
                                    style="color:inherit">{{ $reservation->customer_name }}</a>
                             </strong>
+
+                            {{--
+                                The two notes that change how a table is
+                                handled. Anyone who has stood the venue up
+                                twice deserves a thought before the front row
+                                on a full Saturday (SPEC §28.3).
+                            --}}
+                            @if ($guest?->warning())
+                                <span class="flag flag--warn" title="Has not turned up before">
+                                    {{ $guest->warning() }}
+                                </span>
+                            @elseif ($guest?->visitLabel())
+                                <span class="flag">{{ $guest->visitLabel() }}</span>
+                            @endif
                             <small class="muted">
                                 {{ $reservation->party_size }}
                                 {{ \Illuminate\Support\Str::plural('guest', $reservation->party_size) }}

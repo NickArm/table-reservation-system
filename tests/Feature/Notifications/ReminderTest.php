@@ -133,20 +133,15 @@ final class ReminderTest extends TestCase
      */
     private function booking(CarbonImmutable $startsAt, array $attributes = []): Reservation
     {
-        return $this->asTenant(function () use ($startsAt, $attributes): Reservation {
-            $reservation = Reservation::factory()
-                ->at($startsAt->utc(), $startsAt->addHours(2)->utc())
-                ->create([
-                    'resource_snapshot' => ['label' => 'A1', 'area' => 'Front row', 'components' => null],
-                    ...$attributes,
-                ]);
-
-            // Booked days ago. forceFill, because created_at is deliberately
-            // not fillable and strict mode refuses to discard it quietly.
-            $reservation->forceFill(['created_at' => $startsAt->subDays(3)])->save();
-
-            return $reservation;
-        });
+        return $this->asTenant(fn (): Reservation => Reservation::factory()
+            ->at($startsAt->utc(), $startsAt->addHours(2)->utc())
+            ->create([
+                // Booked days ago, so the two-hour settling rule does not
+                // swallow the reminder.
+                'created_at' => $startsAt->subDays(3),
+                'resource_snapshot' => ['label' => 'A1', 'area' => 'Front row', 'components' => null],
+                ...$attributes,
+            ]));
     }
 
     /**

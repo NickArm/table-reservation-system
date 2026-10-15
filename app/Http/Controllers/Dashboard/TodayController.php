@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Area;
 use App\Models\BookingClosure;
 use App\Models\BookingType;
+use App\Models\Guest;
 use App\Models\Reservation;
 use App\Models\Venue;
 use App\Tenancy\TenantContext;
@@ -65,6 +66,9 @@ final class TodayController extends Controller
             'heading' => $heading,
             'stats' => $this->stats($reservations, $timezone),
             'areaNames' => $this->areaNames($reservations),
+            // "3rd visit", "2 no-shows" — the two notes that change how a
+            // table is handled, next to the name (SPEC §28.3).
+            'guests' => $this->guests($reservations),
         ]);
     }
 
@@ -148,6 +152,23 @@ final class TodayController extends Controller
             ->flip()
             ->map(static fn (): bool => true)
             ->all();
+    }
+
+    /**
+     * The guests behind today's bookings, in one query.
+     *
+     * @param  Collection<int, Reservation>  $reservations
+     * @return array<int, Guest>
+     */
+    private function guests(Collection $reservations): array
+    {
+        $ids = $reservations->pluck('guest_id')->filter()->unique();
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return Guest::query()->whereIn('id', $ids)->get()->keyBy('id')->all();
     }
 
     /**
