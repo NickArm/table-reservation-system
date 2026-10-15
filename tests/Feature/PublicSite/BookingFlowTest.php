@@ -270,6 +270,23 @@ final class BookingFlowTest extends TestCase
     }
 
     #[Test]
+    public function giving_a_spot_back_returns_the_guest_to_the_same_search(): void
+    {
+        $hold = $this->hold($this->spot('A1'));
+
+        $this->delete(route('public.hold.release', [$this->venueTenant, $hold]))
+            ->assertRedirect(route('public.search', [
+                $this->venueTenant,
+                'type' => $this->bookingType->slug,
+                'people' => 2,
+            ]));
+
+        // The spot is free again, and they are back where they were rather
+        // than at the top of the funnel.
+        $this->assertSame(0, $this->asVenue(static fn (): int => ReservationHold::query()->count()));
+    }
+
+    #[Test]
     public function a_hold_that_belongs_to_another_browser_is_not_yours(): void
     {
         $hold = $this->hold($this->spot('A1'));

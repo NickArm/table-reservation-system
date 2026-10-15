@@ -49,6 +49,14 @@ class ReservationHold extends Model
     }
 
     /**
+     * @return BelongsTo<BookingType, $this>
+     */
+    public function bookingType(): BelongsTo
+    {
+        return $this->belongsTo(BookingType::class);
+    }
+
+    /**
      * Holds that still mean something.
      *
      * Expired rows are filtered here rather than trusted to the cleanup job:
