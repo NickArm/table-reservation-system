@@ -19,11 +19,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reservations', function (Blueprint $table): void {
-            $table->timestamp('voucher_sent_at')->nullable()->after('terms_accepted_ip');
+            $table->datetime('voucher_sent_at')->nullable()->after('terms_accepted_ip');
             $table->string('voucher_message_id')->nullable()->after('voucher_sent_at');
             $table->string('voucher_delivery', 20)->nullable()->after('voucher_message_id');
 
-            $table->timestamp('reminder_sent_at')->nullable()->after('voucher_delivery');
+            $table->datetime('reminder_sent_at')->nullable()->after('voucher_delivery');
 
             // The provider knows nothing about tenants, so a bounce arrives
             // with a message id and nothing else to go on.

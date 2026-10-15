@@ -26,18 +26,18 @@ return new class extends Migration
             $table->string('locale', 5)->default('en');
             $table->string('currency', 3)->default('EUR');
 
-            $table->timestamp('trial_ends_at')->nullable();
+            $table->datetime('trial_ends_at')->nullable();
 
             // Which version of the platform terms this account accepted, and
             // from where (SPEC §12.2).
             $table->string('accepted_terms_version')->nullable();
-            $table->timestamp('accepted_terms_at')->nullable();
+            $table->datetime('accepted_terms_at')->nullable();
             $table->string('accepted_terms_ip', 45)->nullable();
 
             // Deletion is a two-step: requested now, purged after 30 days
             // (SPEC §29.3).
-            $table->timestamp('deletion_requested_at')->nullable();
-            $table->timestamp('purge_at')->nullable();
+            $table->datetime('deletion_requested_at')->nullable();
+            $table->datetime('purge_at')->nullable();
 
             $table->timestamps();
             $table->softDeletes();

@@ -49,8 +49,8 @@ return new class extends Migration
 
             // UTC, always. The venue's timezone turns them into something a
             // person reads, and only at that moment (SPEC §3.5).
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->datetime('starts_at');
+            $table->datetime('ends_at');
 
             $table->string('status')->default('pending_payment');
             $table->text('notes')->nullable();
@@ -63,17 +63,17 @@ return new class extends Migration
             $table->string('referrer_domain')->nullable();
 
             $table->unsignedBigInteger('terms_version_id')->nullable();
-            $table->timestamp('terms_accepted_at')->nullable();
+            $table->datetime('terms_accepted_at')->nullable();
             $table->string('terms_accepted_ip', 45)->nullable();
 
-            $table->timestamp('cancelled_at')->nullable();
+            $table->datetime('cancelled_at')->nullable();
             $table->foreignId('cancelled_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('cancellation_reason')->nullable();
 
             // 🔒 Idempotent check-in (SPEC §32.3): setting a timestamp that is
             // already set changes nothing, which is what an offline scanner
             // replaying its queue needs.
-            $table->timestamp('checked_in_at')->nullable();
+            $table->datetime('checked_in_at')->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
 

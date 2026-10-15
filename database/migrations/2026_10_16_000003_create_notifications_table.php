@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('type');
             $table->morphs('notifiable');
             $table->text('data');
-            $table->timestamp('read_at')->nullable();
+            $table->datetime('read_at')->nullable();
             $table->timestamps();
 
             $table->index(['notifiable_type', 'notifiable_id', 'read_at']);

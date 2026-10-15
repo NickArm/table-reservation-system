@@ -28,8 +28,8 @@ return new class extends Migration
             $table->foreignId('booking_type_id')->constrained()->cascadeOnDelete();
             $table->foreignId('resource_id')->constrained()->cascadeOnDelete();
 
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->datetime('starts_at');
+            $table->datetime('ends_at');
             $table->unsignedSmallInteger('party_size')->default(1);
 
             // Identifies the browser session that owns this hold, so the same
@@ -37,7 +37,7 @@ return new class extends Migration
             // competing with themselves.
             $table->string('session_token', 64)->index();
 
-            $table->timestamp('expires_at');
+            $table->datetime('expires_at');
 
             $table->timestamps();
 

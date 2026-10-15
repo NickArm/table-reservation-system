@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('refund_reference')->nullable();
             $table->string('refund_failure_reason')->nullable();
 
-            $table->timestamp('paid_at')->nullable();
+            $table->datetime('paid_at')->nullable();
 
             // Whatever the gateway last told us, kept for the arguments that
             // come months later. Scrubbed of anything resembling card data.

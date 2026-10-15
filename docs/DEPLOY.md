@@ -157,6 +157,19 @@ character and InnoDB's older index limit is 767 bytes per column — a
 server turns out to be new enough for 3072-byte keys, the cap can be lifted;
 there is no reason to.
 
+**Date columns are `datetime`, never `timestamp`.** MySQL's
+`explicit_defaults_for_timestamp` is off by default, and with it off the server
+quietly invents defaults for `TIMESTAMP` columns: the first one in a table gets
+`DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`, and every later
+`NOT NULL` one gets `'0000-00-00 00:00:00'` — which strict mode then refuses,
+so the migration dies on *the second* date column with
+`1067 Invalid default value`. `DATETIME` has none of that behaviour, no 2038
+ceiling, and no server-side timezone conversion, which is what this app wants:
+it stores UTC and says so (SPEC §3.5). SQLite treats the two identically, so
+the local test suite never sees the difference — this is MySQL-only, and it
+only shows up on deploy. Laravel's own three migrations are left alone; they
+have one date column each and an explicit `useCurrent()` where it matters.
+
 **The compiled assets are committed**, under `public/build`. Shared hosting has
 no Node, and a deploy that needs `npm run build` is a deploy that fails with a
 white page. The trade-off is noise in diffs whenever the CSS changes, which is

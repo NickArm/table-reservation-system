@@ -36,7 +36,7 @@ return new class extends Migration
 
             $table->boolean('is_active')->default(false);
 
-            $table->timestamp('last_tested_at')->nullable();
+            $table->datetime('last_tested_at')->nullable();
             $table->string('last_test_result')->nullable();
 
             $table->timestamps();

@@ -20,7 +20,7 @@ return new class extends Migration
     {
         Schema::table('reservations', function (Blueprint $table): void {
             $table->boolean('marketing_consent')->default(false)->after('locale');
-            $table->timestamp('marketing_consent_at')->nullable()->after('marketing_consent');
+            $table->datetime('marketing_consent_at')->nullable()->after('marketing_consent');
         });
     }
 

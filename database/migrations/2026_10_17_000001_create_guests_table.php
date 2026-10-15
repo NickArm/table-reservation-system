@@ -35,8 +35,8 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('locale', 5)->default('en');
 
-            $table->timestamp('first_seen_at')->nullable();
-            $table->timestamp('last_seen_at')->nullable();
+            $table->datetime('first_seen_at')->nullable();
+            $table->datetime('last_seen_at')->nullable();
 
             // Denormalised, and recomputed from the reservations rather than
             // incremented — see RecountGuest. A counter that is only ever
@@ -56,14 +56,14 @@ return new class extends Migration
             // Only ever set from the separate, unticked box at checkout
             // (SPEC §28.4). The list is for serving guests, not mailing them.
             $table->boolean('marketing_consent')->default(false);
-            $table->timestamp('marketing_consent_at')->nullable();
+            $table->datetime('marketing_consent_at')->nullable();
 
             // The venue's private notes. Never shown to the guest, never in
             // any email, never returned by the public API.
             $table->text('internal_notes')->nullable();
             $table->json('tags')->nullable();
 
-            $table->timestamp('anonymized_at')->nullable();
+            $table->datetime('anonymized_at')->nullable();
 
             $table->timestamps();
 
