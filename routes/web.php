@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\AreaController;
 use App\Http\Controllers\Dashboard\BookingTypeController;
 use App\Http\Controllers\Dashboard\CalendarController;
 use App\Http\Controllers\Dashboard\ClosureController;
+use App\Http\Controllers\Dashboard\DeveloperController;
 use App\Http\Controllers\Dashboard\GuestController;
 use App\Http\Controllers\Dashboard\ManualBookingController;
 use App\Http\Controllers\Dashboard\NotificationController;
@@ -200,6 +201,19 @@ Route::prefix('dashboard')
             ->name('notifications.update');
         Route::post('notifications/read', [NotificationController::class, 'markAllRead'])
             ->name('notifications.read');
+
+        /*
+         * The account's API token (SPEC §15.2).
+         *
+         * Revealing is a POST, not a GET: a URL that prints a live secret
+         * ends up in the browser history, the proxy log and any screen
+         * recording that happened to be running.
+         */
+        Route::get('developer', [DeveloperController::class, 'show'])->name('developer');
+        Route::post('developer/{mode}/reveal', [DeveloperController::class, 'reveal'])
+            ->name('developer.reveal');
+        Route::post('developer/{mode}/regenerate', [DeveloperController::class, 'regenerate'])
+            ->name('developer.regenerate');
 
         // The venue's own keys, never ours (SPEC §7.4).
         Route::get('payments', [PaymentSettingsController::class, 'edit'])->name('payments.edit');

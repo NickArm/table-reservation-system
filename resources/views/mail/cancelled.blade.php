@@ -9,10 +9,11 @@
 @extends('mail.layout', ['venue' => $voucher->venue])
 
 @section('preheader')
-    {{-- The @if must not touch the word before it: Blade only recognises a
-         directive where the character in front of the @ is not a word
-         character, so `cancelled@if` stays literal text while its @endif
-         still compiles, and the view dies with "unexpected endif". --}}
+    {{-- The directive below must not touch the word in front of it. Blade
+         only recognises one where the preceding character is not a word
+         character, so a directive glued to a letter stays literal text while
+         its closing partner still compiles — and the view then dies with
+         "unexpected endif". Keep the line break. --}}
     {{ $voucher->when() }} · cancelled
     @if ($refundedCents > 0) · {{ \App\Support\Money::formatExact($refundedCents) }} refunded @endif
 @endsection

@@ -5,15 +5,20 @@ declare(strict_types=1);
 use App\Http\Middleware\EnsureBookingsAreOpen;
 use App\Http\Middleware\IdentifyTenantFromPath;
 use App\Http\Middleware\IdentifyTenantFromUser;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -62,4 +67,41 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        /*
+         * One error shape for the whole API: { error: { code, message } },
+         * never a stack trace (SPEC §15.2.1).
+         *
+         * Laravel's own JSON errors are shaped differently for a validation
+         * failure than for a missing record, and the published contract says
+         * one shape. A customer's error handling should not need a branch per
+         * status, and a field name we rename later must not change the shape
+         * their code reads.
+         */
+        $exceptions->render(function (Throwable $e, Request $request): ?JsonResponse {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            [$status, $code] = match (true) {
+                $e instanceof ValidationException => [422, 'invalid_request'],
+                $e instanceof ModelNotFoundException => [404, 'not_found'],
+                $e instanceof HttpExceptionInterface => [
+                    $e->getStatusCode(),
+                    $e->getStatusCode() === 404 ? 'not_found' : 'request_failed',
+                ],
+                default => [500, 'server_error'],
+            };
+
+            $message = match (true) {
+                $e instanceof ValidationException => (string) collect($e->errors())->flatten()->first(),
+                $status === 500 => 'Something went wrong on our side.',
+                default => $e->getMessage() !== '' ? $e->getMessage() : 'That request could not be completed.',
+            };
+
+            return new JsonResponse(
+                ['error' => ['code' => $code, 'message' => $message]],
+                $status,
+            );
+        });
     })->create();

@@ -9,6 +9,7 @@ use App\Actions\Guests\RecordGuest;
 use App\Actions\Structure\BulkCreateResources;
 use App\Actions\Structure\CreateBookingType;
 use App\Actions\Structure\SetResourceAvailability;
+use App\Enums\ApiTokenMode;
 use App\Enums\BookingMode;
 use App\Enums\Channel;
 use App\Enums\Gateway;
@@ -24,6 +25,7 @@ use App\Enums\ResourceType;
 use App\Enums\StructureScope;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
+use App\Models\ApiToken;
 use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Guest;
@@ -67,6 +69,12 @@ class DemoRestaurantSeeder extends Seeder
     private const STAFF_EMAIL = 'staff@demo.test';
 
     private const PASSWORD = 'password';
+
+    /**
+     * Deliberately obvious. A token that reads like a real secret invites
+     * somebody to wonder whether it is one.
+     */
+    private const API_TOKEN_BODY = 'demo'.'2222333344445555666677778888999900001111';
 
     private const MEDIA_DIR = 'venues/demo';
 
@@ -144,6 +152,7 @@ class DemoRestaurantSeeder extends Seeder
             $this->createReservations($venue);
             $this->fillTheBell($venue, [$owner, $staff]);
             $this->annotateGuests();
+            $this->createApiTokens();
         });
 
         $this->report();
@@ -838,6 +847,28 @@ class DemoRestaurantSeeder extends Seeder
         return $destination;
     }
 
+    /**
+     * The demo account's two API tokens (SPEC §15.2).
+     *
+     * Fixed values, so the curl lines in the documentation and in any demo
+     * can be pasted as they are. Safe precisely because they are published:
+     * nobody can mistake them for a real venue's, and the demo account holds
+     * nothing but invented bookings.
+     */
+    private function createApiTokens(): void
+    {
+        foreach ([ApiTokenMode::Live, ApiTokenMode::Test] as $mode) {
+            $token = $mode->tokenPrefix().self::API_TOKEN_BODY;
+
+            ApiToken::query()->create([
+                'mode' => $mode,
+                'token' => $token,
+                'token_hash' => ApiToken::hash($token),
+                'prefix' => $mode->tokenPrefix().substr(self::API_TOKEN_BODY, 0, 4),
+            ]);
+        }
+    }
+
     private function report(): void
     {
         $this->command?->newLine();
@@ -845,6 +876,7 @@ class DemoRestaurantSeeder extends Seeder
         $this->command?->line('  Public page:  /reservation/'.self::SLUG);
         $this->command?->line('  Owner:        '.self::OWNER_EMAIL.' / '.self::PASSWORD);
         $this->command?->line('  Staff:        '.self::STAFF_EMAIL.' / '.self::PASSWORD);
+        $this->command?->line('  API token:    '.ApiTokenMode::Live->tokenPrefix().self::API_TOKEN_BODY);
 
         if (config('media.disk') === 'public' && ! file_exists(public_path('storage'))) {
             $this->command?->newLine();

@@ -28,6 +28,11 @@
                    @if (request()->routeIs('dashboard.payments.*')) aria-current="page" @endif>Payments</a>
                 <a href="{{ route('dashboard.notifications.edit') }}"
                    @if (request()->routeIs('dashboard.notifications.*')) aria-current="page" @endif>Alerts</a>
+
+                {{-- Last, and the only item here an owner never needs: this
+                     one is for whoever builds their website (SPEC §15.2). --}}
+                <a href="{{ route('dashboard.developer') }}"
+                   @if (request()->routeIs('dashboard.developer*')) aria-current="page" @endif>Developer</a>
             </nav>
 
             {{--

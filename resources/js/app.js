@@ -143,3 +143,51 @@ function suggestGuests(input) {
 }
 
 document.querySelectorAll('[data-suggest]').forEach(suggestGuests);
+
+/*
+ * A copy button next to anything marked [data-copy] — the API token and the
+ * curl line on the Developer page.
+ *
+ * The button is created here rather than rendered in the template so that
+ * without script there is no button at all, instead of one that silently does
+ * nothing. The text stays selectable either way.
+ */
+function addCopyButton(target) {
+    if (!navigator.clipboard) {
+        return;
+    }
+
+    const button = document.createElement('button');
+
+    button.type = 'button';
+    button.className = 'btn btn--ghost copy';
+    button.textContent = 'Copy';
+
+    button.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(target.textContent.trim());
+
+            button.textContent = 'Copied';
+        } catch {
+            // Denied permission or an insecure origin. Saying so is more use
+            // than a button that claims to have worked.
+            button.textContent = 'Press ⌘C';
+        }
+
+        window.setTimeout(() => {
+            button.textContent = 'Copy';
+        }, 2000);
+    });
+
+    // Inside the box for a one-line secret, after it for a code block, which
+    // is where the eye already is in each case.
+    const inline = target.closest('.secret');
+
+    if (inline) {
+        inline.append(button);
+    } else {
+        target.closest('pre')?.after(button);
+    }
+}
+
+document.querySelectorAll('[data-copy]').forEach(addCopyButton);

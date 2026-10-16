@@ -1284,3 +1284,162 @@ details.advanced > summary {
     margin-inline: 4px;
     background: var(--line);
 }
+
+/* --- Developer page ------------------------------------------------------ */
+
+/*
+ * A secret on screen. Monospace and spaced out because the one thing anybody
+ * does with it is compare it, character by character, against what they
+ * pasted somewhere else.
+ */
+.secret {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+}
+
+.secret code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: var(--step--1);
+    letter-spacing: 0.04em;
+    word-break: break-all;
+}
+
+.secret--open {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.snippet {
+    margin: 0;
+    padding: 14px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    overflow-x: auto;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: var(--step--2);
+    line-height: 1.6;
+}
+
+/*
+ * Stacked rather than two columns: an endpoint with three query parameters is
+ * wider than any sensible label column, and wrapping it mid-URL is worse than
+ * putting the description underneath.
+ */
+.endpoints {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+}
+
+.endpoints dt {
+    font-weight: 600;
+}
+
+.endpoints dt code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: var(--step--2);
+    word-break: break-all;
+}
+
+.endpoints dd {
+    margin: 4px 0 0;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+}
+
+/* Two steps for anything that cannot be undone, and no blocking dialog. */
+.reveal > summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: var(--step--1);
+}
+
+.reveal > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.reveal[open] > summary {
+    color: var(--ink);
+    margin-bottom: 10px;
+}
+
+.reveal > *:not(summary) {
+    margin-top: 10px;
+}
+
+/* Seven days of call volume. A shape, not a chart: the question is only ever
+   "is anything happening", and a tooltip carries the number. */
+.bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 72px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bars li {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    height: 100%;
+}
+
+.bars__bar {
+    display: block;
+    width: 100%;
+    height: var(--height, 2%);
+    border-radius: 3px 3px 0 0;
+    background: var(--accent);
+}
+
+.bars__label {
+    color: var(--muted);
+    font-size: var(--step--2);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step--1);
+}
+
+.table th,
+.table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+}
+
+.table th {
+    color: var(--muted);
+    font-size: var(--step--2);
+    font-weight: 600;
+}
+
+.table td code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: var(--step--2);
+}
+
+.pill--warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
+/* Added by script, so it never appears as a button that cannot work. */
+.copy {
+    align-self: flex-start;
+}
