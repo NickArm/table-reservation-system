@@ -1443,3 +1443,29 @@ details.advanced > summary {
 .copy {
     align-self: flex-start;
 }
+
+/* --- Widget builder ------------------------------------------------------ */
+
+.builder {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.builder small {
+    display: block;
+    margin-top: 4px;
+    font-size: var(--step--2);
+}
+
+/*
+ * The preview sits on a neutral slab rather than on the card, so the widget's
+ * own border and background are visible. On a white card a white widget looks
+ * like part of the page, which is exactly the wrong impression to give about
+ * something going onto somebody else's site.
+ */
+.preview {
+    padding: 20px;
+    border-radius: var(--radius-card);
+    background: var(--surface-2);
+}

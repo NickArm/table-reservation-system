@@ -29,6 +29,11 @@
                 <a href="{{ route('dashboard.notifications.edit') }}"
                    @if (request()->routeIs('dashboard.notifications.*')) aria-current="page" @endif>Alerts</a>
 
+                {{-- The snippet for their own site (SPEC §9.4). Earns its
+                     place in the bar: it is where most bookings come from. --}}
+                <a href="{{ route('dashboard.widget') }}"
+                   @if (request()->routeIs('dashboard.widget')) aria-current="page" @endif>Widget</a>
+
                 {{-- Last, and the only item here an owner never needs: this
                      one is for whoever builds their website (SPEC §15.2). --}}
                 <a href="{{ route('dashboard.developer') }}"

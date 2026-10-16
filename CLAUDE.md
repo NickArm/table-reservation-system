@@ -141,6 +141,25 @@ Firing the event is right when the listener's own effects are what matter —
 `Mail::fake()` leaves the queue alone, so on the `sync` connection the
 listener runs for real.
 
+## The embed widget
+
+`public/embed.js` is a **plain static file**, not a Vite entry point. Its
+address is pasted into customers' sites, so it has to stay `/embed.js` for
+ever; a hashed bundle name would break every one of them on the next deploy.
+The budget is 10KB gzipped, checked by a test.
+
+Its settings live **on the element**, never in the file's closure. A second
+script tag on the same page runs the file again but finds the custom element
+already defined, so anything kept in the closure belongs to whichever tag ran
+first — two widgets with different booking types quietly become one.
+
+Changes to it need a browser; no PHP test can exercise a Web Component on
+somebody else's page. `tests/Browser/widget/` runs it in Chromium against
+deliberately hostile CSS, and its README says what each check is guarding
+against. It is a development tool, not part of the suite: shared hosting has
+no Node, and `php artisan test` stays the one command that proves the
+application works.
+
 ## Extensibility
 
 Anything likely to get a second implementation sits behind an interface from

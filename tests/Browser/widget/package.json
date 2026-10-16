@@ -1,0 +1,9 @@
+{
+    "name": "widget-browser-checks",
+    "private": true,
+    "type": "module",
+    "description": "Development-only browser checks for public/embed.js. Not part of php artisan test.",
+    "devDependencies": {
+        "playwright": "^1.49.1"
+    }
+}

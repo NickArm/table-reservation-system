@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>A customer's homepage</title>
+    <style>
+        /* Deliberately hostile: the kind of global CSS a real theme has. */
+        * { box-sizing: content-box !important; }
+        select, input, button { all: unset; font-size: 40px; color: red; }
+        body { font-family: Georgia, serif; background: #eee; }
+    </style>
+</head>
+<body>
+    <h1>Crystal Seaside</h1>
+    <div id="rsv-widget"></div>
+
+    <script src="/embed.js"
+        data-venue="demo-beach-bar"
+        data-mode="search"
+        data-theme="light"
+        data-accent="#C9A227"
+        data-layout="horizontal"
+        data-on-search="redirect"
+        data-people="4"
+        data-label="Find a sunbed"
+        async defer></script>
+</body>
+</html>

@@ -6,6 +6,7 @@ use App\Api\V1\OpenApi;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\IdentifyTenantFromPath;
+use App\Http\Middleware\NoteWidgetSighting;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -64,7 +65,7 @@ Route::prefix('v1')
 */
 
 Route::prefix('internal/{tenant}')
-    ->middleware([IdentifyTenantFromPath::class, 'throttle:120,1'])
+    ->middleware([IdentifyTenantFromPath::class, NoteWidgetSighting::class, 'throttle:120,1'])
     ->name('api.internal.')
     ->group(function (): void {
         Route::get('venue', [AvailabilityController::class, 'venue'])->name('venue');

@@ -191,3 +191,44 @@ function addCopyButton(target) {
 }
 
 document.querySelectorAll('[data-copy]').forEach(addCopyButton);
+
+/*
+ * Tell the parent page how tall we are, when we are inside one (SPEC §9.3).
+ *
+ * The widget's modal and inline modes put a real booking page in an iframe,
+ * and an iframe has no idea what height to be. The alternative is a fixed
+ * height with a scrollbar inside somebody else's layout, which is the thing
+ * everyone recognises as an embedded widget and nobody likes.
+ *
+ * Only the height is sent, and only upward. Nothing is read from the parent,
+ * so there is nothing here that a hostile host page could use.
+ */
+function reportHeight() {
+    if (window.parent === window) {
+        return;
+    }
+
+    const send = () => {
+        const height = Math.ceil(
+            Math.max(
+                document.documentElement.scrollHeight,
+                document.body?.scrollHeight ?? 0,
+            ),
+        );
+
+        // targetOrigin stays '*' here and the listener checks the sender
+        // instead: we cannot know which customer's domain framed us, and the
+        // only thing leaving is a number we would happily shout.
+        window.parent.postMessage({ type: 'tr:resize', height }, '*');
+    };
+
+    send();
+
+    if (window.ResizeObserver) {
+        new ResizeObserver(send).observe(document.documentElement);
+    } else {
+        window.addEventListener('load', send);
+    }
+}
+
+reportHeight();

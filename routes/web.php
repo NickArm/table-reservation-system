@@ -20,9 +20,11 @@ use App\Http\Controllers\Dashboard\ReservationController as DashboardReservation
 use App\Http\Controllers\Dashboard\ReservationListController;
 use App\Http\Controllers\Dashboard\ResourceController;
 use App\Http\Controllers\Dashboard\TodayController;
+use App\Http\Controllers\Dashboard\WidgetController;
 use App\Http\Controllers\MailWebhookController;
 use App\Http\Controllers\PublicSite\BookingPageController;
 use App\Http\Controllers\PublicSite\CheckoutController;
+use App\Http\Controllers\PublicSite\EmbedController;
 use App\Http\Controllers\PublicSite\HoldController;
 use App\Http\Controllers\PublicSite\ReservationController;
 use App\Http\Controllers\PublicSite\SearchController;
@@ -80,6 +82,24 @@ Route::prefix('reservation/{tenant}')
         Route::get('booked/{reservation}', [ReservationController::class, 'show'])
             ->name('confirmed');
     });
+
+/*
+|--------------------------------------------------------------------------
+| The embeddable search bar
+|--------------------------------------------------------------------------
+|
+| `/embed.js` is a static file in public/ — the address has to stay the same
+| for ever, because it is pasted into customers' sites, and a hashed bundle
+| name would break every one of them on our next deploy.
+|
+| This address is the bare-iframe alternative (SPEC §9.2): the same bar,
+| rendered server-side, for a site builder who cannot add a script tag. It
+| needs no JavaScript — the form targets the top window.
+*/
+
+Route::get('embed/{tenant}/search', [EmbedController::class, 'search'])
+    ->middleware(['tenant.path', 'throttle:120,1'])
+    ->name('embed.search');
 
 /*
 |--------------------------------------------------------------------------
@@ -201,6 +221,16 @@ Route::prefix('dashboard')
             ->name('notifications.update');
         Route::post('notifications/read', [NotificationController::class, 'markAllRead'])
             ->name('notifications.read');
+
+        /*
+         * The snippet for the venue's own website (SPEC §9.4).
+         *
+         * Read-only: nothing is saved, because the settings are the snippet.
+         * Storing them would mean two sources of truth for what is on the
+         * customer's page, and ours would be the wrong one the moment their
+         * developer edited a line.
+         */
+        Route::get('widget', [WidgetController::class, 'show'])->name('widget');
 
         /*
          * The account's API token (SPEC §15.2).

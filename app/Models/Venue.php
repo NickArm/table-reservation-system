@@ -55,7 +55,20 @@ class Venue extends Model
             'notify_on_booking' => 'boolean',
             'daily_summary_hour' => 'integer',
             'reminder_hours_before' => 'integer',
+            'widget_last_seen_at' => 'immutable_datetime',
         ];
+    }
+
+    /**
+     * The widget has been seen working on a site (SPEC §9.4).
+     *
+     * Deliberately recent rather than ever: a sighting from last March tells
+     * an owner nothing about whether the snippet is on the page today.
+     */
+    public function widgetIsLive(): bool
+    {
+        return $this->widget_last_seen_at !== null
+            && $this->widget_last_seen_at->gt(now()->subDays(7));
     }
 
     /**
