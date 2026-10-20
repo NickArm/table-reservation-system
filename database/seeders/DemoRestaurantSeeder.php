@@ -874,11 +874,23 @@ class DemoRestaurantSeeder extends Seeder
 
         $start = CarbonImmutable::now()->subMonths(2)->startOfDay();
 
+        /*
+         * The current period has to straddle today, or the demo account is
+         * born expired — which is exactly what happened the first time this
+         * was written: `$start->addMonths(2)` lands on today at midnight,
+         * which is already in the past by the time anybody looks, so
+         * SyncTenantStatus correctly marked the account lapsed and the whole
+         * demo came up read-only.
+         *
+         * Written as two plain dates around now rather than as arithmetic on
+         * $start, because the arithmetic is what got it wrong and the dates
+         * are what the reader actually wants to know.
+         */
         $subscription = Subscription::query()->create([
             'plan_id' => $plan->id,
             'status' => TenantStatus::Active,
-            'current_period_start' => $start->addMonth(),
-            'current_period_end' => $start->addMonths(2),
+            'current_period_start' => CarbonImmutable::now()->subDays(10)->startOfDay(),
+            'current_period_end' => CarbonImmutable::now()->addDays(20)->startOfDay(),
             'provider' => BillingProvider::Stripe,
             'price_cents' => $plan->price_cents,
             'currency' => 'EUR',

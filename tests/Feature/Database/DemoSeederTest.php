@@ -11,6 +11,7 @@ use App\Enums\Occupancy;
 use App\Enums\PriceRuleType;
 use App\Enums\ReservationStatus;
 use App\Enums\StructureScope;
+use App\Enums\TenantStatus;
 use App\Models\Area;
 use App\Models\BookingClosure;
 use App\Models\BookingType;
@@ -20,11 +21,14 @@ use App\Models\PriceRule;
 use App\Models\Reservation;
 use App\Models\ReservationHold;
 use App\Models\Resource;
+use App\Models\Subscription;
+use App\Models\SubscriptionEvent;
 use App\Models\Tenant;
 use App\Models\Venue;
 use App\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Database\Seeders\DemoRestaurantSeeder;
+use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
@@ -47,6 +51,9 @@ final class DemoSeederTest extends TestCase
 
         Storage::fake(config('media.disk'));
 
+        // The plans first: without them the demo account gets no subscription
+        // at all, which is how its billing state went unchecked for a while.
+        $this->seed(PlanSeeder::class);
         $this->seed(DemoRestaurantSeeder::class);
 
         $demo = Tenant::query()->where('slug', 'demo')->first();
@@ -55,6 +62,27 @@ final class DemoSeederTest extends TestCase
         $this->demo = $demo;
 
         app(TenantContext::class)->set($this->demo);
+    }
+
+    #[Test]
+    public function the_demo_account_is_a_paying_customer_not_an_expired_one(): void
+    {
+        $subscription = Subscription::query()->sole();
+
+        // The period has to straddle today. It did not, once: the arithmetic
+        // landed the end on today at midnight, so the demo came up read-only
+        // with its public page closed — the whole product, demonstrating the
+        // one state nobody wants to see.
+        $this->assertTrue(
+            $subscription->isCurrent(),
+            'The demo subscription should still be running, not already over.'
+        );
+
+        $this->assertSame(TenantStatus::Active, $this->demo->fresh()?->status);
+        $this->assertTrue($this->demo->fresh()?->acceptsBookings());
+
+        // And a history that reads like an account with a past.
+        $this->assertGreaterThanOrEqual(2, SubscriptionEvent::query()->count());
     }
 
     #[Test]
