@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\EnsureAccountCanWrite;
 use App\Http\Middleware\EnsureBookingsAreOpen;
 use App\Http\Middleware\IdentifyTenantFromPath;
 use App\Http\Middleware\IdentifyTenantFromUser;
@@ -38,6 +39,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.path' => IdentifyTenantFromPath::class,
             'tenant.user' => IdentifyTenantFromUser::class,
             'bookings.open' => EnsureBookingsAreOpen::class,
+
+            // Read-only once a subscription has run out (SPEC §4.4). Reading
+            // keeps working; only writes are refused.
+            'account.can-write' => EnsureAccountCanWrite::class,
         ]);
 
         /*

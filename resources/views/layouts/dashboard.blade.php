@@ -29,6 +29,9 @@
                 <a href="{{ route('dashboard.notifications.edit') }}"
                    @if (request()->routeIs('dashboard.notifications.*')) aria-current="page" @endif>Alerts</a>
 
+                <a href="{{ route('dashboard.billing') }}"
+                   @if (request()->routeIs('dashboard.billing')) aria-current="page" @endif>Billing</a>
+
                 {{-- The snippet for their own site (SPEC §9.4). Earns its
                      place in the bar: it is where most bookings come from. --}}
                 <a href="{{ route('dashboard.widget') }}"
@@ -92,6 +95,13 @@
     <main class="shell">
         @if (session('status'))
             <div class="notice" style="margin-bottom:24px">{{ session('status') }}</div>
+        @endif
+
+        {{-- A refusal that is nobody's mistake: the account lapsed, or the
+             plan does not stretch that far. Not in `errors`, because that
+             list is for a form the owner can correct. --}}
+        @if (session('error'))
+            <div class="notice notice--warn" style="margin-bottom:24px">{{ session('error') }}</div>
         @endif
 
         @if ($errors->any())

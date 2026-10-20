@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Dashboard\AreaController;
+use App\Http\Controllers\Dashboard\BillingController;
 use App\Http\Controllers\Dashboard\BookingTypeController;
 use App\Http\Controllers\Dashboard\CalendarController;
 use App\Http\Controllers\Dashboard\ClosureController;
@@ -165,7 +166,7 @@ Route::middleware('auth')->group(function (): void {
 */
 
 Route::prefix('dashboard')
-    ->middleware(['auth', 'verified', 'tenant.user'])
+    ->middleware(['auth', 'verified', 'tenant.user', 'account.can-write'])
     ->name('dashboard.')
     ->group(function (): void {
         Route::get('/', [TodayController::class, 'index'])->name('today');
@@ -221,6 +222,15 @@ Route::prefix('dashboard')
             ->name('notifications.update');
         Route::post('notifications/read', [NotificationController::class, 'markAllRead'])
             ->name('notifications.read');
+
+        /*
+         * Billing (SPEC §4).
+         *
+         * Outside the read-only lock on purpose: an account that has run out
+         * has to be able to reach the page where it would pay. Locking
+         * somebody out of that is the one way to guarantee they do not.
+         */
+        Route::get('billing', [BillingController::class, 'show'])->name('billing');
 
         /*
          * The snippet for the venue's own website (SPEC §9.4).

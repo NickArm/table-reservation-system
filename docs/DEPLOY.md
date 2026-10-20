@@ -95,8 +95,11 @@ chmod -R 775 storage bootstrap/cache
 ## 5. The two cron jobs ⚠️
 
 **Without these, the system looks like it works and quietly does not.** No
-confirmation emails, no reminders, no morning list, and payments whose
-webhooks were missed are never reconciled.
+confirmation emails, no reminders, no morning list, payments whose webhooks
+were missed are never reconciled — and **no trial ever ends**, which means
+`/register` hands out the whole product for nothing, for ever. The first
+cron below is the one that runs the subscription sweep, so it is not
+optional in the way a missed reminder is.
 
 cPanel → *Cron Jobs*, both every minute:
 
@@ -110,6 +113,21 @@ cPanel → *Cron Jobs*, both every minute:
 
 Check the PHP binary path in cPanel → *MultiPHP Manager*; on some hosts it is
 `/opt/cpanel/ea-php83/root/usr/bin/php`.
+
+### Checking the subscription sweep is actually running
+
+`schedule:run` is what fires `subscriptions:advance` every night, and that
+command is what ends trials and locks accounts that have not paid. If it is
+not running, nothing complains — accounts simply stay on trial for ever. So
+after the first deploy, run it once by hand and read what it says:
+
+```
+php artisan subscriptions:advance
+```
+
+It prints how many accounts it checked and how many it moved. A run that
+reports `Checked 0` means no accounts exist yet; a run that errors means the
+cron would have been failing silently every night.
 
 **If the host will not run a queue worker at all**, set `QUEUE_CONNECTION=sync`
 in `.env`. Everything still works and nothing is lost — the guest simply waits

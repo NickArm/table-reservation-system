@@ -230,11 +230,27 @@
                     // nothing for a cache to get wrong.
                     credentials: 'omit',
                 }).then(function (response) {
-                    if (!response.ok) {
-                        throw new Error('HTTP ' + response.status);
+                    if (response.ok) {
+                        return response.json();
                     }
 
-                    return response.json();
+                    /*
+                     * A refusal carries a reason, and one of them matters: a
+                     * venue whose subscription has run out is told to show a
+                     * sentence, not an empty box or a console error
+                     * (SPEC §4.4). Everything else is a network problem,
+                     * where the right move is to let the booking page ask.
+                     */
+                    return response.json().catch(function () {
+                        return null;
+                    }).then(function (body) {
+                        var failure = new Error('HTTP ' + response.status);
+
+                        failure.code = body && body.error ? body.error.code : null;
+                        failure.notice = body && body.error ? body.error.message : null;
+
+                        throw failure;
+                    });
                 });
             }
 
@@ -380,6 +396,34 @@
              * only takes tables should not be asked what kind of booking this
              * is (§9.1).
              */
+            /*
+             * The venue is not taking bookings right now.
+             *
+             * The form is replaced by the one sentence we were given, because
+             * a bar that has not renewed should not have a broken-looking
+             * widget on its homepage — and a guest offered times that cannot
+             * be booked is worse than a guest told plainly (SPEC §4.4).
+             */
+            showNotice(message) {
+                var note = document.createElement('p');
+
+                note.className = 'note';
+                note.style.flex = '1 1 100%';
+                note.textContent = message;
+
+                if (this.form) {
+                    this.form.replaceWith(note);
+                    this.form = null;
+                } else {
+                    this.shadowRoot.append(note);
+                }
+            }
+
+            /* Was this refusal the venue being closed, rather than a glitch? */
+            closedUs(failure) {
+                return !!failure && failure.code === 'bookings_closed';
+            }
+
             loadTypes() {
                 if (this.setting('booking-type')) {
                     this.loadTimes();
@@ -405,7 +449,15 @@
                     }
 
                     this.loadTimes();
-                }).catch(() => this.loadTimes());
+                }).catch((failure) => {
+                    if (this.closedUs(failure)) {
+                        this.showNotice(failure.notice);
+
+                        return;
+                    }
+
+                    this.loadTimes();
+                });
             }
 
             /*
@@ -453,8 +505,14 @@
 
                     fields.timeBox.hidden = false;
                     fields.button.disabled = false;
-                }).catch(function () {
-                    // Our API is unreachable. The form still works: the
+                }).catch((failure) => {
+                    if (this.closedUs(failure)) {
+                        this.showNotice(failure.notice);
+
+                        return;
+                    }
+
+                    // A glitch, not a closure. The form still works: the
                     // booking page asks for the time itself.
                     fields.timeBox.hidden = true;
                     fields.button.disabled = false;

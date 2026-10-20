@@ -48,10 +48,29 @@ const api = {
     },
 };
 
+/*
+ * A venue whose subscription has run out. EnsureBookingsAreOpen answers every
+ * first-party endpoint like this, and the widget is supposed to show the
+ * sentence rather than an empty box (SPEC §4.4).
+ */
+const closed = {
+    error: { code: 'bookings_closed', message: 'Online reservations are temporarily unavailable.' },
+};
+
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
 
 const server = createServer(async (req, res) => {
     const url = new URL(req.url, 'http://x');
+
+    if (url.pathname.startsWith('/api/internal/lapsed-taverna/')) {
+        res.writeHead(503, {
+            'content-type': 'application/json',
+            'access-control-allow-origin': '*',
+        });
+        res.end(JSON.stringify(closed));
+
+        return;
+    }
 
     if (api[url.pathname]) {
         res.writeHead(200, {

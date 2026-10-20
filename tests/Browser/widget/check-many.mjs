@@ -82,7 +82,23 @@ themes.explicitLight = {
 
 await override.close();
 
-console.log(JSON.stringify({ many, themes, problems }, null, 2));
+/* --- A venue that has not renewed --------------------------------------- */
+
+const lapsed = await browser.newPage();
+
+lapsed.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
+
+await lapsed.goto('http://127.0.0.1:8799/closed.html', { waitUntil: 'networkidle' });
+await lapsed.waitForTimeout(400);
+
+const closed = {
+    notice: ((await lapsed.locator('tablereserved-search .note').textContent()) ?? '').trim(),
+    stillHasAForm: (await lapsed.locator('tablereserved-search form').count()) > 0,
+};
+
+await lapsed.close();
+
+console.log(JSON.stringify({ many, themes, closed, problems }, null, 2));
 
 const expected = [
     [many.count === 3, 'not all three widgets rendered'],
@@ -96,6 +112,10 @@ const expected = [
     [themes.dark.background === 'rgb(28, 27, 25)', 'dark mode did not follow the device'],
     [themes.explicitLight.background === 'rgb(255, 255, 255)',
         'an explicit light theme lost to a dark device'],
+    [closed.notice === 'Online reservations are temporarily unavailable.',
+        'a venue that has not renewed did not show the sentence'],
+    [closed.stillHasAForm === false,
+        'a venue that has not renewed still shows a form that cannot work'],
     [problems.length === 0, 'the page reported errors'],
 ];
 

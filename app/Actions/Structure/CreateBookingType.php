@@ -6,9 +6,11 @@ namespace App\Actions\Structure;
 
 use App\Enums\BookingMode;
 use App\Enums\Occupancy;
+use App\Enums\PlanLimit;
 use App\Models\BookingType;
 use App\Models\OpeningHour;
 use App\Models\Venue;
+use App\Subscriptions\Entitlements;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -21,11 +23,17 @@ use Illuminate\Support\Str;
  */
 final class CreateBookingType
 {
+    public function __construct(private readonly Entitlements $entitlements) {}
+
     /**
      * @param  array<string, mixed>  $attributes
      */
     public function handle(Venue $venue, array $attributes): BookingType
     {
+        // Checked here rather than in the controller, because the API and the
+        // console reach this same action (SPEC §4.5).
+        $this->entitlements->ensureRoomFor(PlanLimit::BookingTypes);
+
         return DB::transaction(function () use ($venue, $attributes): BookingType {
             $bookingType = new BookingType;
 

@@ -12,6 +12,7 @@ use App\Listeners\AlertTheVenue;
 use App\Listeners\RecordVoucherDelivery;
 use App\Listeners\SendBookingVoucher;
 use App\Listeners\SendCancellationNotice;
+use App\Subscriptions\Entitlements;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,12 @@ class AppServiceProvider extends ServiceProvider
         // forget(), after a write, clears it for all of them.
         $this->app->scoped(OpeningHoursResolver::class);
         $this->app->scoped(AvailabilityEngine::class);
+
+        // Scoped rather than a singleton: what an account may do cannot
+        // change inside one request, so the plan is worth resolving once —
+        // but a queued worker moves between accounts, and a cached answer
+        // carried across that boundary is the wrong account's.
+        $this->app->scoped(Entitlements::class);
     }
 
     public function boot(): void

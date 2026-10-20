@@ -12,6 +12,7 @@ use App\Http\Requests\Structure\BulkCreateResourcesRequest;
 use App\Models\Area;
 use App\Models\Resource;
 use App\Models\ResourceTemplate;
+use App\Subscriptions\Exceptions\PlanDoesNotAllowThis;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -27,14 +28,18 @@ final class ResourceController extends Controller
             ? ResourceTemplate::query()->findOrFail($request->integer('template_id'))
             : null;
 
-        $created = $create->handle(
-            area: $area,
-            prefix: (string) $request->string('prefix'),
-            from: (int) $request->integer('from'),
-            to: (int) $request->integer('to'),
-            template: $template,
-            priceCentsOverride: $request->priceCents(),
-        );
+        try {
+            $created = $create->handle(
+                area: $area,
+                prefix: (string) $request->string('prefix'),
+                from: (int) $request->integer('from'),
+                to: (int) $request->integer('to'),
+                template: $template,
+                priceCentsOverride: $request->priceCents(),
+            );
+        } catch (PlanDoesNotAllowThis $exception) {
+            return back()->withInput()->with('error', $exception->getMessage());
+        }
 
         if ($created->isEmpty()) {
             return back()->withErrors([

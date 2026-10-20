@@ -53,3 +53,21 @@ Schedule::command('venues:daily-summary')
     ->hourly()
     ->withoutOverlapping()
     ->runInBackground();
+
+/*
+ * The subscription lifecycle (SPEC §4.3).
+ *
+ * Daily, early, in a quiet hour. This is what ends a trial and locks an
+ * account that has not paid, so without it running there is no subscription
+ * model — only a signup form that gives the product away. It is on the
+ * deployment checklist for exactly that reason.
+ *
+ * Deliberately not hourly. Nothing here is urgent to the hour, and an account
+ * that expires at 03:40 rather than 03:00 has lost nothing; running it once a
+ * day keeps the trial-reminder emails to one a day per account by
+ * construction rather than by a lock.
+ */
+Schedule::command('subscriptions:advance')
+    ->dailyAt('03:40')
+    ->withoutOverlapping()
+    ->runInBackground();

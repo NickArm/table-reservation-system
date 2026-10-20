@@ -32,6 +32,9 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // Before the demo account, which subscribes to one of them.
+        $this->call(PlanSeeder::class);
+
         $this->call(DemoRestaurantSeeder::class);
     }
 }

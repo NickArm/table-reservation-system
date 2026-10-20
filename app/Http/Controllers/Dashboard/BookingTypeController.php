@@ -20,6 +20,7 @@ use App\Models\PriceRule;
 use App\Models\Resource;
 use App\Models\ResourceTemplate;
 use App\Models\Venue;
+use App\Subscriptions\Exceptions\PlanDoesNotAllowThis;
 use App\Support\BookingTypePresets;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
@@ -55,17 +56,24 @@ final class BookingTypeController extends Controller
 
         $mode = BookingMode::from((string) $request->string('booking_mode'));
 
-        $bookingType = $create->handle($venue, [
-            ...CreateBookingType::defaultsFor($mode),
-            'name' => (string) $request->string('name'),
-            'description' => $request->input('description'),
-            'resource_type' => ResourceType::from((string) $request->string('resource_type')),
-            'booking_mode' => $mode,
-            'payment_requirement' => PaymentRequirement::from((string) $request->string('payment_requirement')),
-            'deposit_label' => $request->input('deposit_label'),
-            'default_price_cents' => $request->priceCents(),
-            'min_lead_time_minutes' => (int) $request->integer('min_lead_time_minutes'),
-        ]);
+        try {
+            $bookingType = $create->handle($venue, [
+                ...CreateBookingType::defaultsFor($mode),
+                'name' => (string) $request->string('name'),
+                'description' => $request->input('description'),
+                'resource_type' => ResourceType::from((string) $request->string('resource_type')),
+                'booking_mode' => $mode,
+                'payment_requirement' => PaymentRequirement::from((string) $request->string('payment_requirement')),
+                'deposit_label' => $request->input('deposit_label'),
+                'default_price_cents' => $request->priceCents(),
+                'min_lead_time_minutes' => (int) $request->integer('min_lead_time_minutes'),
+            ]);
+        } catch (PlanDoesNotAllowThis $exception) {
+            // The plan's own words, which name the number. Flashed rather
+            // than attached to a field: there is nothing on the form for the
+            // owner to correct.
+            return back()->withInput()->with('error', $exception->getMessage());
+        }
 
         return redirect()
             ->route('dashboard.booking-types.show', $bookingType)

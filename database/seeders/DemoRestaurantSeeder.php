@@ -9,7 +9,10 @@ use App\Actions\Guests\RecordGuest;
 use App\Actions\Structure\BulkCreateResources;
 use App\Actions\Structure\CreateBookingType;
 use App\Actions\Structure\SetResourceAvailability;
+use App\Actions\Subscriptions\RecordSubscriptionEvent;
+use App\Actions\Subscriptions\SyncTenantStatus;
 use App\Enums\ApiTokenMode;
+use App\Enums\BillingProvider;
 use App\Enums\BookingMode;
 use App\Enums\Channel;
 use App\Enums\Gateway;
@@ -23,6 +26,7 @@ use App\Enums\PriceRuleType;
 use App\Enums\ReservationStatus;
 use App\Enums\ResourceType;
 use App\Enums\StructureScope;
+use App\Enums\SubscriptionEventType;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
 use App\Models\ApiToken;
@@ -30,15 +34,19 @@ use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Guest;
 use App\Models\PaymentGatewaySetting;
+use App\Models\Plan;
 use App\Models\PriceRule;
 use App\Models\Reservation;
 use App\Models\ReservationHold;
 use App\Models\Resource;
 use App\Models\ResourceTemplate;
+use App\Models\Subscription;
+use App\Models\SubscriptionEvent;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
 use App\Notifications\BookingArrived;
+use App\Support\Money;
 use App\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Faker\Factory as FakerFactory;
@@ -153,6 +161,7 @@ class DemoRestaurantSeeder extends Seeder
             $this->fillTheBell($venue, [$owner, $staff]);
             $this->annotateGuests();
             $this->createApiTokens();
+            $this->createSubscription();
         });
 
         $this->report();
@@ -845,6 +854,75 @@ class DemoRestaurantSeeder extends Seeder
         Storage::disk(config('media.disk'))->put($destination, file_get_contents($path));
 
         return $destination;
+    }
+
+    /**
+     * The demo account is a paying customer (SPEC §4).
+     *
+     * On the monthly plan, two months in, with the history to match — so the
+     * billing page shows what a real account's looks like rather than an
+     * empty state. A demo that only ever shows the empty version of a screen
+     * is a demo of the screen, not of the product.
+     */
+    private function createSubscription(): void
+    {
+        $plan = Plan::query()->where('slug', 'monthly')->first();
+
+        if (! $plan instanceof Plan) {
+            return;
+        }
+
+        $start = CarbonImmutable::now()->subMonths(2)->startOfDay();
+
+        $subscription = Subscription::query()->create([
+            'plan_id' => $plan->id,
+            'status' => TenantStatus::Active,
+            'current_period_start' => $start->addMonth(),
+            'current_period_end' => $start->addMonths(2),
+            'provider' => BillingProvider::Stripe,
+            'price_cents' => $plan->price_cents,
+            'currency' => 'EUR',
+        ]);
+
+        $events = app(RecordSubscriptionEvent::class);
+
+        $subscription->setRelation('plan', $plan);
+
+        $events->handle(
+            $subscription,
+            SubscriptionEventType::Started,
+            'Started on Monthly, '.Money::format((int) $plan->price_cents).' per month.',
+            (int) $plan->price_cents,
+        );
+
+        $events->handle(
+            $subscription,
+            SubscriptionEventType::Renewed,
+            'Renewed until '.$subscription->current_period_end?->format('j M Y').', '
+                .Money::format((int) $plan->price_cents).'.',
+            (int) $plan->price_cents,
+        );
+
+        // Backdated so the history reads as two months rather than as two
+        // things that happened in the same second.
+        SubscriptionEvent::query()->where('subscription_id', $subscription->id)
+            ->orderBy('id')->get()
+            ->each(function (SubscriptionEvent $event, int $index) use ($start): void {
+                $event->forceFill([
+                    'occurred_at' => $start->addMonths($index),
+                ])->save();
+            });
+
+        $this->tenantStatus();
+    }
+
+    private function tenantStatus(): void
+    {
+        $tenant = Tenant::query()->where('slug', self::SLUG)->first();
+
+        if ($tenant instanceof Tenant) {
+            app(SyncTenantStatus::class)->handle($tenant);
+        }
     }
 
     /**

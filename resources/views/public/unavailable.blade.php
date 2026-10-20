@@ -8,7 +8,7 @@
             {{ $venue?->name ?? $tenant->name }}
         </h1>
 
-        <p style="margin:0 0 20px">Online reservations are temporarily unavailable.</p>
+        <p style="margin:0 0 20px">{{ $message ?? 'Online reservations are temporarily unavailable.' }}</p>
 
         @if (filled($venue?->phone))
             <p class="muted" style="margin:0">

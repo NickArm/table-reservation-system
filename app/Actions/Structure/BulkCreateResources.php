@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Actions\Structure;
 
+use App\Enums\PlanLimit;
 use App\Enums\ResourceType;
 use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Resource;
 use App\Models\ResourceTemplate;
+use App\Subscriptions\Entitlements;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class BulkCreateResources
 {
+    public function __construct(private readonly Entitlements $entitlements) {}
+
     /**
      * @return Collection<int, Resource>
      */
@@ -35,6 +39,15 @@ final class BulkCreateResources
         if ($to < $from) {
             [$from, $to] = [$to, $from];
         }
+
+        /*
+         * The whole batch is checked against the limit before any of it is
+         * written, so "A1 to A20" with room for twelve is refused with a
+         * number rather than creating twelve and stopping. Half a row of
+         * sunbeds is worse than none: the owner has to work out which ones
+         * exist before they can try again.
+         */
+        $this->entitlements->ensureRoomFor(PlanLimit::Resources, $to - $from + 1);
 
         $bookingType = BookingType::query()->findOrFail($area->booking_type_id);
 

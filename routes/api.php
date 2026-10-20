@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Api\V1\OpenApi;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Middleware\AuthenticateApiToken;
+use App\Http\Middleware\EnsureBookingsAreOpen;
 use App\Http\Middleware\IdentifyTenantFromPath;
 use App\Http\Middleware\NoteWidgetSighting;
 use Illuminate\Support\Facades\Route;
@@ -65,7 +66,20 @@ Route::prefix('v1')
 */
 
 Route::prefix('internal/{tenant}')
-    ->middleware([IdentifyTenantFromPath::class, NoteWidgetSighting::class, 'throttle:120,1'])
+    ->middleware([
+        IdentifyTenantFromPath::class,
+        NoteWidgetSighting::class,
+
+        /*
+         * The same gate as the public pages (SPEC §4.4). Without it an
+         * expired venue's widget went on offering times that nobody could
+         * book — an empty box on the customer's homepage instead of the one
+         * calm sentence they were promised.
+         */
+        EnsureBookingsAreOpen::class,
+
+        'throttle:120,1',
+    ])
     ->name('api.internal.')
     ->group(function (): void {
         Route::get('venue', [AvailabilityController::class, 'venue'])->name('venue');
