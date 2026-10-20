@@ -136,10 +136,21 @@
                 <div class="row">
                     <button type="submit" class="btn">Save</button>
 
-                    @if ($gateway->needsCredentials() && $setting?->hasCredentials())
-                        <button type="submit" class="btn btn--ghost"
-                                formaction="{{ route('dashboard.payments.test', $gateway->value) }}">
-                            Test connection
+                    {{--
+                        One form, one method, one address. The previous
+                        version used `formaction` to point this button at the
+                        test route, which changes the URL and not the method —
+                        so the form's own PATCH went to a POST-only route and
+                        the owner got a 405 instead of an answer.
+
+                        It saves first on purpose: somebody who has just typed
+                        a key and pressed this means "is this one right", and
+                        testing without saving would check the previous key
+                        and report success.
+                    --}}
+                    @if ($gateway->needsCredentials())
+                        <button type="submit" name="test" value="1" class="btn btn--ghost">
+                            Save and test
                         </button>
                     @endif
 

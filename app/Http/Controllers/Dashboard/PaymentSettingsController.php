@@ -47,7 +47,7 @@ final class PaymentSettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request, Gateway $gateway): RedirectResponse
+    public function update(Request $request, Gateway $gateway, GatewayManager $gateways): RedirectResponse
     {
         $validated = $request->validate([
             'mode' => ['required', Rule::enum(GatewayMode::class)],
@@ -87,6 +87,16 @@ final class PaymentSettingsController extends Controller
             $this->deactivateOthers($gateway);
         }
 
+        /*
+         * "Save and test" is one press, because that is what somebody who has
+         * just typed a key means by it. Testing without saving would check
+         * the *previous* key and report success — the most misleading answer
+         * available.
+         */
+        if ($request->boolean('test') && $gateway->needsCredentials()) {
+            return $this->reportOn($gateway, $gateways, saved: true);
+        }
+
         return back()->with('status', "{$gateway->label()} saved.");
     }
 
@@ -96,6 +106,20 @@ final class PaymentSettingsController extends Controller
      */
     public function test(Gateway $gateway, GatewayManager $gateways): RedirectResponse
     {
+        return $this->reportOn($gateway, $gateways);
+    }
+
+    /**
+     * Makes the call and writes down what happened.
+     *
+     * Shared by the endpoint and by "save and test", so the two can never
+     * drift into reporting the same failure differently.
+     */
+    private function reportOn(
+        Gateway $gateway,
+        GatewayManager $gateways,
+        bool $saved = false,
+    ): RedirectResponse {
         $setting = PaymentGatewaySetting::query()->where('gateway', $gateway->value)->firstOrFail();
 
         try {
@@ -109,9 +133,13 @@ final class PaymentSettingsController extends Controller
             'last_test_result' => $result['ok'] ? 'ok' : $result['message'],
         ])->save();
 
+        $prefix = $saved ? "{$gateway->label()} saved. " : '';
+
         return $result['ok']
-            ? back()->with('status', $result['message'])
-            : back()->withErrors(['gateway' => $result['message']]);
+            ? back()->with('status', $prefix.$result['message'])
+            : back()
+                ->with('status', $saved ? "{$gateway->label()} saved." : null)
+                ->withErrors(['gateway' => $result['message']]);
     }
 
     /**

@@ -31,6 +31,63 @@ final class PaymentSettingsTest extends TestCase
     }
 
     #[Test]
+    public function save_and_test_is_one_press_through_the_same_form(): void
+    {
+        // Exactly the request the browser sends: the settings form's own
+        // PATCH, with the test button's name and value alongside the fields.
+        //
+        // The previous version of that button used `formaction` to point at
+        // a POST-only route, which changes the address and not the method —
+        // so pressing it produced a 405 instead of an answer. The endpoint
+        // had a test; the button did not, which is why nothing caught it.
+        Http::fake(['api.stripe.com/v1/balance' => Http::response(['object' => 'balance'])]);
+
+        $this->patch(route('dashboard.payments.update', Gateway::Stripe->value), [
+            'mode' => GatewayMode::Test->value,
+            'secret_key' => 'sk_test_abcdefghijklmnop1234',
+            'is_active' => '1',
+            'test' => '1',
+        ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $setting = $this->asTenant(
+            static fn (): PaymentGatewaySetting => PaymentGatewaySetting::query()->firstOrFail()
+        );
+
+        // Both halves happened: the key is stored, and it was tried.
+        $this->assertSame('sk_test_abcdefghijklmnop1234', $setting->credential('secret_key'));
+        $this->assertNotNull($setting->last_tested_at);
+        $this->assertSame('ok', $setting->last_test_result);
+    }
+
+    #[Test]
+    public function a_key_that_does_not_work_is_still_saved_and_the_failure_reported(): void
+    {
+        Http::fake(['api.stripe.com/v1/balance' => Http::response(
+            ['error' => ['message' => 'Invalid API Key provided.']],
+            401,
+        )]);
+
+        $this->patch(route('dashboard.payments.update', Gateway::Stripe->value), [
+            'mode' => GatewayMode::Test->value,
+            'secret_key' => 'sk_test_wrong_one_here_1234',
+            'test' => '1',
+        ])
+            ->assertRedirect()
+            ->assertSessionHasErrors('gateway');
+
+        $setting = $this->asTenant(
+            static fn (): PaymentGatewaySetting => PaymentGatewaySetting::query()->firstOrFail()
+        );
+
+        // Saving it anyway matters: the owner can correct one character
+        // rather than retyping the whole key.
+        $this->assertSame('sk_test_wrong_one_here_1234', $setting->credential('secret_key'));
+        $this->assertNotSame('ok', $setting->last_test_result);
+    }
+
+    #[Test]
     public function a_venue_with_no_gateway_is_told_that_is_fine(): void
     {
         $this->get(route('dashboard.payments.edit'))
