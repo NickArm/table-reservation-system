@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\PlatformDocumentType;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\LegalController as AdminLegalController;
 use App\Http\Controllers\Admin\OverviewController as AdminOverviewController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Admin\TenantController as AdminTenantController;
@@ -27,8 +29,10 @@ use App\Http\Controllers\Dashboard\PriceRuleController;
 use App\Http\Controllers\Dashboard\ReservationController as DashboardReservationController;
 use App\Http\Controllers\Dashboard\ReservationListController;
 use App\Http\Controllers\Dashboard\ResourceController;
+use App\Http\Controllers\Dashboard\TermsAcceptanceController;
 use App\Http\Controllers\Dashboard\TodayController;
 use App\Http\Controllers\Dashboard\WidgetController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MailWebhookController;
 use App\Http\Controllers\PublicSite\BookingPageController;
 use App\Http\Controllers\PublicSite\CheckoutController;
@@ -47,6 +51,27 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::view('/', 'marketing.home')->name('home');
+
+/*
+|--------------------------------------------------------------------------
+| The platform's legal pages (SPEC §12.2)
+|--------------------------------------------------------------------------
+|
+| Public, indexable, and reachable without an account — they have to be, or
+| the links in the sign-up form go nowhere for exactly the person who needs to
+| read them before signing up.
+|
+| The addresses come from the enum rather than being written here, because
+| they end up in contracts, in emails and on other people's websites: /terms
+| is a promise, not a routing detail.
+*/
+
+Route::get('{type}', LegalController::class)
+    ->whereIn('type', array_map(
+        static fn (PlatformDocumentType $case): string => $case->path(),
+        PlatformDocumentType::cases(),
+    ))
+    ->name('legal');
 
 /*
 |--------------------------------------------------------------------------
@@ -213,6 +238,15 @@ Route::prefix('admin')
         Route::get('plans/{plan}', [AdminPlanController::class, 'edit'])->name('plans.edit');
         Route::patch('plans/{plan}', [AdminPlanController::class, 'update'])->name('plans.update');
 
+        /*
+         * The legal texts, editable without a deploy (SPEC §12.2). That is
+         * the requirement: the wording comes from a lawyer, will arrive
+         * twice, and probably after the first customer has signed up.
+         */
+        Route::get('legal', [AdminLegalController::class, 'index'])->name('legal.index');
+        Route::get('legal/{type}', [AdminLegalController::class, 'edit'])->name('legal.edit');
+        Route::patch('legal/{type}', [AdminLegalController::class, 'update'])->name('legal.update');
+
         Route::get('audit', AdminAuditController::class)->name('audit');
     });
 
@@ -321,6 +355,14 @@ Route::prefix('dashboard')
             ->name('billing.returned');
         Route::post('billing/cancel', [BillingCheckoutController::class, 'cancel'])
             ->name('billing.cancel');
+
+        /*
+         * Agreeing to a new version of the terms (SPEC §12.2). Exempt from
+         * the read-only lock: an expired account is still shown the banner,
+         * and refusing the one button on it would be absurd.
+         */
+        Route::post('terms/accept', TermsAcceptanceController::class)
+            ->name('terms.accept');
 
         /*
          * The snippet for the venue's own website (SPEC §9.4).

@@ -32,6 +32,13 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        /*
+         * The placeholder legal texts, before anything else that might want
+         * to accept them (SPEC §12.2). The real wording arrives from a
+         * lawyer through the admin screen, without a deploy.
+         */
+        $this->call(PlatformDocumentSeeder::class);
+
         // Before the demo account, which subscribes to one of them.
         $this->call(PlanSeeder::class);
 

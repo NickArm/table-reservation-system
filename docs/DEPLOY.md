@@ -232,6 +232,39 @@ Two things worth knowing before using it on a live account:
   Everything done while in there looks, in every other table, exactly like the
   owner doing it; the log is the only thing that can say otherwise afterwards.
 
+## 6b. The legal pages
+
+`/terms`, `/privacy`, `/dpa` and `/cookies` are live from the first deploy,
+carrying **placeholder text that says so in as many words** — the public page
+prints *"Draft — pending legal review"* above it. That is deliberate: a
+half-finished legal page that looks finished is worse than an obviously
+unfinished one.
+
+The real wording goes in from *Admin → Legal*, **without a deploy**. Paste it
+as Markdown, give it a version number, and press Publish.
+
+Two things to know before doing that:
+
+- **A published version cannot be edited.** Accounts agree to a version by
+  name, so changing the words afterwards would quietly rewrite an agreement
+  somebody already made. Every revision gets a new version number; the old
+  one is kept and still readable in the editor's history.
+- **"Venues have to agree again" puts a banner on every dashboard** until each
+  one agrees. Tick it for a real change only. A typo fix should not interrupt
+  four hundred venues, and a banner that appears every time is one nobody
+  reads by the third time.
+
+The placeholder text is not filler — it states the three things that matter
+commercially and are easy to get wrong, so a lawyer has something to correct
+rather than a blank page: the venue is the seller to the guest, tax compliance
+is the venue's, and we are the processor rather than the controller of a
+venue's guest list.
+
+⚠️ **The sign-up form links to `/terms` and `/privacy` and requires the box to
+be ticked.** Until the real text is published, anybody registering is agreeing
+to a page that says it is a draft. Fine while this is only us looking at it;
+not fine for a paying customer.
+
 ## 7. Mail delivery
 
 In Brevo, add the webhook so that bounces come back to us (SPEC §10.3):

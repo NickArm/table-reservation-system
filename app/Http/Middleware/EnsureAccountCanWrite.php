@@ -46,6 +46,10 @@ final class EnsureAccountCanWrite
         'dashboard.billing.checkout',
         'dashboard.billing.cancel',
         'dashboard.notifications.read',
+
+        // Agreeing to new terms (SPEC §12.2). An expired account still sees
+        // the banner, and refusing the one button on it would be absurd.
+        'dashboard.terms.accept',
         'logout',
     ];
 

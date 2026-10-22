@@ -23,6 +23,8 @@ enum AuditAction: string
     case PlanCreated = 'plan_created';
     case PlanUpdated = 'plan_updated';
     case PlanRetired = 'plan_retired';
+    case LegalDocumentPublished = 'legal_document_published';
+    case TermsAccepted = 'terms_accepted';
 
     public function label(): string
     {
@@ -36,6 +38,8 @@ enum AuditAction: string
             self::PlanCreated => 'Plan created',
             self::PlanUpdated => 'Plan changed',
             self::PlanRetired => 'Plan retired',
+            self::LegalDocumentPublished => 'Legal text published',
+            self::TermsAccepted => 'Terms accepted',
         };
     }
 

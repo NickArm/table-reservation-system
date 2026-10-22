@@ -24,6 +24,29 @@
         </div>
     @endif
 
+    {{--
+        The terms changed and this account has not agreed to the new version
+        (SPEC §12.2). Informational rather than alarming — nothing is blocked,
+        the account works exactly as before — but it stays until they agree,
+        because a notice that can be dismissed is a notice that was.
+    --}}
+    @if (($termsChange ?? null) !== null)
+        <div class="terms-change">
+            <span>
+                Our <a href="{{ route('legal', 'terms') }}" target="_blank" rel="noopener">terms</a>
+                have changed.
+                @if (filled($termsChange->change_summary))
+                    {{ rtrim($termsChange->change_summary, '.') }}.
+                @endif
+            </span>
+
+            <form method="POST" action="{{ route('dashboard.terms.accept') }}">
+                @csrf
+                <button type="submit">I agree</button>
+            </form>
+        </div>
+    @endif
+
     <header class="topbar">
         <div class="topbar__inner">
             <strong style="flex:none">{{ $tenant->name }}</strong>

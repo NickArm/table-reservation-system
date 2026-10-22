@@ -1556,3 +1556,113 @@ details.advanced > summary {
 }
 
 .impersonating button:hover { background: rgba(255, 255, 255, 0.14); }
+
+/*
+ * The platform's legal pages (SPEC §12.2).
+ *
+ * `.prose` exists only here: it styles HTML produced from Markdown, where
+ * there is no chance to put a class on anything. Everywhere else in the
+ * application the markup is ours and carries its own classes.
+ */
+.legal-head {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.legal-head__inner {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    font-weight: 600;
+}
+
+.legal-head__inner a { color: var(--ink); text-decoration: none; }
+
+.prose { max-width: 68ch; }
+
+.prose h2 {
+    margin: 32px 0 12px;
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+.prose h3 {
+    margin: 24px 0 8px;
+    font-size: var(--step-1);
+    font-weight: 600;
+}
+
+.prose p,
+.prose ul,
+.prose ol { margin: 0 0 16px; }
+
+.prose ul,
+.prose ol { padding-left: 22px; }
+
+.prose li { margin-bottom: 6px; }
+
+.prose a { color: var(--accent); }
+
+.prose table {
+    width: 100%;
+    margin: 0 0 16px;
+    border-collapse: collapse;
+    font-size: var(--step--1);
+}
+
+.prose th,
+.prose td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.prose th { font-weight: 600; }
+
+.legal-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: var(--step--1);
+}
+
+/*
+ * The re-acceptance banner (SPEC §12.2).
+ *
+ * Informational rather than alarming: the terms changed, which is normal, and
+ * the account keeps working until they agree. Louder than a notice because it
+ * has to be noticed; quieter than the impersonation bar because nothing is
+ * wrong.
+ */
+.terms-change {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    background: #1e3a5f;
+    color: #fff;
+    font-size: var(--step--1);
+    text-align: center;
+}
+
+.terms-change a { color: #fff; text-decoration: underline; }
+
+.terms-change button {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    padding: 5px 12px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.terms-change button:hover { background: rgba(255, 255, 255, 0.14); }

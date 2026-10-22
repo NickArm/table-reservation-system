@@ -40,6 +40,23 @@
                    type="password" required autocomplete="new-password">
         </div>
 
+        {{--
+            Agreeing to the terms (SPEC §12.2). Unticked by default and
+            required — a pre-ticked box is not consent anywhere in the EU, and
+            the links have to be real links rather than plain text, because
+            agreeing to something you cannot open is the thing that makes a
+            clause unenforceable.
+        --}}
+        <label class="consent">
+            <input type="checkbox" name="terms" value="1" required @checked(old('terms'))>
+            <span>
+                I agree to the
+                <a href="{{ route('legal', 'terms') }}" target="_blank" rel="noopener">Terms of Service</a>
+                and the
+                <a href="{{ route('legal', 'privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+        </label>
+
         <button class="btn btn--block" type="submit">Create account</button>
     </form>
 @endsection

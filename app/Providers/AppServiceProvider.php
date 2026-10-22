@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Actions\Tenants\AcceptPlatformTerms;
 use App\Availability\AvailabilityEngine;
 use App\Availability\OpeningHoursResolver;
 use App\Events\ReservationWasCancelled;
@@ -81,6 +82,19 @@ class AppServiceProvider extends ServiceProvider
             $view->with('bell', $user === null
                 ? collect()
                 : $user->unreadNotifications()->latest()->limit(8)->get());
+
+            /*
+             * Whether the terms changed since this account agreed to them
+             * (SPEC §12.2). Here rather than in a controller for the same
+             * reason as the bell: it belongs to the shell, and a banner that
+             * only appeared on whichever screens remembered to look it up
+             * would be a banner nobody sees.
+             */
+            $tenant = app(TenantContext::class)->get();
+
+            $view->with('termsChange', $tenant === null
+                ? null
+                : app(AcceptPlatformTerms::class)->outstandingFor($tenant));
         });
     }
 

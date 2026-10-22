@@ -33,6 +33,7 @@ final class RegistrationTest extends TestCase
             'email' => 'nick@example.com',
             'password' => 'correct-horse-battery',
             'password_confirmation' => 'correct-horse-battery',
+            'terms' => '1',
         ]);
 
         $response->assertRedirect(route('verification.notice'));
@@ -70,6 +71,7 @@ final class RegistrationTest extends TestCase
             'email' => 'nick@example.com',
             'password' => 'correct-horse-battery',
             'password_confirmation' => 'correct-horse-battery',
+            'terms' => '1',
         ]);
 
         // An old link must never resolve to a different venue (SPEC §29.3).
@@ -85,6 +87,7 @@ final class RegistrationTest extends TestCase
             'email' => 'nick@example.com',
             'password' => 'correct-horse-battery',
             'password_confirmation' => 'correct-horse-battery',
+            'terms' => '1',
         ]);
 
         $this->assertNull(Tenant::firstWhere('slug', 'admin'));
@@ -102,6 +105,7 @@ final class RegistrationTest extends TestCase
             'email' => 'taken@example.com',
             'password' => 'correct-horse-battery',
             'password_confirmation' => 'correct-horse-battery',
+            'terms' => '1',
         ])->assertSessionHasErrors('email');
 
         $this->assertGuest();
