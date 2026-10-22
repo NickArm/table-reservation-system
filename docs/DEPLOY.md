@@ -318,6 +318,54 @@ land in spam. Brevo's own setup page walks through the DNS records.
 Payment webhooks are **per venue** and are shown, with the venue's own
 address filled in, on the dashboard's *Payments* screen.
 
+## 8. Error tracking
+
+`sentry/sentry-laravel` is installed. With `SENTRY_LARAVEL_DSN` empty nothing
+is sent and nothing breaks, which is how every developer machine and the test
+suite run — so this step is optional until there are real venues on the system,
+and worth doing before there are. Hearing about a broken checkout from a
+customer's telephone call is a bad place to be.
+
+Create a project at sentry.io, paste its DSN into `.env`, and set
+`SENTRY_RELEASE` from the deploy script:
+
+```bash
+SENTRY_RELEASE=$(git rev-parse --short HEAD)
+```
+
+`config/sentry.php` is written by hand rather than published by the package,
+because two of its defaults work against us (SPEC §30.2) and the reasons are
+in the comments there:
+
+- **`send_default_pii` is hard-coded off**, not read from the environment.
+  Left on, Sentry attaches the request body, headers, cookies and IP of every
+  failed request by itself — and the request body of the page that matters
+  most here is a booking form with a tourist's name, email and telephone in
+  it. That contradicts our own privacy page.
+- **Every event passes through `App\Observability\SentryScrubber`** before it
+  leaves. This is the one that is easy to miss: a stack trace carries the
+  local variables of every frame, so a failure inside the payment flow
+  carries a venue's **live gateway secret** without anybody having sent it.
+  The scrubber redacts secrets and contact details by key name and by shape,
+  including inside stack frames and exception messages.
+
+Both are covered by tests, including one asserting the scrubber is not a
+closure — a closure in a config file cannot be serialised, so `config:cache`
+would fail on every deploy.
+
+In Sentry itself, set alerts for **a new kind of error** and **a sudden
+increase**, not for every event. Alerts on everything are alerts you stop
+reading inside a week.
+
+### What to watch
+
+Payments, webhooks and queue jobs. That is where money breaks.
+
+Deliberately **not** reported, because none of it means anything is wrong:
+404s, validation errors, expired holds, failed logins, CSRF mismatches. One
+exception is never ignored — `TenantNotResolved`, which means a query was
+about to cross between two venues.
+
 ---
 
 ## Things that bite on a first MySQL deploy
