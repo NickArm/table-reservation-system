@@ -7,6 +7,7 @@ namespace App\Actions\Subscriptions;
 use App\Enums\TenantStatus;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use Carbon\CarbonImmutable;
 
 /**
  * Writes the tenant's cached status from its subscription (SPEC §4.3).
@@ -99,9 +100,9 @@ final readonly class SyncTenantStatus
      */
     private function afterAFailedPayment(Subscription $subscription): TenantStatus
     {
-        $failedAt = $subscription->payment_failed_at;
+        $locksOn = $this->locksOn($subscription);
 
-        if ($failedAt === null) {
+        if ($locksOn === null) {
             return TenantStatus::Active;
         }
 
@@ -111,14 +112,30 @@ final readonly class SyncTenantStatus
             return TenantStatus::PastDue;
         }
 
+        return $locksOn->isFuture() ? TenantStatus::Grace : TenantStatus::Expired;
+    }
+
+    /**
+     * The day the booking page stops, on the current failure.
+     *
+     * Public because the dunning emails have to name this date, and a second
+     * copy of the rule is the kind of duplication that eventually tells an
+     * owner one date and locks them on another. Null when nothing has failed.
+     */
+    public function locksOn(Subscription $subscription): ?CarbonImmutable
+    {
+        $failedAt = $subscription->payment_failed_at;
+
+        if ($failedAt === null) {
+            return null;
+        }
+
         $periodEnd = $subscription->current_period_end;
 
         $graceStarts = $periodEnd !== null && $periodEnd->greaterThan($failedAt)
             ? $periodEnd
             : $failedAt;
 
-        return $graceStarts->addDays((int) config('tenancy.grace_days'))->isFuture()
-            ? TenantStatus::Grace
-            : TenantStatus::Expired;
+        return $graceStarts->addDays((int) config('tenancy.grace_days'));
     }
 }

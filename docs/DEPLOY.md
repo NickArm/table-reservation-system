@@ -170,9 +170,15 @@ after the first deploy, run it once by hand and read what it says:
 php artisan subscriptions:advance
 ```
 
-It prints how many accounts it checked and how many it moved. A run that
-reports `Checked 0` means no accounts exist yet; a run that errors means the
-cron would have been failing silently every night.
+It prints three lines: how many accounts it checked and moved, how many trial
+reminders went out, and how many payment-failure notices. A run that reports
+`Checked 0` means no accounts exist yet; a run that errors means the cron would
+have been failing silently every night.
+
+The payment-failure notices are the ones that matter commercially once real
+money is involved: a card that expires is chased on days one, three and seven,
+and without this cron the owner's first and only warning is their booking page
+going quiet.
 
 **If the host will not run a queue worker at all**, set `QUEUE_CONNECTION=sync`
 in `.env`. Everything still works and nothing is lost — the guest simply waits

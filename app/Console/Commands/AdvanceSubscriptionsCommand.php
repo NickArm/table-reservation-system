@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Actions\Subscriptions\AdvanceLifecycle;
+use App\Actions\Subscriptions\SendDunningNotices;
 use App\Actions\Subscriptions\SendTrialReminders;
 use Illuminate\Console\Command;
 
@@ -21,8 +22,11 @@ final class AdvanceSubscriptionsCommand extends Command
 
     protected $description = 'Move every account to the subscription state it should be in today';
 
-    public function handle(AdvanceLifecycle $lifecycle, SendTrialReminders $reminders): int
-    {
+    public function handle(
+        AdvanceLifecycle $lifecycle,
+        SendTrialReminders $reminders,
+        SendDunningNotices $dunning,
+    ): int {
         $moved = $lifecycle->handle();
 
         $this->info(sprintf(
@@ -41,6 +45,20 @@ final class AdvanceSubscriptionsCommand extends Command
 
         $this->info(sprintf('Trial reminders: sent %d, failed %d.', $sent['sent'], $sent['failed']));
 
-        return $sent['failed'] > 0 ? self::FAILURE : self::SUCCESS;
+        /*
+         * The statuses move first, the emails go second, and that order
+         * matters: a notice has to be able to say whether the booking page
+         * has already stopped, and it reads that from the state this run has
+         * just settled.
+         */
+        $chased = $dunning->handle();
+
+        $this->info(sprintf(
+            'Payment failure notices: sent %d, failed %d.',
+            $chased['sent'],
+            $chased['failed'],
+        ));
+
+        return $sent['failed'] > 0 || $chased['failed'] > 0 ? self::FAILURE : self::SUCCESS;
     }
 }

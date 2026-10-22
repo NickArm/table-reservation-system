@@ -53,6 +53,10 @@ final readonly class RenewSubscription
                 'current_period_start' => $start,
                 'current_period_end' => $period->endFrom($start),
                 'payment_failed_at' => null,
+
+                // Chased from the beginning if the card fails again. The mark
+                // is per failure, not per account.
+                'dunning_sent_for' => null,
             ])->save();
 
             $charged = $amountCents ?? (int) $subscription->price_cents;
