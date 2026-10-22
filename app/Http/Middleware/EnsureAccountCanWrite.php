@@ -43,6 +43,8 @@ final class EnsureAccountCanWrite
      */
     private const ALWAYS_ALLOWED = [
         'dashboard.billing',
+        'dashboard.billing.checkout',
+        'dashboard.billing.cancel',
         'dashboard.notifications.read',
         'logout',
     ];

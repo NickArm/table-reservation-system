@@ -6,7 +6,9 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BillingWebhookController;
 use App\Http\Controllers\Dashboard\AreaController;
+use App\Http\Controllers\Dashboard\BillingCheckoutController;
 use App\Http\Controllers\Dashboard\BillingController;
 use App\Http\Controllers\Dashboard\BookingTypeController;
 use App\Http\Controllers\Dashboard\CalendarController;
@@ -233,6 +235,25 @@ Route::prefix('dashboard')
         Route::get('billing', [BillingController::class, 'show'])->name('billing');
 
         /*
+         * Paying for it (SPEC §4.3).
+         *
+         * These three are exempt from the read-only lock for the same reason
+         * the page is: the account we are locking is the account we want to
+         * take money from.
+         *
+         * The return is a GET because a payment provider redirects a browser
+         * back, and a browser follows a redirect with a GET. It is not
+         * trusted on that account — the controller asks the provider what
+         * happened rather than believing the address.
+         */
+        Route::post('billing/checkout/{plan}', [BillingCheckoutController::class, 'start'])
+            ->name('billing.checkout');
+        Route::get('billing/returned/{provider}', [BillingCheckoutController::class, 'returned'])
+            ->name('billing.returned');
+        Route::post('billing/cancel', [BillingCheckoutController::class, 'cancel'])
+            ->name('billing.cancel');
+
+        /*
          * The snippet for the venue's own website (SPEC §9.4).
          *
          * Read-only: nothing is saved, because the settings are the snippet.
@@ -312,6 +333,21 @@ Route::prefix('dashboard')
 | (SPEC §7.4). No session, no CSRF token — a gateway has neither — so the
 | signature is the only thing standing between us and anybody with curl.
 */
+
+/*
+ * Our own provider, about subscriptions (SPEC §4.3).
+ *
+ * Registered before the per-venue route below and with no account in the
+ * path, because this is the platform's single Stripe or PayPal account
+ * rather than a venue's. Which account a notice concerns is read out of the
+ * notice itself, after it has been verified.
+ *
+ * This is where a renewal eleven months from now arrives, and nowhere else:
+ * nobody is sitting in a browser when a card is charged for the second time.
+ */
+Route::post('webhooks/billing/{provider}', BillingWebhookController::class)
+    ->whereIn('provider', ['stripe', 'paypal'])
+    ->name('webhooks.billing');
 
 Route::post('webhooks/{gateway}/{tenantUuid}', WebhookController::class)
     ->whereIn('gateway', ['stripe', 'paypal'])

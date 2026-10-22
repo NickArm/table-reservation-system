@@ -892,6 +892,15 @@ class DemoRestaurantSeeder extends Seeder
             'current_period_start' => CarbonImmutable::now()->subDays(10)->startOfDay(),
             'current_period_end' => CarbonImmutable::now()->addDays(20)->startOfDay(),
             'provider' => BillingProvider::Stripe,
+
+            /*
+             * No `provider_subscription_id` on purpose. There is no
+             * subscription at Stripe behind this row — the demo is seeded, not
+             * bought — and putting a plausible-looking id here would make the
+             * Cancel button call Stripe about something that does not exist.
+             * Empty, the cancellation is simply recorded locally, which is
+             * what a demo should do.
+             */
             'price_cents' => $plan->price_cents,
             'currency' => 'EUR',
         ]);
@@ -907,6 +916,22 @@ class DemoRestaurantSeeder extends Seeder
             (int) $plan->price_cents,
         );
 
+        /*
+         * One failed payment that recovered, because that is the sequence the
+         * billing code actually produces and the one an owner will one day
+         * ring about. A history that only ever says "renewed" demonstrates
+         * the happy path and nothing else.
+         *
+         * History only — `payment_failed_at` stays null, so the demo account
+         * is not sitting in past_due.
+         */
+        $events->handle(
+            $subscription,
+            SubscriptionEventType::PaymentFailed,
+            'Payment failed: your card has expired.',
+            (int) $plan->price_cents,
+        );
+
         $events->handle(
             $subscription,
             SubscriptionEventType::Renewed,
@@ -915,7 +940,7 @@ class DemoRestaurantSeeder extends Seeder
             (int) $plan->price_cents,
         );
 
-        // Backdated so the history reads as two months rather than as two
+        // Backdated so the history reads as two months rather than as three
         // things that happened in the same second.
         SubscriptionEvent::query()->where('subscription_id', $subscription->id)
             ->orderBy('id')->get()

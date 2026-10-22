@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BillingPeriod;
+use App\Enums\BillingProvider;
 use App\Enums\Feature;
 use App\Enums\PlanLimit;
 use App\Support\Money;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'name', 'slug', 'description', 'billing_period',
     'price_cents', 'currency', 'trial_days',
+    'stripe_price_id', 'paypal_plan_id',
     'limits', 'features', 'is_public', 'is_active', 'sort_order',
 ])]
 class Plan extends Model
@@ -97,6 +99,22 @@ class Plan extends Model
     public function isFree(): bool
     {
         return (int) $this->price_cents === 0;
+    }
+
+    /**
+     * Can this plan be bought through that provider?
+     *
+     * A plan has to exist at the provider before anybody can subscribe to it,
+     * and one may be set up at Stripe weeks before PayPal. The billing page
+     * asks this rather than offering a button that fails on the other side.
+     */
+    public function sellableThrough(BillingProvider $provider): bool
+    {
+        return match ($provider) {
+            BillingProvider::Stripe => filled($this->stripe_price_id),
+            BillingProvider::PayPal => filled($this->paypal_plan_id),
+            BillingProvider::Manual => true,
+        };
     }
 
     public function price(): string

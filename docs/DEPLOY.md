@@ -72,6 +72,51 @@ Then fill in, in `.env`:
 - `MAIL_WEBHOOK_SECRET` — any long random string:
   `php artisan key:generate --show`
 
+### Subscription billing — our own keys
+
+These charge venues their subscription into **our** account. They are not the
+keys in the dashboard's *Payments* screen, which belong to each venue and
+charge that venue's own guests into that venue's own account. Keeping the two
+apart is the whole commercial position of the product, so they live in
+different places and are never interchangeable.
+
+Leave them unset and everything still works: the Billing page says online
+payment is not switched on and tells owners to write to us. Filling them in is
+what turns the buttons on.
+
+- `BILLING_PROVIDER` — `stripe` or `paypal`. Whichever is configured is used;
+  this only decides the order when both are.
+- `BILLING_MODE` — `test` or `live`. **Deliberately separate from `APP_ENV`.**
+  Staging against live keys charges real cards; production against test keys
+  takes no money at all while looking like it has. In test mode the Billing
+  page says so.
+- `BILLING_STRIPE_SECRET` — the platform Stripe account's secret key
+- `BILLING_STRIPE_WEBHOOK_SECRET` — from Stripe → *Developers → Webhooks*,
+  after adding the endpoint below
+- `BILLING_PAYPAL_CLIENT_ID`, `BILLING_PAYPAL_CLIENT_SECRET` — from the PayPal
+  app (sandbox credentials while `BILLING_MODE=test`)
+- `BILLING_PAYPAL_WEBHOOK_ID` — from the webhook you create in the PayPal
+  dashboard. Without it a PayPal webhook **cannot be verified and is ignored**,
+  which looks exactly like silence until a paying account lapses.
+
+Then two things outside this server:
+
+1. **Register the webhook** at each provider you use:
+   - Stripe → `https://table.armenisnick.gr/webhooks/billing/stripe`,
+     events `invoice.paid`, `invoice.payment_failed`,
+     `customer.subscription.deleted`
+   - PayPal → `https://table.armenisnick.gr/webhooks/billing/paypal`,
+     events `PAYMENT.SALE.COMPLETED`,
+     `BILLING.SUBSCRIPTION.PAYMENT.FAILED`, `BILLING.SUBSCRIPTION.CANCELLED`
+
+   This is where a renewal eleven months from now arrives, and nowhere else —
+   nobody is sitting in a browser when a card is charged for the second time.
+
+2. **Create each plan at the provider** and put its id on the plan row:
+   `plans.stripe_price_id` (a `price_…` id, recurring) and
+   `plans.paypal_plan_id` (a `P-…` id). A plan with neither gets no button, on
+   purpose: a button that dies on the other side is worse than no button.
+
 ## 4. Migrate and link storage
 
 ```bash

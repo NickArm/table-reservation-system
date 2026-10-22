@@ -60,6 +60,21 @@ class PlanFactory extends Factory
         ]);
     }
 
+    /**
+     * A plan that exists at the payment providers, so it can be bought.
+     *
+     * Not the default: a plan with no provider ids is the normal state of a
+     * plan the super admin has just written, and the billing page has to keep
+     * working for one.
+     */
+    public function sellable(): static
+    {
+        return $this->state(fn (): array => [
+            'stripe_price_id' => 'price_'.Str::random(14),
+            'paypal_plan_id' => 'P-'.Str::upper(Str::random(13)),
+        ]);
+    }
+
     public function free(): static
     {
         return $this->state(fn (): array => ['price_cents' => 0]);

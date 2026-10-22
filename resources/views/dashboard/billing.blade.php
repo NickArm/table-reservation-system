@@ -76,7 +76,23 @@
                 <h2 class="h2">Plans</h2>
             </div>
 
+            @if ($testBilling && $provider !== null)
+                <p class="notice notice--warn">
+                    <strong>Test mode.</strong>
+                    No real money moves. Anything you subscribe to here is a test
+                    subscription at the payment provider.
+                </p>
+            @endif
+
             @forelse ($plans as $option)
+                @php
+                    $isCurrent = $plan?->is($option) && ($subscription?->isCurrent() ?? false);
+                    $canBuy = $provider !== null
+                        && $option->sellableThrough($provider)
+                        && ! $option->isFree()
+                        && (! $isCurrent || ($subscription?->cancel_at_period_end ?? false));
+                @endphp
+
                 <div class="plan {{ $plan?->is($option) ? 'plan--current' : '' }}">
                     <div>
                         <strong>{{ $option->name }}</strong>
@@ -99,24 +115,61 @@
                                 about {{ $option->monthlyEquivalent() }} a month
                             </small>
                         @endif
+
+                        @if ($canBuy)
+                            {{--
+                                One button, one plan. It is a form rather than a
+                                link because it starts a subscription, and a GET
+                                that charges money is a GET a browser will
+                                happily make twice.
+                            --}}
+                            <form method="POST"
+                                  action="{{ route('dashboard.billing.checkout', $option) }}">
+                                @csrf
+                                <button type="submit" class="btn btn--primary">
+                                    @if ($isCurrent)
+                                        Keep this plan
+                                    @elseif ($plan === null)
+                                        Choose this plan
+                                    @else
+                                        Switch to this
+                                    @endif
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             @empty
                 <p class="empty">No plans are on offer at the moment.</p>
             @endforelse
 
-            {{--
-                No "choose this plan" button yet, on purpose. Card payment for
-                the subscription is the next piece of work, and a button here
-                that quietly started a subscription without taking money would
-                be worse than no button.
-            --}}
-            <p class="notice">
-                Card and PayPal payment for subscriptions is being set up. In the meantime
-                reply to any of our emails and we will sort your plan out with you
-                directly.
-            </p>
+            @if ($provider === null)
+                <p class="notice">
+                    Online payment for subscriptions is not switched on yet. Reply to any
+                    of our emails and we will sort your plan out with you directly.
+                </p>
+            @endif
         </section>
+
+        @if ($subscription !== null && $subscription->isCurrent() && ! $subscription->cancel_at_period_end)
+            <section class="card stack">
+                <div class="card__head">
+                    <h2 class="h2">Stopping</h2>
+                </div>
+
+                <p class="muted">
+                    You can stop whenever you like. You keep everything until
+                    <strong>{{ $subscription->current_period_end?->format('j M Y') }}</strong>,
+                    which you have already paid for, and nothing is deleted after that —
+                    your setup waits twelve months in case you come back.
+                </p>
+
+                <form method="POST" action="{{ route('dashboard.billing.cancel') }}">
+                    @csrf
+                    <button type="submit" class="btn">Cancel my subscription</button>
+                </form>
+            </section>
+        @endif
 
         <section class="card stack">
             <div class="card__head">

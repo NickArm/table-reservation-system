@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Billing\BillingManager;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\Subscription;
@@ -23,8 +24,11 @@ use Illuminate\View\View;
  */
 final class BillingController extends Controller
 {
-    public function show(TenantContext $context, Entitlements $entitlements): View
-    {
+    public function show(
+        TenantContext $context,
+        Entitlements $entitlements,
+        BillingManager $billing,
+    ): View {
         $tenant = $context->getOrFail();
 
         $subscription = Subscription::query()->with('plan')->first();
@@ -35,6 +39,16 @@ final class BillingController extends Controller
             'plan' => $subscription?->plan,
             'plans' => Plan::query()->offeredTo($tenant)->get(),
             'entitlements' => $entitlements,
+
+            /*
+             * Which provider the buttons will use, or null while none is set
+             * up. The page asks for one rather than offering a choice: the
+             * owner does not care whether we charge them through Stripe or
+             * PayPal, and a screen that makes them pick loses the ones who
+             * came here to pay (§1.1).
+             */
+            'provider' => $billing->preferred(),
+            'testBilling' => $billing->isTestMode(),
 
             // Newest first: the question somebody opens this page with is
             // almost always about the most recent thing that happened.
