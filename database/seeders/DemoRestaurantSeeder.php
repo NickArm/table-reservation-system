@@ -31,6 +31,7 @@ use App\Enums\SubscriptionEventType;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
 use App\Enums\VenueDocumentType;
+use App\Enums\VenueImage;
 use App\Legal\DefaultVenueDocuments;
 use App\Models\ApiToken;
 use App\Models\Area;
@@ -86,8 +87,6 @@ class DemoRestaurantSeeder extends Seeder
      * somebody to wonder whether it is one.
      */
     private const API_TOKEN_BODY = 'demo'.'2222333344445555666677778888999900001111';
-
-    private const MEDIA_DIR = 'venues/demo';
 
     private const TIMEZONE = 'Europe/Athens';
 
@@ -195,8 +194,8 @@ class DemoRestaurantSeeder extends Seeder
             'price_range' => '€€',
             'accent_color' => '#0E6E6E',
             'hero_overlay' => 45,
-            'logo_path' => $this->publishMedia('demo-logo.png', 'logo.png'),
-            'hero_path' => $this->publishMedia('demo-hero.jpg', 'hero.jpg'),
+            'logo_path' => $this->publishMedia(VenueImage::Logo, 'demo-logo.png'),
+            'hero_path' => $this->publishMedia(VenueImage::Hero, 'demo-hero.jpg'),
             'timezone' => 'Europe/Athens',
 
             // Alerts, set the way a real beach bar would have them: a second
@@ -844,8 +843,13 @@ class DemoRestaurantSeeder extends Seeder
     /**
      * Copies a bundled image onto the media disk, so the demo has a real hero
      * and logo rather than an empty frame.
+     *
+     * Under the same `tenants/{uuid}/venue/{kind}/` layout the dashboard's own
+     * uploads use (§30.1), and that is not tidiness: `PurgeTenant` deletes an
+     * account's files by deleting `tenants/{uuid}` (§29.3), so anything stored
+     * anywhere else outlives the account it belonged to.
      */
-    private function publishMedia(string $source, string $target): ?string
+    private function publishMedia(VenueImage $kind, string $source): ?string
     {
         $path = database_path('seeders/media/'.$source);
 
@@ -853,11 +857,16 @@ class DemoRestaurantSeeder extends Seeder
             return null;
         }
 
-        $destination = self::MEDIA_DIR.'/'.$target;
+        $destination = $kind->pathFor($this->tenantUuid(), 'demo');
 
         Storage::disk(config('media.disk'))->put($destination, file_get_contents($path));
 
         return $destination;
+    }
+
+    private function tenantUuid(): string
+    {
+        return (string) app(TenantContext::class)->getOrFail()->uuid;
     }
 
     /**
@@ -1064,7 +1073,11 @@ class DemoRestaurantSeeder extends Seeder
 
         DB::table('users')->whereIn('id', $users)->delete();
 
-        Storage::disk(config('media.disk'))->deleteDirectory(self::MEDIA_DIR);
+        // The account's whole folder, the same one PurgeTenant removes — and
+        // read from the row before it goes, because afterwards there is no
+        // uuid to build the path from (§29.3).
+        Storage::disk(config('media.disk'))
+            ->deleteDirectory('tenants/'.$existing->uuid);
 
         $existing->forceDelete();
     }

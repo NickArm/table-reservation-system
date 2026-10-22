@@ -21,6 +21,7 @@ use App\Http\Controllers\Dashboard\AreaController;
 use App\Http\Controllers\Dashboard\BillingCheckoutController;
 use App\Http\Controllers\Dashboard\BillingController;
 use App\Http\Controllers\Dashboard\BookingTypeController;
+use App\Http\Controllers\Dashboard\BrandingController;
 use App\Http\Controllers\Dashboard\CalendarController;
 use App\Http\Controllers\Dashboard\ClosureController;
 use App\Http\Controllers\Dashboard\DeveloperController;
@@ -402,6 +403,15 @@ Route::prefix('dashboard')
          * The account itself, and the one irreversible thing in the product
          * (SPEC §13.1, §29).
          */
+        /*
+         * How the booking page looks (SPEC §5.5, §27). Under Setup rather
+         * than in Settings, because it is something an owner does once while
+         * setting up and then forgets — and Settings is where the account
+         * itself lives.
+         */
+        Route::get('branding', [BrandingController::class, 'edit'])->name('branding.edit');
+        Route::patch('branding', [BrandingController::class, 'update'])->name('branding.update');
+
         Route::get('settings', SettingsController::class)->name('settings');
         Route::get('settings/export', AccountExportController::class)->name('account.export');
 

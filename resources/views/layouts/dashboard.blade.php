@@ -70,6 +70,8 @@
 
                 <a href="{{ route('dashboard.booking-types.index') }}"
                    @if (request()->routeIs('dashboard.booking-types.*')) aria-current="page" @endif>Setup</a>
+                <a href="{{ route('dashboard.branding.edit') }}"
+                   @if (request()->routeIs('dashboard.branding.*')) aria-current="page" @endif>Appearance</a>
                 <a href="{{ route('dashboard.payments.edit') }}"
                    @if (request()->routeIs('dashboard.payments.*')) aria-current="page" @endif>Payments</a>
                 <a href="{{ route('dashboard.notifications.edit') }}"
