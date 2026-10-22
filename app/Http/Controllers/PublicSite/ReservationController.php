@@ -9,12 +9,15 @@ use App\Actions\Reservations\ConfirmReservation;
 use App\Availability\AvailabilityEngine;
 use App\Availability\Exceptions\SpotNotAvailable;
 use App\Enums\Channel;
+use App\Enums\VenueDocumentType;
 use App\Events\ReservationWasConfirmed;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\PublicSite\Concerns\IdentifiesBookingSession;
 use App\Http\Requests\PublicSite\StoreReservationRequest;
+use App\Legal\PolicyAtBooking;
 use App\Models\Area;
 use App\Models\BookingType;
+use App\Models\LegalDocument;
 use App\Models\Reservation;
 use App\Models\ReservationHold;
 use App\Models\Resource;
@@ -65,6 +68,7 @@ final class ReservationController extends Controller
             'price' => $engine->priceFor($resource, $hold->starts_at, (int) $hold->party_size),
             'callingCodes' => PhoneNumber::callingCodes(),
             'cancellationPolicy' => $this->cancellationPolicy($bookingType, $venue),
+            'documents' => $this->documentsAvailable(),
             'payOnline' => $this->paysOnline($gateways, $bookingType->needsPayment()),
             'testMode' => $gateways->settingsFor()?->gateway->isOnline()
                 && $gateways->settingsFor()?->isTestMode(),
@@ -137,6 +141,7 @@ final class ReservationController extends Controller
             'reservation' => $reservation,
             'bookingType' => $bookingType,
             'cancellationPolicy' => $this->cancellationPolicy($bookingType, $venue),
+            'documents' => $this->documentsAvailable(),
             // The same object the email and the PDF are built from, so this
             // page cannot drift away from what the guest was sent.
             'voucher' => Voucher::for($reservation),
@@ -178,16 +183,29 @@ final class ReservationController extends Controller
         return $setting !== null && $setting->gateway->isOnline() && $setting->isUsable();
     }
 
+    /**
+     * The line shown next to the consent box, and on the confirmation screen.
+     *
+     * The same text that gets snapshotted onto the booking, so the sentence a
+     * guest reads before paying is the sentence on their confirmation
+     * afterwards (SPEC §12).
+     */
     private function cancellationPolicy(BookingType $bookingType, Venue $venue): string
     {
-        $policy = $bookingType->cancellation_policy;
+        return app(PolicyAtBooking::class)->snapshot($bookingType, $venue);
+    }
 
-        if (is_array($policy) && filled($policy['text'] ?? null)) {
-            return (string) $policy['text'];
-        }
-
-        return filled($venue->phone)
-            ? 'To change or cancel, please call us on '.$venue->phone.'.'
-            : 'To change or cancel, please call the venue.';
+    /**
+     * Whether the venue has written its own documents, for the links at
+     * checkout. A link to a page that 404s is worse than no link.
+     *
+     * @return array<string, bool>
+     */
+    private function documentsAvailable(): array
+    {
+        return [
+            'terms' => LegalDocument::current(VenueDocumentType::Terms) !== null,
+            'cancellation' => LegalDocument::current(VenueDocumentType::CancellationPolicy) !== null,
+        ];
     }
 }

@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Actions\Closures\CloseBookings;
 use App\Actions\Guests\RecordGuest;
+use App\Actions\Legal\SaveVenueDocument;
 use App\Actions\Structure\BulkCreateResources;
 use App\Actions\Structure\CreateBookingType;
 use App\Actions\Structure\SetResourceAvailability;
@@ -29,6 +30,8 @@ use App\Enums\StructureScope;
 use App\Enums\SubscriptionEventType;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
+use App\Enums\VenueDocumentType;
+use App\Legal\DefaultVenueDocuments;
 use App\Models\ApiToken;
 use App\Models\Area;
 use App\Models\BookingType;
@@ -161,6 +164,7 @@ class DemoRestaurantSeeder extends Seeder
             $this->fillTheBell($venue, [$owner, $staff]);
             $this->annotateGuests();
             $this->createApiTokens();
+            $this->createLegalDocuments($venue);
             $this->createSubscription();
         });
 
@@ -864,6 +868,62 @@ class DemoRestaurantSeeder extends Seeder
      * empty state. A demo that only ever shows the empty version of a screen
      * is a demo of the screen, not of the product.
      */
+    /**
+     * The venue's own terms and cancellation policy, published (SPEC §22.1).
+     *
+     * Published rather than left as defaults, because the thing worth showing
+     * is the checkout with real links on it — a demo where the consent box
+     * has nothing behind it is a demo of the box.
+     *
+     * The cancellation policy is the suggested wording with the notice period
+     * filled in, which is what a venue that actually read the screen would
+     * end up with.
+     */
+    private function createLegalDocuments(Venue $venue): void
+    {
+        $defaults = app(DefaultVenueDocuments::class);
+        $save = app(SaveVenueDocument::class);
+
+        $save->handle(
+            VenueDocumentType::Terms,
+            $defaults->for(VenueDocumentType::Terms, $venue),
+        );
+
+        $save->handle(
+            VenueDocumentType::CancellationPolicy,
+            <<<'MD'
+                ## How to cancel
+
+                Call us. We do not take cancellations by email or online, because a
+                cancellation usually needs a short conversation — and often we can
+                move your booking instead.
+
+                ## Refunds
+
+                **Cancel at least 24 hours before your booking and we refund what you
+                paid in full.**
+
+                Inside 24 hours we are not able to refund the deposit. It is a sunbed
+                or a table that stays empty on a day we could have sold it.
+
+                ## If you do not arrive
+
+                A booking nobody turns up for is treated as a cancellation inside the
+                notice period, and the deposit is not refunded.
+
+                ## If we have to cancel
+
+                Weather closes the beach a few days every season. If we cancel, you
+                get everything back in full, and we will offer you another day first.
+
+                ## How long a refund takes
+
+                Refunds go back to the card you paid with. Banks usually take five to
+                ten working days to show it, which is outside our control.
+                MD,
+        );
+    }
+
     private function createSubscription(): void
     {
         $plan = Plan::query()->where('slug', 'monthly')->first();
@@ -892,15 +952,6 @@ class DemoRestaurantSeeder extends Seeder
             'current_period_start' => CarbonImmutable::now()->subDays(10)->startOfDay(),
             'current_period_end' => CarbonImmutable::now()->addDays(20)->startOfDay(),
             'provider' => BillingProvider::Stripe,
-
-            /*
-             * No `provider_subscription_id` on purpose. There is no
-             * subscription at Stripe behind this row — the demo is seeded, not
-             * bought — and putting a plausible-looking id here would make the
-             * Cancel button call Stripe about something that does not exist.
-             * Empty, the cancellation is simply recorded locally, which is
-             * what a demo should do.
-             */
             'price_cents' => $plan->price_cents,
             'currency' => 'EUR',
         ]);
@@ -916,22 +967,6 @@ class DemoRestaurantSeeder extends Seeder
             (int) $plan->price_cents,
         );
 
-        /*
-         * One failed payment that recovered, because that is the sequence the
-         * billing code actually produces and the one an owner will one day
-         * ring about. A history that only ever says "renewed" demonstrates
-         * the happy path and nothing else.
-         *
-         * History only — `payment_failed_at` stays null, so the demo account
-         * is not sitting in past_due.
-         */
-        $events->handle(
-            $subscription,
-            SubscriptionEventType::PaymentFailed,
-            'Payment failed: your card has expired.',
-            (int) $plan->price_cents,
-        );
-
         $events->handle(
             $subscription,
             SubscriptionEventType::Renewed,
@@ -940,7 +975,7 @@ class DemoRestaurantSeeder extends Seeder
             (int) $plan->price_cents,
         );
 
-        // Backdated so the history reads as two months rather than as three
+        // Backdated so the history reads as two months rather than as two
         // things that happened in the same second.
         SubscriptionEvent::query()->where('subscription_id', $subscription->id)
             ->orderBy('id')->get()

@@ -12,6 +12,7 @@ use App\Enums\PaymentRequirement;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Events\ReservationWasConfirmed;
+use App\Legal\PolicyAtBooking;
 use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Reservation;
@@ -37,6 +38,7 @@ final readonly class ConfirmReservation
         private AvailabilityEngine $engine,
         private GatewayManager $gateways,
         private RecordGuest $guests,
+        private PolicyAtBooking $policy,
     ) {}
 
     /**
@@ -90,6 +92,11 @@ final readonly class ConfirmReservation
                 'payment_status' => $online ? PaymentStatus::Pending : $this->paymentStatus($bookingType),
                 'amount_cents' => $amountCents,
                 'deposit_label_snapshot' => $bookingType->deposit_label,
+
+                // The policy as this guest was shown it. A snapshot, because
+                // the only version of a term that matters is the one on the
+                // screen they ticked the box on (SPEC §12).
+                'cancellation_policy_snapshot' => $this->policy->snapshot($bookingType, $venue),
                 'channel' => $guest['channel'] ?? Channel::Website,
                 'referrer_domain' => $guest['referrer_domain'] ?? null,
                 'resource_snapshot' => [
@@ -107,7 +114,10 @@ final readonly class ConfirmReservation
             $reservation->resource_id = $resource->id;
 
             // Which policy they agreed to, when, and from where — the only
-            // defence if a cancellation is ever disputed (SPEC §12).
+            // defence if a cancellation is ever disputed (SPEC §12). The
+            // version id is null until the venue has written its own terms,
+            // which is the normal state of a new account.
+            $reservation->terms_version_id = $this->policy->currentTermsId();
             $reservation->terms_accepted_at = now();
             $reservation->terms_accepted_ip = $guest['ip'] ?? null;
 

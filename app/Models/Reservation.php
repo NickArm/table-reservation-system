@@ -27,7 +27,7 @@ use Illuminate\Support\Str;
     'customer_name', 'customer_email', 'customer_phone', 'locale',
     'party_size', 'starts_at', 'ends_at', 'notes',
     'marketing_consent', 'marketing_consent_at',
-    'amount_cents', 'deposit_label_snapshot',
+    'amount_cents', 'deposit_label_snapshot', 'cancellation_policy_snapshot',
     'status', 'payment_status', 'channel', 'referrer_domain',
     'resource_snapshot',
 ])]

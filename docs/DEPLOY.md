@@ -265,6 +265,22 @@ be ticked.** Until the real text is published, anybody registering is agreeing
 to a page that says it is a draft. Fine while this is only us looking at it;
 not fine for a paying customer.
 
+### A venue's own terms
+
+Separate from the above, and the venue writes them: *Dashboard → Legal*, two
+boxes pre-filled with suggested wording. Their guests agree to these at
+checkout, and the cancellation policy is printed on every booking
+confirmation.
+
+Worth telling a new venue, because it is the one thing in that text only they
+can decide: **how long before a booking a guest gets their money back.** The
+suggested wording says 24 hours and says, in the text itself, to change it.
+
+Nothing is published until they press Save. A venue that never opens the
+screen has no documents, the checkout shows no links, and the confirmation
+falls back to "to change or cancel, please call us on …" — which is true
+either way.
+
 ## 7. Mail delivery
 
 In Brevo, add the webhook so that bounces come back to us (SPEC §10.3):

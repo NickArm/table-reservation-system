@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Vouchers;
 
 use App\Enums\PaymentStatus;
+use App\Legal\PolicyAtBooking;
 use App\Models\BookingType;
 use App\Models\Reservation;
 use App\Models\Tenant;
@@ -145,21 +146,28 @@ final readonly class Voucher
     }
 
     /**
-     * What the guest agreed to at the time. Stored on the booking type rather
-     * than typed here, so that changing the policy tomorrow does not rewrite
-     * what was shown yesterday.
+     * What the guest agreed to at the time.
+     *
+     * From the snapshot written when the booking was made, which is the only
+     * version that means anything: it is the text that was on the screen the
+     * guest ticked the box on (SPEC §12).
+     *
+     * This method used to read the booking type's live text while saying it
+     * did the opposite, so a venue editing its policy in August rewrote every
+     * confirmation it had sent in July. The fallback below is for bookings
+     * made before the snapshot column existed, and it is the old behaviour on
+     * purpose — a confirmation from last season should keep showing something
+     * rather than nothing.
      */
     public function cancellationPolicy(): string
     {
-        $policy = $this->bookingType->cancellation_policy;
+        $snapshot = $this->reservation->cancellation_policy_snapshot;
 
-        if (is_array($policy) && filled($policy['text'] ?? null)) {
-            return (string) $policy['text'];
+        if (filled($snapshot)) {
+            return (string) $snapshot;
         }
 
-        return filled($this->venue->phone)
-            ? 'To change or cancel, please call us on '.$this->venue->phone.'.'
-            : 'To change or cancel, please call the venue.';
+        return app(PolicyAtBooking::class)->fallback($this->bookingType, $this->venue);
     }
 
     public function url(): string

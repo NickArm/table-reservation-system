@@ -129,10 +129,37 @@
                           placeholder="A birthday, an allergy, a bottle on ice…">{{ old('notes') }}</textarea>
             </div>
 
+            {{--
+                Agreeing to the venue's terms (SPEC §12.1).
+
+                The links only appear once the venue has actually written the
+                documents — a link to a page that 404s is worse than no link,
+                and most accounts have written nothing on their first day. The
+                sentence underneath is the policy itself, which is the part a
+                tourist on a phone will actually read.
+            --}}
             <label class="consent">
                 <input type="checkbox" name="terms" value="1" required @checked(old('terms'))>
                 <span>
-                    I agree to the terms and the cancellation policy.
+                    @if ($documents['terms'] || $documents['cancellation'])
+                        I agree to
+                        @if ($documents['terms'])
+                            the <a href="{{ route('public.legal', [$tenant, 'terms']) }}"
+                                   target="_blank" rel="noopener">terms</a>
+                        @else
+                            the terms
+                        @endif
+                        and
+                        @if ($documents['cancellation'])
+                            the <a href="{{ route('public.legal', [$tenant, 'cancellation-policy']) }}"
+                                   target="_blank" rel="noopener">cancellation policy</a>.
+                        @else
+                            the cancellation policy.
+                        @endif
+                    @else
+                        I agree to the terms and the cancellation policy.
+                    @endif
+
                     <small class="muted">{{ $cancellationPolicy }}</small>
                 </span>
             </label>

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PlatformDocumentType;
+use App\Enums\VenueDocumentType;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LegalController as AdminLegalController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Dashboard\CalendarController;
 use App\Http\Controllers\Dashboard\ClosureController;
 use App\Http\Controllers\Dashboard\DeveloperController;
 use App\Http\Controllers\Dashboard\GuestController;
+use App\Http\Controllers\Dashboard\LegalController as DashboardLegalController;
 use App\Http\Controllers\Dashboard\ManualBookingController;
 use App\Http\Controllers\Dashboard\NotificationController;
 use App\Http\Controllers\Dashboard\PaymentSettingsController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\PublicSite\EmbedController;
 use App\Http\Controllers\PublicSite\HoldController;
 use App\Http\Controllers\PublicSite\ReservationController;
 use App\Http\Controllers\PublicSite\SearchController;
+use App\Http\Controllers\PublicSite\VenueLegalController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -87,6 +90,18 @@ Route::prefix('reservation/{tenant}')
     ->name('public.')
     ->group(function (): void {
         Route::get('/', [BookingPageController::class, 'show'])->name('booking');
+
+        /*
+         * The venue's own terms and cancellation policy (SPEC §12.1).
+         *
+         * Outside the bookings-open group on purpose: a venue whose
+         * subscription has lapsed still has guests holding confirmations that
+         * link here, and a term somebody cannot go back and read is a term
+         * that does not hold.
+         */
+        Route::get('legal/{type}', VenueLegalController::class)
+            ->whereIn('type', VenueDocumentType::paths())
+            ->name('legal');
 
         // Everything that could create a booking stops when the venue's own
         // subscription lapses — politely, never with an error (SPEC §4.4).
@@ -373,6 +388,17 @@ Route::prefix('dashboard')
          * developer edited a line.
          */
         Route::get('widget', [WidgetController::class, 'show'])->name('widget');
+
+        /*
+         * The venue's own terms and cancellation policy (SPEC §12.1). One
+         * screen, two boxes, pre-filled with text that already works — a
+         * blank textarea headed "Terms of Booking" produces either nothing or
+         * a paragraph copied off a competitor.
+         */
+        Route::get('legal', [DashboardLegalController::class, 'edit'])->name('legal.edit');
+        Route::patch('legal/{type}', [DashboardLegalController::class, 'update'])
+            ->whereIn('type', VenueDocumentType::paths())
+            ->name('legal.update');
 
         /*
          * The account's API token (SPEC §15.2).

@@ -12,6 +12,7 @@ use App\Enums\PaymentRequirement;
 use App\Enums\PaymentStatus;
 use App\Enums\ReservationStatus;
 use App\Events\ReservationWasConfirmed;
+use App\Legal\PolicyAtBooking;
 use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Reservation;
@@ -47,6 +48,7 @@ final readonly class CreateManualReservation
     public function __construct(
         private AvailabilityEngine $engine,
         private RecordGuest $guests,
+        private PolicyAtBooking $policy,
     ) {}
 
     /**
@@ -96,6 +98,16 @@ final readonly class CreateManualReservation
                 'payment_status' => $this->paymentStatus($bookingType, $amountCents, (bool) ($details['paid'] ?? false)),
                 'amount_cents' => $amountCents,
                 'deposit_label_snapshot' => $bookingType->deposit_label,
+
+                /*
+                 * The policy is snapshotted here too, because the guest gets
+                 * the same confirmation as anybody else and it is printed on
+                 * it. What is *not* written is that they agreed to it: nobody
+                 * ticks a box over the telephone, and recording otherwise
+                 * would make the agreement worthless everywhere it counts
+                 * (SPEC §13.2.1).
+                 */
+                'cancellation_policy_snapshot' => $this->policy->snapshot($bookingType, $venue),
                 'channel' => $details['channel'] ?? Channel::Phone,
                 'resource_snapshot' => [
                     'label' => $locked->label,
