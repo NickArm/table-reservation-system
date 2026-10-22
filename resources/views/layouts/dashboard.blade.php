@@ -75,6 +75,9 @@
                 <a href="{{ route('dashboard.notifications.edit') }}"
                    @if (request()->routeIs('dashboard.notifications.*')) aria-current="page" @endif>Alerts</a>
 
+                <a href="{{ route('dashboard.settings') }}"
+                   @if (request()->routeIs('dashboard.settings')) aria-current="page" @endif>Settings</a>
+
                 <a href="{{ route('dashboard.legal.edit') }}"
                    @if (request()->routeIs('dashboard.legal.*')) aria-current="page" @endif>Legal</a>
 

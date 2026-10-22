@@ -15,6 +15,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BillingWebhookController;
+use App\Http\Controllers\Dashboard\AccountDeletionController;
+use App\Http\Controllers\Dashboard\AccountExportController;
 use App\Http\Controllers\Dashboard\AreaController;
 use App\Http\Controllers\Dashboard\BillingCheckoutController;
 use App\Http\Controllers\Dashboard\BillingController;
@@ -31,6 +33,7 @@ use App\Http\Controllers\Dashboard\PriceRuleController;
 use App\Http\Controllers\Dashboard\ReservationController as DashboardReservationController;
 use App\Http\Controllers\Dashboard\ReservationListController;
 use App\Http\Controllers\Dashboard\ResourceController;
+use App\Http\Controllers\Dashboard\SettingsController;
 use App\Http\Controllers\Dashboard\TermsAcceptanceController;
 use App\Http\Controllers\Dashboard\TodayController;
 use App\Http\Controllers\Dashboard\WidgetController;
@@ -395,6 +398,22 @@ Route::prefix('dashboard')
          * blank textarea headed "Terms of Booking" produces either nothing or
          * a paragraph copied off a competitor.
          */
+        /*
+         * The account itself, and the one irreversible thing in the product
+         * (SPEC §13.1, §29).
+         */
+        Route::get('settings', SettingsController::class)->name('settings');
+        Route::get('settings/export', AccountExportController::class)->name('account.export');
+
+        /*
+         * Asking for deletion. Owners only, enforced by the form request, and
+         * **not** exempt from the read-only lock — an account that has run out
+         * is an account that should renew or leave, and the lock has nothing
+         * useful to say about the second.
+         */
+        Route::post('settings/delete', [AccountDeletionController::class, 'store'])
+            ->name('account.destroy');
+
         Route::get('legal', [DashboardLegalController::class, 'edit'])->name('legal.edit');
         Route::patch('legal/{type}', [DashboardLegalController::class, 'update'])
             ->whereIn('type', VenueDocumentType::paths())

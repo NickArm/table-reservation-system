@@ -25,6 +25,9 @@ enum AuditAction: string
     case PlanRetired = 'plan_retired';
     case LegalDocumentPublished = 'legal_document_published';
     case TermsAccepted = 'terms_accepted';
+    case AccountDeletionRequested = 'account_deletion_requested';
+    case AccountDeletionCancelled = 'account_deletion_cancelled';
+    case AccountPurged = 'account_purged';
 
     public function label(): string
     {
@@ -40,6 +43,9 @@ enum AuditAction: string
             self::PlanRetired => 'Plan retired',
             self::LegalDocumentPublished => 'Legal text published',
             self::TermsAccepted => 'Terms accepted',
+            self::AccountDeletionRequested => 'Deletion requested',
+            self::AccountDeletionCancelled => 'Deletion called off',
+            self::AccountPurged => 'Account purged',
         };
     }
 
@@ -56,7 +62,11 @@ enum AuditAction: string
             self::SubscriptionExtended,
             self::SubscriptionPlanChanged,
             self::TenantSuspended,
-            self::ImpersonationStarted => true,
+            self::ImpersonationStarted,
+
+            // Putting a deletion back is support reversing somebody's
+            // explicit decision. It needs a sentence saying why.
+            self::AccountDeletionCancelled => true,
             default => false,
         };
     }

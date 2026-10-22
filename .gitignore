@@ -15,6 +15,16 @@
 /auth.json
 /node_modules
 
+# Anywhere, not just the root. `tests/Browser/widget` has a package.json of
+# its own (the Playwright harness), and a rooted pattern leaves its
+# node_modules untracked-but-not-ignored — so the next `git add -A` stages a
+# few thousand files nobody meant to commit.
+#
+# No trailing slash on purpose: with one, the pattern matches directories only,
+# and on this machine that path is a symlink — which git then happily staged as
+# a single file.
+node_modules
+
 # The compiled CSS and JS are committed on purpose. Shared hosting has no Node,
 # and a deploy that needs `npm run build` is a deploy that fails with a white
 # page (docs/DEPLOY.md). Run the build locally and commit what changes.

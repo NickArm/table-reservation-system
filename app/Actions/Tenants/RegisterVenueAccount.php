@@ -6,6 +6,7 @@ namespace App\Actions\Tenants;
 
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
+use App\Models\ReservedSlug;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
@@ -81,7 +82,16 @@ final readonly class RegisterVenueAccount
         $slug = $base;
         $suffix = 1;
 
-        while (Tenant::withTrashed()->where('slug', $slug)->exists()) {
+        /*
+         * Soft-deleted tenants **and** the reserved list. The first covers the
+         * thirty days between a deletion request and the purge; after the
+         * purge there is no row left to collide with, and the reserved list is
+         * the only thing standing between a new account and an address that is
+         * printed on somebody else's sign (§29.3).
+         */
+        while (Tenant::withTrashed()->where('slug', $slug)->exists()
+            || ReservedSlug::isTaken($slug)
+        ) {
             $suffix++;
             $slug = "{$base}-{$suffix}";
         }

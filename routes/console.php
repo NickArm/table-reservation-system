@@ -71,3 +71,18 @@ Schedule::command('subscriptions:advance')
     ->dailyAt('03:40')
     ->withoutOverlapping()
     ->runInBackground();
+
+/*
+ * Accounts whose thirty days are up (SPEC §29.3).
+ *
+ * An hour after the subscription sweep, and separately from it, because this
+ * one destroys data irreversibly and the other one sends emails. A bug in the
+ * cheap half must not be able to reach the expensive one.
+ *
+ * Once a day is often enough: the delay is thirty days, so being a few hours
+ * late is not a thing anybody can notice.
+ */
+Schedule::command('tenants:purge')
+    ->dailyAt('04:40')
+    ->withoutOverlapping()
+    ->runInBackground();

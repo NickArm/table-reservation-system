@@ -180,6 +180,26 @@ money is involved: a card that expires is chased on days one, three and seven,
 and without this cron the owner's first and only warning is their booking page
 going quiet.
 
+### The purge, and seeing what it would do first
+
+`schedule:run` also fires `tenants:purge` nightly, which permanently deletes
+accounts whose thirty-day wait is up (SPEC §29.3). It is the only command in
+the application that destroys data, so before trusting it on a live database,
+run it once with the flag that touches nothing:
+
+```bash
+php artisan tenants:purge --dry-run
+```
+
+It lists what it would delete and exits. A purged account cannot be restored,
+and the address it used — `/reservation/<slug>` — is reserved for ever
+afterwards, because a freed slug is a QR code on a sign pointing a tourist at
+somebody else's booking page.
+
+If this cron never runs, nothing breaks and nobody complains: deletion
+requests simply sit there with their date passed, which is the safe direction
+to fail in.
+
 **If the host will not run a queue worker at all**, set `QUEUE_CONNECTION=sync`
 in `.env`. Everything still works and nothing is lost — the guest simply waits
 two or three seconds longer on the confirmation screen while the email and the
