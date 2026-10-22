@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'price_cents', 'currency', 'trial_days',
     'stripe_price_id', 'paypal_plan_id',
     'limits', 'features', 'is_public', 'is_active', 'sort_order',
+    'custom_for_tenant_id',
 ])]
 class Plan extends Model
 {

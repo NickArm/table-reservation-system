@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\AuditController as AdminAuditController;
+use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\OverviewController as AdminOverviewController;
+use App\Http\Controllers\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\Admin\TenantController as AdminTenantController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -157,6 +162,70 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Super admin
+|--------------------------------------------------------------------------
+|
+| The platform's own screens (SPEC §13.2). Everything here reads across
+| accounts, which is why `super-admin` is the one middleware that switches
+| tenant scoping off for a whole request — and why it answers 404 rather than
+| 403 to everybody else. Confirming that an admin area exists is an
+| invitation, and there is nothing here a venue owner needs.
+|
+| Deliberately *not* inside the dashboard group: a super admin has no tenant
+| of their own, so `tenant.user` would refuse them at the door.
+*/
+
+Route::prefix('admin')
+    ->middleware(['auth', 'verified', 'super-admin'])
+    ->name('admin.')
+    ->group(function (): void {
+        Route::get('/', AdminOverviewController::class)->name('overview');
+
+        Route::get('tenants', [AdminTenantController::class, 'index'])->name('tenants.index');
+        Route::get('tenants/{tenant}', [AdminTenantController::class, 'show'])->name('tenants.show');
+
+        /*
+         * The three that change what an account has. Each one requires a
+         * written reason and lands in the audit log with a name on it
+         * (SPEC §4.1, §2.1).
+         */
+        Route::post('tenants/{tenant}/extend', [AdminTenantController::class, 'extend'])
+            ->name('tenants.extend');
+        Route::post('tenants/{tenant}/suspend', [AdminTenantController::class, 'suspend'])
+            ->name('tenants.suspend');
+        Route::post('tenants/{tenant}/restore', [AdminTenantController::class, 'restore'])
+            ->name('tenants.restore');
+
+        /*
+         * Becoming the venue. A POST, not a link: a GET that changes who you
+         * are ends up in browser history and can be triggered by an image
+         * tag on any page the admin happens to be reading.
+         */
+        Route::post('tenants/{tenant}/impersonate', [ImpersonationController::class, 'store'])
+            ->name('tenants.impersonate');
+
+        Route::get('plans', [AdminPlanController::class, 'index'])->name('plans.index');
+        Route::get('plans/new', [AdminPlanController::class, 'create'])->name('plans.create');
+        Route::post('plans', [AdminPlanController::class, 'store'])->name('plans.store');
+        Route::get('plans/{plan}', [AdminPlanController::class, 'edit'])->name('plans.edit');
+        Route::patch('plans/{plan}', [AdminPlanController::class, 'update'])->name('plans.update');
+
+        Route::get('audit', AdminAuditController::class)->name('audit');
+    });
+
+/*
+ * Ending an impersonation.
+ *
+ * Outside the group above, because while impersonating the platform screens
+ * are closed — one identity at a time — and a route behind them would leave
+ * no way out except clearing cookies.
+ */
+Route::post('stop-impersonating', [ImpersonationController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('impersonate.stop');
 
 /*
 |--------------------------------------------------------------------------

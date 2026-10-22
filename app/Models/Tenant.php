@@ -89,6 +89,22 @@ class Tenant extends Model
         return $this->hasOne(Venue::class)->oldestOfMany();
     }
 
+    /**
+     * The one subscription this account has (SPEC §4.3).
+     *
+     * Reachable only where tenant scoping is off or this account is the one
+     * in context — the admin area and console work. Inside a venue's own
+     * dashboard the subscription is read directly, because `Subscription` is
+     * already filtered to that account and going through the tenant would be
+     * a longer way to the same row.
+     *
+     * @return HasOne<Subscription, $this>
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
     public function acceptsBookings(): bool
     {
         return $this->status->acceptsBookings();

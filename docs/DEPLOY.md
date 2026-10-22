@@ -198,6 +198,40 @@ That creates the account, its venue, and a 15-day trial. Then *Setup* → add a
 booking type, an area and some tables or sunbeds, and the public page is live
 at `/reservation/<your-slug>`.
 
+### The platform admin
+
+Separate from any venue account, and there is no screen that creates one —
+`is_super_admin` is not fillable anywhere, on purpose. Make it from the
+terminal:
+
+```bash
+php artisan tinker
+>>> \App\Models\User::forceCreate([
+...     'name' => 'Nick',
+...     'email' => 'you@yourdomain.gr',
+...     'password' => 'something long',
+...     'is_super_admin' => true,
+...     'email_verified_at' => now(),
+... ]);
+```
+
+Signing in with that account lands on `/admin` rather than a dashboard — a
+platform admin belongs to no venue, so the dashboard has nothing to show them.
+From there: every account with its status and usage, plans, suspend and
+restore, extending a subscription by hand, signing in as a venue for support,
+and the log of all of it.
+
+Two things worth knowing before using it on a live account:
+
+- **Suspending is not the same as expiring.** Expiry is what the nightly sweep
+  does when a subscription runs out, and a payment undoes it. A suspension is
+  a decision a person made, and **nothing automatic reverses it** — only the
+  Restore button. Use it for a chargeback or an abuse report, not for an unpaid
+  invoice.
+- **Signing in as a venue is logged at both ends, with the reason you type.**
+  Everything done while in there looks, in every other table, exactly like the
+  owner doing it; the log is the only thing that can say otherwise afterwards.
+
 ## 7. Mail delivery
 
 In Brevo, add the webhook so that bounces come back to us (SPEC §10.3):

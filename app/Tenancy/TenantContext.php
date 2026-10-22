@@ -91,7 +91,13 @@ final class TenantContext
     }
 
     /**
-     * Permanently switch scoping off for this execution. Console only.
+     * Switch scoping off for the rest of this execution.
+     *
+     * For the super admin area, console commands and seeders — the three
+     * places that are supposed to read across accounts. `withoutScoping()` is
+     * the right call everywhere else, because it puts the previous state
+     * back; this one does not, and is granted for a whole request only behind
+     * `EnsureSuperAdmin`.
      */
     public function bypass(): void
     {

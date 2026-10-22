@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\EnsureAccountCanWrite;
 use App\Http\Middleware\EnsureBookingsAreOpen;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\IdentifyTenantFromPath;
 use App\Http\Middleware\IdentifyTenantFromUser;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -43,6 +44,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // Read-only once a subscription has run out (SPEC §4.4). Reading
             // keeps working; only writes are refused.
             'account.can-write' => EnsureAccountCanWrite::class,
+
+            // The platform's own screens (SPEC §13.2). 404 for everybody
+            // else, and the one place tenant scoping is switched off for a
+            // whole request.
+            'super-admin' => EnsureSuperAdmin::class,
         ]);
 
         /*

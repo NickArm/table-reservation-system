@@ -1,6 +1,29 @@
 @extends('layouts.base', ['accent' => $venue?->accent_color ?? '#0e6e6e'])
 
 @section('body')
+    {{--
+        A platform admin inside somebody's account (SPEC §2.1).
+
+        Loud and at the very top on purpose. Every action taken from here
+        looks exactly like the owner doing it in every table except the audit
+        log, so the one thing that must never happen is forgetting whose
+        dashboard this is — and the way out has to be one button, always in
+        the same place.
+    --}}
+    @if (session()->has('impersonator_id'))
+        <div class="impersonating">
+            <span>
+                You are signed in as <strong>{{ $tenant->name }}</strong>.
+                Anything you do here is theirs.
+            </span>
+
+            <form method="POST" action="{{ route('impersonate.stop') }}">
+                @csrf
+                <button type="submit">Back to the platform</button>
+            </form>
+        </div>
+    @endif
+
     <header class="topbar">
         <div class="topbar__inner">
             <strong style="flex:none">{{ $tenant->name }}</strong>

@@ -1520,3 +1520,39 @@ details.advanced > summary {
         text-align: left;
     }
 }
+
+/*
+ * A platform admin inside a venue's account (SPEC §2.1).
+ *
+ * Deliberately the loudest thing on the page, and above the header rather
+ * than inside it, so it cannot be scrolled past or mistaken for part of the
+ * venue's own dashboard. The one mistake worth designing against here is an
+ * admin forgetting whose account they are in.
+ */
+.impersonating {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    background: #7c2d12;
+    color: #fff;
+    font-size: var(--step--1);
+    text-align: center;
+}
+
+.impersonating strong { color: #fff; }
+
+.impersonating button {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    padding: 5px 12px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.impersonating button:hover { background: rgba(255, 255, 255, 0.14); }
