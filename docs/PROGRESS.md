@@ -1,6 +1,6 @@
 # TableReserved — Κατάσταση υλοποίησης
 
-> **Τελευταία ενημέρωση:** 2026-10-22 (M10 · branding upload — το M1 έκλεισε)
+> **Τελευταία ενημέρωση:** 2026-10-22 (M10 · Money & System tabs)
 > **Spec:** `SPEC.md` v2.5 · **Ανταγωνισμός:** `COMPETITORS.md`
 >
 > 🔒 **Κανόνας:** αυτό το αρχείο ενημερώνεται **στο ίδιο commit** με τη δουλειά που περιγράφει. Ένα feature δεν θεωρείται τελειωμένο αν δεν έχει (α) tests, (β) εγγραφή στον demo seeder, (γ) ενημερωμένη γραμμή εδώ.
@@ -15,11 +15,11 @@
 
 Μπήκε και το **error tracking με scrubbing** — αδρανές χωρίς DSN, αλλά με τον scrubber και τα tests του στη θέση τους, γιατί το επικίνδυνο δεν είναι το PII setting αλλά τα frame vars του payment flow.
 
-Μπήκε και το **upload του branding**, που ήταν το τελευταίο κενό του M1 — logo, hero και ένα χρώμα, με resize, στροφή από EXIF και metadata που φεύγουν.
+Μπήκε και το **upload του branding**, που ήταν το τελευταίο κενό του M1, και οι δύο τελευταίες καρτέλες του super admin — **Money** και **System**.
 
-**Επόμενο:** **onboarding wizard**, το τελευταίο αντικείμενο του Phase 1 που είναι κώδικας. Το staging θέλει subdomain και βάση στον host.
+**Ο onboarding wizard μεταφέρθηκε στο Phase 2** ως feature: η μορφή του εξαρτάται από την απόφαση «ποιος στήνει το μαγαζί», και θα ξανακοιταχτεί στο τέλος.
 
-⚠️ Πριν γραφτεί ο wizard χρειάζεται η απόφαση **«ποιος στήνει το μαγαζί: wizard ή εσύ»** από τις ανοιχτές αποφάσεις — αλλάζει το αν είναι 5 οθόνες self-service ή 2 οθόνες και ένα τηλέφωνο.
+**Επόμενο:** δεν μένει κώδικας Phase 1 που δεν περιμένει απόφαση ή πρόσβαση στον host. Το staging θέλει subdomain και βάση στον host· το R2 ένα env var και bucket.
 
 ### ☑ Πακέτα, συνδρομές και όρια
 
@@ -193,6 +193,23 @@
 - 🔴 **Το bug που έπιασαν τα tests, και ο λόγος που ο catch πλέον γράφει log.** Το `venues.accent_color` είναι NOT NULL· χωρίς χρώμα στο submit έγραφα `null`, η βάση το απέρριπτε, και ο controller **κατάπινε** το exception σε flash message — οπότε το upload «δούλευε» και δεν αποθήκευε τίποτα. Το `assertSessionHasNoErrors()` δεν βλέπει flashed `error`, άρα 8 tests αποτύγχαναν με άσχετο μήνυμα. Τώρα: χωρίς χρώμα σημαίνει «άσε το ήσυχο», και κάθε καταπιωμένο exception γράφεται στο log με αρχείο και γραμμή
 
 **15 tests**, με το SVG και το χρώμα δίπλα-δίπλα: και τα δύο είναι κανόνες ασφαλείας, όχι μορφής.
+
+### ☑ Money & System — οι δύο τελευταίες καρτέλες (§13.2)
+
+- **Money**: οι ίδιες γραμμές με τους λογαριασμούς, άλλη ερώτηση. Το *Accounts* απαντά «ποιος είναι αυτό το μαγαζί», αυτό απαντά «πού είναι τα λεφτά» — γι' αυτό η σειρά **δεν** είναι αλφαβητική αλλά **ό,τι φταίει πρώτο**: αποτυχημένη πληρωμή, μετά ό,τι λήγει συντομότερα. Και δείχνει **σε ποια μέρα του dunning** είναι ο καθένας, ώστε «δεν τον ειδοποιήσαμε ποτέ» και «αγνόησε τρία emails» να μην είναι η ίδια γραμμή
+- **System**: όλα τα νούμερα εδώ απαντούν **μία** ερώτηση — χάλασε κάτι χωρίς να το πει. Αυτή είναι ολόκληρη η κατηγορία: cron που λείπει, queue worker που πέθανε, webhook που το gateway ξαναέστελνε στο πουθενά. Κανένα δεν πετά exception, κανένα δεν στέλνει email, και όλα μοιάζουν με ήσυχη βδομάδα μέχρι να τηλεφωνήσει μαγαζί
+- 🔒 **Πίνακας `command_runs`, όχι cache.** Πρώτη σκέψη ήταν το cache· αλλά το `cache:clear` τρέχει σε κάθε deploy, και σελίδα που λέει «δεν έτρεξε ποτέ» μετά από κάθε deploy είναι συναγερμός που τον αγνοείς μέσα σε δεκαπέντε μέρες
+- **Μία γραμμή ανά εντολή, όχι log.** Το `holds:release` τρέχει κάθε λεπτό — ιστορικό θα ήταν 1.440 γραμμές τη μέρα από κάτι που δεν θα διαβάσει ποτέ κανείς, και η ερώτηση είναι μόνο «πότε έτρεξε τελευταία»
+- **Αποθηκεύεται η ίδια πρόταση που τυπώνει η εντολή.** Timestamp λέει ότι πυροδοτήθηκε το cron, όχι ότι δούλεψε — «Checked 12, changed 2» είναι η διαφορά. Ένα trait (`RecordsItsRun`) με μία κλήση: εντολή δεν μπορεί να τυπώσει report και να ξεχάσει να το καταγράψει
+- **Αργοπορία = διπλάσιο του διαστήματος.** Μία χαμένη νύχτα είναι host που είχε δουλειά· δύο είναι cron που δεν υπάρχει
+- **Dry run δεν καταγράφεται ποτέ** — ούτε όταν δεν βρει τίποτα. Δεν έκανε τη δουλειά, και System που λέει ότι ο purge έτρεξε χθες όταν το μόνο που έκανε ήταν να απαριθμήσει είναι χειρότερο από το να μη λέει τίποτα
+- **Το «γιατί μετράει» γράφεται δίπλα στο πρόβλημα**: «το `tenants:purge` άργησε» δεν σημαίνει τίποτα μόνο του· «αφήνει αιτήματα διαγραφής ανεκπλήρωτα, που είναι υπόσχεση στη σελίδα privacy» σημαίνει
+- **Ο δείκτης που ξεχωρίζει απασχολημένη ουρά από σταματημένη** δεν είναι πόσα jobs περιμένουν αλλά **πόση ώρα περιμένει το παλαιότερο**. Και με `QUEUE_CONNECTION=sync` δεν υπάρχει πίνακας `jobs` καθόλου, οπότε η σελίδα το λέει αντί να σκάσει
+- Μία γραμμή «**δεν υπάρχει κάτι να κάνεις**» στην κορυφή, γιατί σελίδα με δώδεκα πράσινα νούμερα δεν πρέπει να απαιτεί να τα διαβάσεις όλα για να το μάθεις
+
+🔴 **Το ίδιο strict-mode πρόβλημα για τρίτη φορά, και το δεύτερο σιωπηλό catch.** Το `CommandRun` δεν έχει `fillable` επίτηδες — γράφεται από ένα trait, ποτέ από request. Αυτό αποκλείει **και** το `updateOrCreate` **και** το `firstOrNew`: και τα δύο κάνουν mass-assign τα πεδία που ψάχνουν, το strict mode πετά, και ο `catch (Throwable)` το κατάπινε — οπότε **κάθε** εντολή ανέφερε επιτυχία και **καμία** δεν κατέγραφε τίποτα. Λύση: `where(...)->first() ?? new self` και `forceFill`. Και ο catch **γράφει τώρα log**: η γραμμή που πρόσθεσα στο branding controller πριν από μία ώρα βρήκε αυτό το bug σε ένα τρέξιμο.
+
+**9 tests**, με πρώτο ότι εντολή που δεν έτρεξε ποτέ **το λέει**.
 
 ### ☑ API v1 — ο πελάτης διαβάζει τη διαθεσιμότητα από τον δικό του server
 
@@ -477,7 +494,7 @@ Demo: `/reservation/demo` · dashboard `owner@demo.test` / `password`
 - ☑ Χειροκίνητη παράταση από super admin, με λόγο και audit log
 - ☑ **Super admin**: overview με MRR, λογαριασμοί, πακέτα CRUD, suspend/restore,
   impersonate, audit log
-- ☐ Subscriptions & System tabs του §13.2 (failed payments, queue health) → M10
+- ☑ Subscriptions & System tabs του §13.2 (failed payments, queue health)
 
 ### M10 · Τελείωμα ◐
 - ☑ Όροι & πολιτική ακυρώσεων καταστήματος + versioning + snapshot στο αποδεικτικό
@@ -485,7 +502,7 @@ Demo: `/reservation/demo` · dashboard `owner@demo.test` / `password`
   versioning, επεξεργασία από το admin χωρίς deploy, αποδοχή & επανα-αποδοχή
 - ☑ **Διαγραφή λογαριασμού** (§29) — μπλοκάρισμα σε πληρωμένες κρατήσεις, export,
   30 ημέρες, `tenants:purge`, slug που δεν ξαναδίνεται
-- ☐ Onboarding wizard
+- → Onboarding wizard — **μεταφέρθηκε στο Phase 2** ως feature (εξαρτάται από απόφαση)
 - ☑ **Sentry με scrubbing** + `send_default_pii=false` (§30.2) — αδρανές χωρίς DSN
 - ☐ Staging environment (§30.3) — θέλει subdomain & βάση στον host, όχι κώδικα
 - ◐ Object storage R2 (§30.1) — `config/media.php`, ένα env var μακριά
@@ -497,21 +514,21 @@ Demo: `/reservation/demo` · dashboard `owner@demo.test` / `password`
   πολιτική ακυρώσεων**, ~4% bounced vouchers ώστε να
   φαίνεται η προειδοποίηση, και **πελατολόγιο με τακτικούς πελάτες** — 40 άνθρωποι
   αντί 200 ξένων, σημειώσεις και tags σε τρεις από αυτούς
-- ◐ Tests κατά §25 — 60 αρχεία, 592 tests· tenant isolation, σειρά middleware, δομή, διαθεσιμότητα,
+- ◐ Tests κατά §25 — 61 αρχεία, 605 tests· tenant isolation, σειρά middleware, δομή, διαθεσιμότητα,
   closures, holds, τιμές, dashboard, ροή κράτησης, πληρωμές & refunds,
   QR, .ics, αποδεικτικό, ειδοποιήσεις, υπενθυμίσεις, σύνοψη, bounce webhook,
   **πελατολόγιο, τηλεφωνική κράτηση, no-show, λίστα κρατήσεων & CSV, ημερολόγιο,
   API v1 & token, widget, συνδρομές & όρια, checkout & billing webhooks, dunning,
   Blade directives σε όλα τα templates, πρόσβαση super admin, impersonation,
   πακέτα & audit log, νομικά πλατφόρμας & καταστήματος, διαγραφή λογαριασμού & export,
-  scrubbing του Sentry, branding upload**
+  scrubbing του Sentry, branding upload, scheduler & queue health**
 - ◐ Αυτό το αρχείο
 
 ---
 
 ## Μετά το Phase 1
 
-**Phase 2** — floor plan editor, widget modal, Viva & Cardlink, Reserve with Google, waitlist, merge guests, SMS, **browser push (θέλει PWA)**, QR check-in με ρόλο πορτιέρη, per-tenant verified sending domain, Tenant API writes, multi-venue UI, staff permissions, reports.
+**Phase 2** — **onboarding wizard** (η μορφή του είναι ακόμα απόφαση: 5 οθόνες self-service, 2 οθόνες και ένα τηλέφωνο, ή checklist στο Today), floor plan editor, widget modal, Viva & Cardlink, Reserve with Google, waitlist, merge guests, SMS, **browser push (θέλει PWA)**, QR check-in με ρόλο πορτιέρη, per-tenant verified sending domain, Tenant API writes, multi-venue UI, staff permissions, reports.
 
 **Phase 3 / Backlog** — Ελληνικά, WordPress plugin, custom domains, λογαριασμοί πελατών, καλάθι, ένωση τραπεζιών, προπαραγγελία με μενού, **events & εισιτήρια με scanner (§32)**, Stripe Connect, PWA, offline επίπεδο 1, outgoing webhooks.
 
@@ -526,11 +543,28 @@ Demo: `/reservation/demo` · dashboard `owner@demo.test` / `password`
 | Μόνιμο δωρεάν πακέτο 20–30 κρατήσεων; (§4.1) | Όχι — ένα `plan` row |
 | Υποστήριξη: κανάλι & ώρες | Όχι — πριν τους Όρους |
 | Επιστροφή δικής μας συνδρομής (αναλογική;) | Όχι — πριν τον δικηγόρο |
-| Ποιος στήνει το μαγαζί: wizard ή εσύ | Όχι — επηρεάζει το M10 |
+| Ποιος στήνει το μαγαζί: wizard ή εσύ | Όχι — ο wizard πήγε στο Phase 2 μέχρι να αποφασιστεί |
 
 ---
 
 ## Ημερολόγιο
+
+### 2026-10-22 — M10 · Money & System, και ένα μάθημα τρεις φορές
+- **Οι δύο τελευταίες καρτέλες του §13.2.** Το Money ταξινομεί κατά «τι φταίει»,
+  όχι αλφαβητικά, και δείχνει σε ποια μέρα dunning είναι ο καθένας
+- 🔒 **Το System υπάρχει για μία κατηγορία βλάβης: αυτή που δεν το λέει.** Cron που
+  λείπει, worker που πέθανε, webhook στο πουθενά — κανένα δεν πετά exception
+- **`command_runs`, πίνακας και όχι cache**: το `cache:clear` κάθε deploy θα έκανε
+  τη σελίδα να λέει «δεν έτρεξε ποτέ» και τον συναγερμό να αγνοηθεί
+- **Μία γραμμή ανά εντολή**: το `holds:release` τρέχει κάθε λεπτό
+- **Αποθηκεύεται η πρόταση που τυπώνει η εντολή**, γιατί timestamp λέει ότι το cron
+  πυροδοτήθηκε, όχι ότι δούλεψε
+- 🔴 **Τρίτη φορά το ίδιο strict-mode πρόβλημα, δεύτερη φορά σιωπηλό catch.** Model
+  χωρίς `fillable` δεν δέχεται **ούτε** `updateOrCreate` **ούτε** `firstOrNew` — και
+  τα δύο κάνουν mass-assign αυτό που ψάχνουν. Κάθε εντολή ανέφερε επιτυχία, καμία
+  δεν κατέγραψε τίποτα. Το βρήκε σε ένα τρέξιμο η γραμμή log που είχα προσθέσει
+  στον branding controller μία ώρα πριν — δύο φορές το ίδιο μάθημα την ίδια μέρα:
+  **catch χωρίς log είναι bug που κρύβεται**
 
 ### 2026-10-22 — M1 · Το branding ανεβαίνει, και το M1 έκλεισε
 - **Τίποτα δεν αποθηκεύεται όπως ήρθε**: decode, resize, re-encode. Το μικρό αρχείο

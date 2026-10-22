@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LegalController as AdminLegalController;
 use App\Http\Controllers\Admin\OverviewController as AdminOverviewController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\Admin\SubscriptionsController as AdminSubscriptionsController;
+use App\Http\Controllers\Admin\SystemController as AdminSystemController;
 use App\Http\Controllers\Admin\TenantController as AdminTenantController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
@@ -265,6 +267,14 @@ Route::prefix('admin')
         Route::get('legal', [AdminLegalController::class, 'index'])->name('legal.index');
         Route::get('legal/{type}', [AdminLegalController::class, 'edit'])->name('legal.edit');
         Route::patch('legal/{type}', [AdminLegalController::class, 'update'])->name('legal.update');
+
+        /*
+         * Where the money is, and whether the parts nobody watches are
+         * working (SPEC §13.2). The second one exists because a missing cron
+         * does not throw, does not log and does not email anybody.
+         */
+        Route::get('subscriptions', AdminSubscriptionsController::class)->name('subscriptions');
+        Route::get('system', AdminSystemController::class)->name('system');
 
         Route::get('audit', AdminAuditController::class)->name('audit');
     });

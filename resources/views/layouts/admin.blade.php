@@ -25,6 +25,10 @@
                    @if (request()->routeIs('admin.tenants.*')) aria-current="page" @endif>Accounts</a>
                 <a href="{{ route('admin.plans.index') }}"
                    @if (request()->routeIs('admin.plans.*')) aria-current="page" @endif>Plans</a>
+                <a href="{{ route('admin.subscriptions') }}"
+                   @if (request()->routeIs('admin.subscriptions')) aria-current="page" @endif>Money</a>
+                <a href="{{ route('admin.system') }}"
+                   @if (request()->routeIs('admin.system')) aria-current="page" @endif>System</a>
                 <a href="{{ route('admin.legal.index') }}"
                    @if (request()->routeIs('admin.legal.*')) aria-current="page" @endif>Legal</a>
                 <a href="{{ route('admin.audit') }}"

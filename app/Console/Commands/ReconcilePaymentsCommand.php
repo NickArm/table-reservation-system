@@ -6,10 +6,13 @@ namespace App\Console\Commands;
 
 use App\Actions\Payments\ExpireUnpaidReservations;
 use App\Actions\Payments\ReconcilePayments;
+use App\Console\Concerns\RecordsItsRun;
 use Illuminate\Console\Command;
 
 final class ReconcilePaymentsCommand extends Command
 {
+    use RecordsItsRun;
+
     protected $signature = 'payments:reconcile {--hours=24 : How far back to look}';
 
     protected $description = 'Ask the gateways about payments whose webhooks never arrived';
@@ -19,15 +22,16 @@ final class ReconcilePaymentsCommand extends Command
         $released = $expire->handle();
         $result = $reconcile->handle((int) $this->option('hours'));
 
-        $this->info(sprintf(
-            'Checked %d, settled %d, failed %d. Released %d unpaid %s.',
-            $result['checked'],
-            $result['settled'],
-            $result['failed'],
-            $released,
-            str('reservation')->plural($released),
-        ));
-
-        return $result['failed'] > 0 ? self::FAILURE : self::SUCCESS;
+        return $this->report(
+            sprintf(
+                'Checked %d, settled %d, failed %d. Released %d unpaid %s.',
+                $result['checked'],
+                $result['settled'],
+                $result['failed'],
+                $released,
+                str('reservation')->plural($released),
+            ),
+            $result['failed'] === 0,
+        );
     }
 }

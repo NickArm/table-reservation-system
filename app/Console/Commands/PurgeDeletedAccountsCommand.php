@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Actions\Tenants\PurgeTenant;
+use App\Console\Concerns\RecordsItsRun;
 use App\Models\Tenant;
 use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
@@ -27,6 +28,8 @@ use Throwable;
  */
 final class PurgeDeletedAccountsCommand extends Command
 {
+    use RecordsItsRun;
+
     protected $signature = 'tenants:purge
         {--dry-run : List what would go, and delete nothing}';
 
@@ -41,9 +44,7 @@ final class PurgeDeletedAccountsCommand extends Command
             ->get());
 
         if ($due->isEmpty()) {
-            $this->info('Nothing to purge.');
-
-            return self::SUCCESS;
+            return $this->reportUnlessDryRun('Nothing to purge.');
         }
 
         $failed = 0;
@@ -76,13 +77,32 @@ final class PurgeDeletedAccountsCommand extends Command
             }
         }
 
-        $this->info(sprintf(
+        $summary = sprintf(
             '%s %d %s.',
             $this->option('dry-run') ? 'Would purge' : 'Purged',
             $due->count() - $failed,
             str('account')->plural($due->count() - $failed)->toString(),
-        ));
+        );
 
-        return $failed > 0 ? self::FAILURE : self::SUCCESS;
+        return $this->reportUnlessDryRun($summary, $failed === 0);
+    }
+
+    /**
+     * A dry run is printed but never recorded.
+     *
+     * It did not do the work, and a System screen saying the purge ran last
+     * night when all it did was list what it would have done is worse than
+     * saying nothing. Applied at both exits rather than at the end, so that
+     * `--dry-run` on an empty queue does not quietly count as a run either.
+     */
+    private function reportUnlessDryRun(string $summary, bool $ok = true): int
+    {
+        if ($this->option('dry-run')) {
+            $this->info($summary);
+
+            return self::SUCCESS;
+        }
+
+        return $this->report($summary, $ok);
     }
 }

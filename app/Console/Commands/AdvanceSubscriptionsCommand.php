@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Actions\Subscriptions\AdvanceLifecycle;
 use App\Actions\Subscriptions\SendDunningNotices;
 use App\Actions\Subscriptions\SendTrialReminders;
+use App\Console\Concerns\RecordsItsRun;
 use Illuminate\Console\Command;
 
 /**
@@ -18,6 +19,8 @@ use Illuminate\Console\Command;
  */
 final class AdvanceSubscriptionsCommand extends Command
 {
+    use RecordsItsRun;
+
     protected $signature = 'subscriptions:advance {--no-reminders : Move statuses without emailing anybody}';
 
     protected $description = 'Move every account to the subscription state it should be in today';
@@ -29,21 +32,21 @@ final class AdvanceSubscriptionsCommand extends Command
     ): int {
         $moved = $lifecycle->handle();
 
-        $this->info(sprintf(
+        $lines = [sprintf(
             'Checked %d, changed %d — %d trials ended, %d expired.',
             $moved['checked'],
             $moved['changed'],
             $moved['trials_ended'],
             $moved['expired'],
-        ));
+        )];
 
         if ($this->option('no-reminders')) {
-            return self::SUCCESS;
+            return $this->report(implode(' ', $lines));
         }
 
         $sent = $reminders->handle();
 
-        $this->info(sprintf('Trial reminders: sent %d, failed %d.', $sent['sent'], $sent['failed']));
+        $lines[] = sprintf('Trial reminders: sent %d, failed %d.', $sent['sent'], $sent['failed']);
 
         /*
          * The statuses move first, the emails go second, and that order
@@ -53,12 +56,20 @@ final class AdvanceSubscriptionsCommand extends Command
          */
         $chased = $dunning->handle();
 
-        $this->info(sprintf(
+        $lines[] = sprintf(
             'Payment failure notices: sent %d, failed %d.',
             $chased['sent'],
             $chased['failed'],
-        ));
+        );
 
-        return $sent['failed'] > 0 || $chased['failed'] > 0 ? self::FAILURE : self::SUCCESS;
+        /*
+         * One line, recorded as well as printed. Nobody reads the output of a
+         * cron; the System screen reads this (§13.2), and without it a
+         * missing cron is indistinguishable from a quiet week.
+         */
+        return $this->report(
+            implode(' ', $lines),
+            $sent['failed'] === 0 && $chased['failed'] === 0,
+        );
     }
 }
