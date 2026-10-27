@@ -125,6 +125,28 @@ class Reservation extends Model
     }
 
     /**
+     * Bookings a guest could still turn up for.
+     *
+     * The one definition of "somebody is counting on this", used wherever
+     * something is about to be taken away: an account being deleted (§29.3),
+     * a table being removed. Checked-in and completed bookings are in the
+     * past as far as this is concerned — only what is still ahead can be
+     * orphaned, and only that is worth refusing for.
+     *
+     * @param  Builder<Reservation>  $query
+     * @return Builder<Reservation>
+     */
+    public function scopeStillToCome(Builder $query): Builder
+    {
+        return $query
+            ->whereIn('status', [
+                ReservationStatus::Confirmed->value,
+                ReservationStatus::CheckedIn->value,
+            ])
+            ->where('starts_at', '>=', now());
+    }
+
+    /**
      * Overlapping a window, with the turnover buffer applied on both sides.
      *
      * A booking from 10:00 to 14:00 with a 30 minute buffer makes the next

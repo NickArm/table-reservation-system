@@ -133,10 +133,24 @@ final class PayPalBilling implements BillingGateway
 
     public function cancel(string $subscriptionId): void
     {
-        $this->client()->post(
+        $response = $this->client()->post(
             $this->base().'/v1/billing/subscriptions/'.$subscriptionId.'/cancel',
             ['reason' => 'Cancelled from the venue dashboard.'],
         );
+
+        /*
+         * Not through `decode`: a successful cancellation here is 204 with an
+         * empty body, which `decode` would read as the provider saying nothing
+         * useful. The status is the whole answer — and it has to be looked at,
+         * because the client does not throw and a discarded refusal means the
+         * owner is told they have stopped paying while PayPal keeps billing.
+         */
+        if ($response->status() >= 400) {
+            throw BillingUnavailable::providerRefused(
+                $this->provider(),
+                (string) ($response->json('message') ?? 'PayPal refused to cancel the subscription.'),
+            );
+        }
     }
 
     public function verify(Request $request): ?BillingNotice

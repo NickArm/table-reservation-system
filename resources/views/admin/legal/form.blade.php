@@ -98,7 +98,7 @@
         </section>
 
         <p>
-            <button type="submit" name="publish" value="1" class="btn btn--primary">
+            <button type="submit" name="publish" value="1" class="btn">
                 Publish it
             </button>
             <button type="submit" name="publish" value="0" class="btn">

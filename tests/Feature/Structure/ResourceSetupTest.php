@@ -8,8 +8,10 @@ use App\Actions\Structure\BulkCreateResources;
 use App\Enums\PriceBasis;
 use App\Models\Area;
 use App\Models\BookingType;
+use App\Models\Reservation;
 use App\Models\Resource;
 use App\Models\ResourceTemplate;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\ActsAsVenueOwner;
@@ -197,5 +199,92 @@ final class ResourceSetupTest extends TestCase
             'from' => 1,
             'to' => 3,
         ])->assertNotFound();
+    }
+
+    #[Test]
+    public function a_mistyped_range_can_be_taken_back_off(): void
+    {
+        /*
+         * The reason removal exists at all: an owner meaning A1–A4 who types
+         * A1–A40 would otherwise live with thirty-six phantom sunbeds for
+         * ever, and an area cannot be removed while anything is in it.
+         */
+        $resource = $this->oneResource();
+
+        $this->delete(route('dashboard.resources.destroy', $resource))
+            ->assertRedirect();
+
+        $this->assertSame(0, $this->asTenant(static fn (): int => Resource::query()->count()));
+    }
+
+    #[Test]
+    public function a_spot_somebody_is_expected_at_is_not_removed(): void
+    {
+        $resource = $this->oneResource();
+
+        $this->asTenant(fn () => Reservation::factory()->forResource($resource)->create());
+
+        $this->delete(route('dashboard.resources.destroy', $resource))
+            ->assertRedirect()
+
+            /*
+             * The booking itself would survive — `resource_id` is nulled, not
+             * cascaded, and the snapshot keeps what was booked — but the guest
+             * would arrive to a booking with no table against it. Closing is
+             * what was wanted anyway.
+             */
+            ->assertSessionHas('error', fn (string $message): bool => str_contains($message, 'Close it instead'));
+
+        $this->assertSame(1, $this->asTenant(static fn (): int => Resource::query()->count()));
+    }
+
+    #[Test]
+    public function a_booking_that_has_already_happened_does_not_stand_in_the_way(): void
+    {
+        $resource = $this->oneResource();
+
+        $this->asTenant(fn () => Reservation::factory()
+            ->forResource($resource)
+            ->at(CarbonImmutable::now()->subWeek(), CarbonImmutable::now()->subWeek()->addHours(2))
+            ->create());
+
+        // Nobody is turning up for it, so there is nothing to orphan.
+        $this->delete(route('dashboard.resources.destroy', $resource))->assertRedirect();
+
+        $this->assertSame(0, $this->asTenant(static fn (): int => Resource::query()->count()));
+    }
+
+    #[Test]
+    public function a_cancelled_booking_does_not_stand_in_the_way_either(): void
+    {
+        $resource = $this->oneResource();
+
+        $this->asTenant(fn () => Reservation::factory()->forResource($resource)->cancelled()->create());
+
+        $this->delete(route('dashboard.resources.destroy', $resource))->assertRedirect();
+
+        $this->assertSame(0, $this->asTenant(static fn (): int => Resource::query()->count()));
+    }
+
+    #[Test]
+    public function one_venue_cannot_remove_another_ones_resource(): void
+    {
+        $resource = $this->oneResource();
+
+        $this->signInAsOwner('Another Place');
+
+        $this->delete(route('dashboard.resources.destroy', $resource))->assertNotFound();
+    }
+
+    private function oneResource(): Resource
+    {
+        $this->post(route('dashboard.resources.store'), [
+            'area_id' => $this->area->id,
+            'prefix' => 'A',
+            'from' => 1,
+            'to' => 1,
+        ])->assertRedirect();
+
+        return $this->asTenant(static fn (): Resource => Resource::query()->firstOrFail());
     }
 }

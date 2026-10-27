@@ -69,7 +69,7 @@
                     </div>
 
                     <p>
-                        <button type="submit" class="btn btn--primary">
+                        <button type="submit" class="btn">
                             {{ $document === null ? 'Publish it' : 'Save changes' }}
                         </button>
 

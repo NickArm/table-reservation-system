@@ -8,7 +8,6 @@ use App\Actions\Platform\RecordAuditEntry;
 use App\Billing\BillingManager;
 use App\Enums\AuditAction;
 use App\Enums\BillingProvider;
-use App\Enums\ReservationStatus;
 use App\Enums\TenantStatus;
 use App\Models\Reservation;
 use App\Models\Subscription;
@@ -52,13 +51,7 @@ final readonly class RequestAccountDeletion
      */
     public function blockers(): int
     {
-        return Reservation::query()
-            ->whereIn('status', [
-                ReservationStatus::Confirmed->value,
-                ReservationStatus::CheckedIn->value,
-            ])
-            ->where('starts_at', '>=', now())
-            ->count();
+        return Reservation::query()->stillToCome()->count();
     }
 
     public function handle(Tenant $tenant, User $actor, ?string $ip = null): Tenant

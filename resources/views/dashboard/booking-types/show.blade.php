@@ -189,6 +189,39 @@
                 </form>
             </details>
 
+            @if ($areaResources->isNotEmpty())
+                {{--
+                    Removing is for a range that was typed wrong, which is why it
+                    is in here and not on the tiles. During service the tile is a
+                    close button, and a remove control next to it would be mistapped
+                    by somebody holding three plates.
+                --}}
+                <details class="advanced" style="margin-top:8px">
+                    <summary>Remove {{ $noun }}</summary>
+
+                    <p class="muted" style="margin:8px 0 12px">
+                        For good. If what you want is to stop taking bookings for one
+                        today, tap it above instead — that is reversible, and it leaves
+                        the bookings you already have alone.
+                    </p>
+
+                    <div class="row" style="flex-wrap:wrap;gap:8px">
+                        @foreach ($areaResources as $resource)
+                            <form method="POST"
+                                  action="{{ route('dashboard.resources.destroy', $resource) }}"
+                                  onsubmit="return confirm('Remove this permanently? Closing it is reversible; this is not.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn--ghost"
+                                        style="min-height:36px;padding:0 14px">
+                                    {{ $resource->label }} ✕
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                </details>
+            @endif
+
             <details class="advanced" style="margin-top:8px">
                 <summary>How long a booking holds a spot here</summary>
 

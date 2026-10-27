@@ -150,11 +150,20 @@ final class StripeBilling implements BillingGateway
 
     public function cancel(string $subscriptionId): void
     {
-        // At the end of the period, not now. They paid for the month.
-        $this->client()->asForm()->post(
+        /*
+         * At the end of the period, not now. They paid for the month.
+         *
+         * Through `decode`, like every other call here, because the answer
+         * matters: the client is set to `throw: false`, so a refusal comes
+         * back as a 500 and nothing else. Discarding it left the owner looking
+         * at "your subscription has been cancelled" while Stripe carried on
+         * charging them every month — the one outcome the caller's try/catch
+         * exists to prevent.
+         */
+        $this->decode($this->client()->asForm()->post(
             self::BASE.'/subscriptions/'.$subscriptionId,
             ['cancel_at_period_end' => 'true'],
-        );
+        ));
     }
 
     public function verify(Request $request): ?BillingNotice

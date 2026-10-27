@@ -15,7 +15,7 @@
     </div>
 
     <p style="margin-bottom:24px">
-        <a href="{{ route('admin.plans.create') }}" class="btn btn--primary">Write a new plan</a>
+        <a href="{{ route('admin.plans.create') }}" class="btn">Write a new plan</a>
     </p>
 
     <table class="table">

@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Reservation;
 use App\Payments\GatewayManager;
 use App\Tenancy\TenantContext;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -82,10 +83,23 @@ final readonly class ExpireUnpaidReservations
 
                 $gateway->cancelCheckout($setting, (string) $payment->session_id);
             });
-        } catch (Throwable) {
-            // A gateway that will not close a session is not a reason to keep
-            // a sunbed off the market. The availability re-check before
-            // confirming covers the rest (SPEC §24.1).
+        } catch (Throwable $exception) {
+            /*
+             * A gateway that will not close a session is not a reason to keep
+             * a sunbed off the market. The availability re-check before
+             * confirming covers the rest (SPEC §24.1).
+             *
+             * Logged rather than ignored: a session left open at the provider
+             * is a guest who can still be charged for a spot that has gone
+             * back on sale, and the only way anybody finds out is this line.
+             */
+            Log::warning('Could not close a checkout session at the gateway.', [
+                'payment' => $payment->getKey(),
+                'reservation' => $reservation->code,
+                'gateway' => $payment->gateway->value,
+                'error' => $exception->getMessage(),
+                'at' => $exception->getFile().':'.$exception->getLine(),
+            ]);
         }
     }
 

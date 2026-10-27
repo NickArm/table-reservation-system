@@ -6,6 +6,7 @@ namespace Tests\Feature\Vouchers;
 
 use App\Models\Reservation;
 use App\Tenancy\TenantContext;
+use App\Vouchers\VoucherPdf;
 use App\Vouchers\VoucherToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -102,6 +103,48 @@ final class VoucherPageTest extends TestCase
         $this->assertStringContainsString('text/calendar', (string) $response->headers->get('content-type'));
         $this->assertStringContainsString('attachment;', (string) $response->headers->get('content-disposition'));
         $this->assertStringContainsString('BEGIN:VEVENT', (string) $response->getContent());
+    }
+
+    #[Test]
+    public function the_pdf_downloads_or_sends_them_to_the_page_instead(): void
+    {
+        $response = $this->get(route('voucher.pdf', [
+            'code' => $this->reservation->code,
+            'token' => $this->token,
+        ]));
+
+        /*
+         * Two valid outcomes, because the PDF library is optional by design:
+         * without dompdf installed the page itself is a perfectly good
+         * voucher, and a guest tapping "download" should land on it rather
+         * than on an error (SPEC §11.2).
+         */
+        if (! VoucherPdf::available()) {
+            $response->assertRedirect($this->url());
+
+            return;
+        }
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+        $this->assertStringContainsString('attachment;', (string) $response->headers->get('content-disposition'));
+        $this->assertStringStartsWith('%PDF', (string) $response->getContent());
+    }
+
+    #[Test]
+    public function the_pdf_is_behind_the_same_signature_as_the_page(): void
+    {
+        $this->get(route('voucher.pdf', [
+            'code' => $this->reservation->code,
+            'token' => $this->token.'x',
+        ]))->assertNotFound();
+
+        // A real code with somebody else's signature is the case worth having
+        // a test for: the code travels in an email, the signature does not.
+        $this->get(route('voucher.pdf', [
+            'code' => 'NOSUCHCODE',
+            'token' => $this->token,
+        ]))->assertNotFound();
     }
 
     #[Test]

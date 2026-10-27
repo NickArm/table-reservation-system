@@ -89,8 +89,31 @@ final class ResourceController extends Controller
         return back()->with('status', "“{$area->name}” is now {$status->label()}.");
     }
 
+    /**
+     * Remove one for good — for a range that was typed wrong, not for a windy
+     * afternoon.
+     *
+     * Refused while somebody is still expected at it. The reservation itself
+     * would survive, because `resource_id` is nulled rather than cascaded and
+     * the snapshot keeps what was booked (SPEC §14) — but the guest would
+     * arrive to a booking with no table against it, and the system does not
+     * orphan a paid booking by itself (§24.5, §29.3). Closing it is the one
+     * tap that was wanted anyway, and it is reversible.
+     */
     public function destroy(Resource $resource): RedirectResponse
     {
+        $expected = $resource->reservations()->stillToCome()->count();
+
+        if ($expected > 0) {
+            return back()->with('error', sprintf(
+                '%s has %d booking%s still to come. Close it instead — that stops '
+                .'anybody else booking it and leaves the ones you have alone.',
+                $resource->label,
+                $expected,
+                $expected === 1 ? '' : 's',
+            ));
+        }
+
         $label = $resource->label;
         $resource->delete();
 

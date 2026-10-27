@@ -96,7 +96,7 @@
         </section>
 
         <p>
-            <button type="submit" class="btn btn--primary">Save</button>
+            <button type="submit" class="btn">Save</button>
             <a href="{{ route('public.booking', $tenant) }}" class="btn btn--ghost">
                 See the booking page
             </a>

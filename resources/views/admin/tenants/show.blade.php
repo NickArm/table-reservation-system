@@ -151,7 +151,7 @@
                             </small>
                         </div>
 
-                        <button type="submit" class="btn btn--primary">Extend</button>
+                        <button type="submit" class="btn">Extend</button>
                     </form>
                 @endif
             </details>
@@ -202,7 +202,7 @@
                                    placeholder="Dispute resolved">
                         </div>
 
-                        <button type="submit" class="btn btn--primary">Restore</button>
+                        <button type="submit" class="btn">Restore</button>
                     </form>
                 </details>
             @else

@@ -199,7 +199,7 @@
         </section>
 
         <p>
-            <button type="submit" class="btn btn--primary">
+            <button type="submit" class="btn">
                 {{ $plan->exists ? 'Save the plan' : 'Write the plan' }}
             </button>
             <a href="{{ route('admin.plans.index') }}" class="btn btn--ghost">Back</a>

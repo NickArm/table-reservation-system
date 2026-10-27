@@ -242,6 +242,134 @@ final class CheckoutTest extends TestCase
             ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_session_2');
     }
 
+    #[Test]
+    public function cancelling_stops_the_provider_and_keeps_the_month_that_was_paid_for(): void
+    {
+        $this->subscribe();
+
+        Http::fake([
+            'api.stripe.com/v1/subscriptions/sub_test_1' => Http::response([
+                'id' => 'sub_test_1',
+                'status' => 'canceled',
+            ]),
+        ]);
+
+        $this->post(route('dashboard.billing.cancel'))
+            ->assertRedirect(route('dashboard.billing'))
+            ->assertSessionHas('status');
+
+        $subscription = $this->asTenant(
+            static fn (): Subscription => Subscription::query()->firstOrFail()
+        );
+
+        $this->assertNotNull($subscription->cancelled_at);
+        $this->assertTrue((bool) $subscription->cancel_at_period_end);
+
+        /*
+         * Still working. They paid for the month, and switching the venue off
+         * the same afternoon would strand every guest who has already booked
+         * (SPEC §4.3).
+         */
+        $this->assertSame(TenantStatus::Active, $this->tenant->refresh()->status);
+        $this->get(route('dashboard.today'))->assertOk();
+    }
+
+    #[Test]
+    public function nothing_is_cancelled_here_if_the_provider_cannot_be_reached(): void
+    {
+        $this->subscribe();
+
+        Http::fake([
+            'api.stripe.com/v1/subscriptions/sub_test_1' => Http::response(['error' => 'down'], 500),
+        ]);
+
+        $this->post(route('dashboard.billing.cancel'))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        /*
+         * The order is deliberate. Marking it cancelled here while the
+         * provider keeps charging is the one outcome worth refusing — the
+         * owner would be paying for an account that believes it is closed.
+         */
+        $this->assertNull($this->asTenant(
+            static fn (): ?Subscription => Subscription::query()->first()
+        )?->cancelled_at);
+    }
+
+    #[Test]
+    public function cancelling_twice_changes_nothing(): void
+    {
+        $this->subscribe();
+
+        Http::fake([
+            'api.stripe.com/v1/subscriptions/sub_test_1' => Http::response(['status' => 'canceled']),
+        ]);
+
+        $this->post(route('dashboard.billing.cancel'))->assertRedirect();
+
+        $first = $this->asTenant(
+            static fn (): Subscription => Subscription::query()->firstOrFail()
+        )->cancelled_at;
+
+        $this->travel(2)->hours();
+        $this->post(route('dashboard.billing.cancel'))->assertRedirect(route('dashboard.billing'));
+
+        $this->assertEquals($first, $this->asTenant(
+            static fn (): Subscription => Subscription::query()->firstOrFail()
+        )->cancelled_at);
+    }
+
+    #[Test]
+    public function one_venue_cannot_cancel_another_ones_subscription(): void
+    {
+        $this->subscribe();
+
+        $mine = $this->tenant;
+
+        $this->signInAsOwner('Another Place');
+        $this->post(route('dashboard.billing.cancel'))->assertRedirect(route('dashboard.billing'));
+
+        // Nothing of the first account's was touched: `cancel` resolves the
+        // subscription from the signed-in account, so there is no identifier
+        // to aim at somebody else's.
+        $this->assertNull(
+            Subscription::query()->acrossTenants()
+                ->where('tenant_id', $mine->getKey())
+                ->firstOrFail()
+                ->cancelled_at
+        );
+    }
+
+    /**
+     * An account that is paying, through a full return from the provider —
+     * the same path a real one took to get there.
+     */
+    private function subscribe(): void
+    {
+        $this->startCheckout();
+
+        Http::fake([
+            'api.stripe.com/v1/checkout/sessions/cs_test_session_1*' => Http::response([
+                'id' => 'cs_test_session_1',
+                'subscription' => [
+                    'id' => 'sub_test_1',
+                    'status' => 'active',
+                    'customer' => 'cus_test_1',
+                    'current_period_end' => CarbonImmutable::parse('2026-08-01 09:00')->getTimestamp(),
+                    'items' => ['data' => [[
+                        'price' => ['unit_amount' => 7000, 'currency' => 'eur'],
+                    ]]],
+                ],
+            ]),
+        ]);
+
+        $this->get(route('dashboard.billing.returned', [
+            'provider' => BillingProvider::Stripe->value,
+            'reference' => 'cs_test_session_1',
+        ]))->assertRedirect(route('dashboard.billing'));
+    }
+
     /**
      * Puts the session into the state a real checkout leaves behind.
      */

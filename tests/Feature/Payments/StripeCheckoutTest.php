@@ -322,6 +322,86 @@ final class StripeCheckoutTest extends TestCase
         );
     }
 
+    #[Test]
+    public function a_guest_who_backs_out_at_the_gateway_frees_the_spot_at_once(): void
+    {
+        $this->pendingPayment();
+
+        $reservation = $this->asVenue(static fn (): Reservation => Reservation::query()->firstOrFail());
+
+        $this->get(route('public.payment-cancelled', [$this->venueTenant, $reservation]))
+            ->assertRedirect(route('public.search', [
+                $this->venueTenant,
+                'people' => $reservation->party_size,
+            ]));
+
+        /*
+         * Immediately, rather than at the next sweep. The guest is standing on
+         * the sand with the page open and will try again in the next thirty
+         * seconds; finding their own abandoned booking in the way is the one
+         * thing that must not happen (SPEC §24.1).
+         */
+        $this->assertSame(
+            ReservationStatus::Expired,
+            $this->asVenue(static fn (): Reservation => Reservation::query()->firstOrFail())->status,
+        );
+    }
+
+    #[Test]
+    public function backing_out_does_not_touch_a_booking_that_was_already_paid(): void
+    {
+        $this->pendingPayment();
+
+        // The webhook carries an identifier and nothing worth trusting, so
+        // the session is fetched from Stripe before anything is believed.
+        Http::fake([
+            'api.stripe.com/v1/checkout/sessions/cs_test_123' => Http::response([
+                'id' => 'cs_test_123',
+                'payment_status' => 'paid',
+                'payment_intent' => 'pi_test_123',
+                'amount_total' => 2500,
+            ]),
+        ]);
+
+        $this->postWebhook([
+            'type' => 'checkout.session.completed',
+            'data' => ['object' => ['id' => 'cs_test_123']],
+        ])->assertOk();
+
+        $reservation = $this->asVenue(static fn (): Reservation => Reservation::query()->firstOrFail());
+        $this->assertSame(ReservationStatus::Confirmed, $reservation->status);
+
+        // The same URL, typed afterwards or opened from a stale tab. A guest
+        // must not be able to cancel a paid booking by going back a page.
+        $this->get(route('public.payment-cancelled', [$this->venueTenant, $reservation]))
+            ->assertRedirect();
+
+        $this->assertSame(
+            ReservationStatus::Confirmed,
+            $this->asVenue(static fn (): Reservation => Reservation::query()->firstOrFail())->status,
+        );
+    }
+
+    #[Test]
+    public function one_venues_address_cannot_cancel_another_venues_booking(): void
+    {
+        $this->pendingPayment();
+
+        $reservation = $this->asVenue(static fn (): Reservation => Reservation::query()->firstOrFail());
+
+        $this->signInAsOwner('Another Place');
+        $otherTenant = $this->tenant;
+        auth()->logout();
+
+        $this->get(route('public.payment-cancelled', [$otherTenant, $reservation]))
+            ->assertNotFound();
+
+        $this->assertSame(
+            ReservationStatus::PendingPayment,
+            $this->asVenue(static fn (): Reservation => Reservation::query()->firstOrFail())->status,
+        );
+    }
+
     private function book(): void
     {
         $spot = $this->asVenue(static fn (): Resource => Resource::query()->where('label', 'A1')->firstOrFail());

@@ -12,6 +12,7 @@ use App\Models\Reservation;
 use App\Models\Tenant;
 use App\Models\Venue;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Throwable;
 
@@ -37,9 +38,20 @@ final class CheckoutController extends Controller
         if ($payment !== null && ! $payment->isPaid()) {
             try {
                 $settle->handle($payment);
-            } catch (Throwable) {
-                // The webhook or the hourly reconciliation will catch it. The
-                // guest should not see a stack trace for our plumbing.
+            } catch (Throwable $exception) {
+                /*
+                 * The webhook or the hourly reconciliation will catch it. The
+                 * guest should not see a stack trace for our plumbing — but
+                 * somebody has to be able to see it, or a gateway that has
+                 * started refusing us looks exactly like a run of guests who
+                 * changed their minds.
+                 */
+                Log::warning('Could not settle a payment on the way back from the gateway.', [
+                    'reservation' => $reservation->code,
+                    'payment' => $payment->getKey(),
+                    'error' => $exception->getMessage(),
+                    'at' => $exception->getFile().':'.$exception->getLine(),
+                ]);
             }
         }
 

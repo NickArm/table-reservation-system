@@ -126,7 +126,7 @@
                             <form method="POST"
                                   action="{{ route('dashboard.billing.checkout', $option) }}">
                                 @csrf
-                                <button type="submit" class="btn btn--primary">
+                                <button type="submit" class="btn">
                                     @if ($isCurrent)
                                         Keep this plan
                                     @elseif ($plan === null)
