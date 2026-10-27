@@ -91,11 +91,9 @@ final class BookingPageController extends Controller
      */
     private function structuredData(Tenant $tenant, Venue $venue): array
     {
-        $type = match ($venue->venue_category) {
-            'restaurant', 'taverna' => 'Restaurant',
-            'beach_bar', 'cafe', 'club' => 'BarOrPub',
-            default => 'LocalBusiness',
-        };
+        // The mapping lives on the enum, which is the only place that knows
+        // what a taverna is to a search engine (§33.2).
+        $type = $venue->venue_category?->schemaType() ?? 'LocalBusiness';
 
         $data = [
             '@context' => 'https://schema.org',
@@ -116,7 +114,7 @@ final class BookingPageController extends Controller
             $data['priceRange'] = $venue->price_range;
         }
 
-        if (filled($venue->cuisine) && $type === 'Restaurant') {
+        if (filled($venue->cuisine) && ($venue->venue_category?->servesCuisine() ?? false)) {
             $data['servesCuisine'] = $venue->cuisine;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\VenueCategory;
 use App\Models\Concerns\BelongsToTenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\VenueFactory;
@@ -47,6 +48,7 @@ class Venue extends Model
         return [
             'latitude' => 'float',
             'longitude' => 'float',
+            'venue_category' => VenueCategory::class,
             'hero_overlay' => 'integer',
             'is_indexable' => 'boolean',
             'social' => 'array',

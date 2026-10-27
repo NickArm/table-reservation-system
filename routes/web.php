@@ -39,6 +39,7 @@ use App\Http\Controllers\Dashboard\ResourceController;
 use App\Http\Controllers\Dashboard\SettingsController;
 use App\Http\Controllers\Dashboard\TermsAcceptanceController;
 use App\Http\Controllers\Dashboard\TodayController;
+use App\Http\Controllers\Dashboard\VenueProfileController;
 use App\Http\Controllers\Dashboard\WidgetController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MailWebhookController;
@@ -48,6 +49,7 @@ use App\Http\Controllers\PublicSite\EmbedController;
 use App\Http\Controllers\PublicSite\HoldController;
 use App\Http\Controllers\PublicSite\ReservationController;
 use App\Http\Controllers\PublicSite\SearchController;
+use App\Http\Controllers\PublicSite\SitemapController;
 use App\Http\Controllers\PublicSite\VenueLegalController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WebhookController;
@@ -60,6 +62,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::view('/', 'marketing.home')->name('home');
+
+/*
+ * Every booking page worth indexing (SPEC §33.2). Structured data tells a
+ * search engine what a page is; this tells it the page exists — otherwise a
+ * brand new venue waits for somebody to link to it.
+ */
+Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
 /*
 |--------------------------------------------------------------------------
@@ -419,6 +428,14 @@ Route::prefix('dashboard')
          * setting up and then forgets — and Settings is where the account
          * itself lives.
          */
+        /*
+         * The venue's public profile (SPEC §33.1). The fields have been in
+         * the database since M0 and the booking page has read them since M4;
+         * this is the screen that lets an owner fill them in.
+         */
+        Route::get('profile', [VenueProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('profile', [VenueProfileController::class, 'update'])->name('profile.update');
+
         Route::get('branding', [BrandingController::class, 'edit'])->name('branding.edit');
         Route::patch('branding', [BrandingController::class, 'update'])->name('branding.update');
 
