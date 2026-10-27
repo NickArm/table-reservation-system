@@ -318,7 +318,52 @@ land in spam. Brevo's own setup page walks through the DNS records.
 Payment webhooks are **per venue** and are shown, with the venue's own
 address filled in, on the dashboard's *Payments* screen.
 
-## 8. Error tracking
+## 8. Images, when the local disk stops being enough
+
+`MEDIA_DISK=public` serves logos and hero photographs off this server, which
+works from the first deploy and is the wrong answer once there are real
+venues. Those images are fetched on **every** visit a tourist makes to a
+booking page: shared hosting has little disk, and the nightly backups
+multiply whatever is on it.
+
+Moving to object storage changes one setting, because nothing anywhere stores
+a URL — only a path. `Venue::logoUrl()` builds the address from whichever disk
+is configured when the page renders.
+
+Cloudflare R2 is what the spec names, for one reason: egress is the dominant
+cost of this disk and R2 charges nothing for it (SPEC §30.1). Hetzner Object
+Storage is as good if you would rather keep everything with one provider.
+
+1. Create a bucket, and an API token scoped to it.
+2. **Make the bucket publicly readable** and note its public address — either
+   the r2.dev one or, better, a custom domain pointed at it.
+3. Fill in the `MEDIA_*` block in `.env` (it is in
+   `.env.production.example`) and set `MEDIA_DISK=media`.
+4. Copy whatever is already on the local disk across, keeping the paths:
+   everything lives under `tenants/<uuid>/venue/...`, so `rclone copy` or the
+   Cloudflare dashboard both do it. Existing rows keep working untouched.
+
+Three settings are each a trap worth knowing before you hit it:
+
+- **`MEDIA_URL` is not `MEDIA_ENDPOINT`.** The endpoint is the S3 API and
+  needs credentials; `MEDIA_URL` is where a browser fetches a file from.
+  Leave it empty and every image on every booking page answers 401.
+- **`MEDIA_REGION` is `auto`.** R2 has one region and that is its name.
+  Anything else is accepted and then quietly ignored, and the first sign of
+  trouble is a signature mismatch rather than a useful error.
+- **No per-object ACLs.** R2 does not implement them, so nothing in the
+  application asks for one — the bucket is made readable once, in step 2.
+  That is why the `media` disk has no `visibility` key, and why changing it
+  would break every upload.
+
+The `media` disk also has `throw` on, unlike Laravel's stock `s3`. A failed
+upload becomes an exception the owner is told about rather than a quiet
+`false` that stores a path with no file behind it.
+
+Vouchers are not affected: the PDF is rendered when the email is sent and
+never stored, so there is nothing on this disk that needs a signed URL.
+
+## 9. Error tracking
 
 `sentry/sentry-laravel` is installed. With `SENTRY_LARAVEL_DSN` empty nothing
 is sent and nothing breaks, which is how every developer machine and the test

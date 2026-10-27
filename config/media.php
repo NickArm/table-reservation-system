@@ -16,6 +16,15 @@ return [
     |
     */
 
+    /*
+     * `public` on a developer machine, `media` in production — the R2 disk in
+     * `config/filesystems.php`. A developer should not need a bucket to show a
+     * logo, and production should not be serving a season of photographs off
+     * a shared host's disk, where the backups multiply the volume (§30.1).
+     *
+     * Nothing anywhere stores a URL, only a path, which is what lets this
+     * move between the two without rewriting a single row.
+     */
     'disk' => env('MEDIA_DISK', 'public'),
 
     /*

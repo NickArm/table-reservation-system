@@ -54,7 +54,29 @@ final readonly class ImageStore
     ): string {
         $path = $kind->pathFor($tenantUuid, (string) Str::uuid7());
 
-        Storage::disk($this->disk())->put($path, $this->encode($kind, $file), 'public');
+        /*
+         * No visibility argument. Laravel turns `public` into an
+         * `ACL: public-read` header, and Cloudflare R2 — which is what this
+         * disk is for in production (§30.1) — does not implement per-object
+         * ACLs, so the upload fails outright. The disk's own configuration
+         * decides, and on R2 the bucket is made readable once rather than
+         * per file.
+         */
+        $written = Storage::disk($this->disk())->put($path, $this->encode($kind, $file));
+
+        /*
+         * Checked, because a Laravel disk with `throw` off answers a failed
+         * write with a quiet `false`. Unchecked, the venue's row would hold
+         * the path we meant to write, the booking page would show a broken
+         * image, and nothing anywhere would say why. The `media` disk is
+         * configured to throw for the same reason; this covers the case where
+         * it is not.
+         */
+        if ($written === false) {
+            throw new RuntimeException(
+                'The image could not be saved. Please try again in a moment.'
+            );
+        }
 
         if ($replacing !== null && $replacing !== '' && $replacing !== $path) {
             $this->forget($replacing);
