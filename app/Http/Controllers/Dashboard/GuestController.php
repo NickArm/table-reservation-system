@@ -46,12 +46,70 @@ final class GuestController extends Controller
             'search' => $search,
             'filter' => $filter,
             'sort' => (string) $request->string('sort', 'recent'),
-            'totals' => [
+            'totals' => $totals = [
                 'all' => Guest::query()->count(),
                 'repeat' => Guest::query()->repeat()->count(),
                 'trouble' => Guest::query()->trouble()->count(),
             ],
+            // One tap each, with the count on the chip: the count is the
+            // reason an owner opens this screen at all.
+            'segments' => $this->segments($request, $filter, $totals),
+            'sorts' => $this->sorts($request),
         ]);
+    }
+
+    /**
+     * @param  array{all: int, repeat: int, trouble: int}  $totals
+     * @return list<array{label: string, count: int, href: string, on: bool}>
+     */
+    private function segments(Request $request, string $filter, array $totals): array
+    {
+        $keep = $request->only(['q', 'sort']);
+
+        $options = [
+            ['label' => 'Everyone', 'show' => 'all', 'count' => $totals['all']],
+            ['label' => 'Came back', 'show' => 'repeat', 'count' => $totals['repeat']],
+            ['label' => 'No-shows', 'show' => 'trouble', 'count' => $totals['trouble']],
+        ];
+
+        return array_map(
+            static fn (array $option): array => [
+                'label' => $option['label'],
+                'count' => $option['count'],
+                'href' => route('dashboard.guests.index', array_filter(
+                    [...$keep, 'show' => $option['show']],
+                    static fn (mixed $value): bool => $value !== null && $value !== '',
+                )),
+                'on' => $filter === $option['show'],
+            ],
+            $options,
+        );
+    }
+
+    /**
+     * @return list<array{label: string, href: string, on: bool}>
+     */
+    private function sorts(Request $request): array
+    {
+        $keep = $request->only(['q', 'show']);
+        $current = $request->string('sort')->value() === 'bookings' ? 'bookings' : 'recent';
+
+        $options = [
+            ['label' => 'Last visit', 'sort' => 'recent'],
+            ['label' => 'Most bookings', 'sort' => 'bookings'],
+        ];
+
+        return array_map(
+            static fn (array $option): array => [
+                'label' => $option['label'],
+                'href' => route('dashboard.guests.index', array_filter(
+                    [...$keep, 'sort' => $option['sort']],
+                    static fn (mixed $value): bool => $value !== null && $value !== '',
+                )),
+                'on' => $current === $option['sort'],
+            ],
+            $options,
+        );
     }
 
     public function show(Guest $guest, TenantContext $context): View

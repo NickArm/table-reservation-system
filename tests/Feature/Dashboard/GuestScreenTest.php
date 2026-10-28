@@ -65,6 +65,33 @@ final class GuestScreenTest extends TestCase
     }
 
     #[Test]
+    public function the_segments_carry_their_counts_and_keep_the_search(): void
+    {
+        $this->asTenant(function (): void {
+            Guest::factory()->regular(4)->create(['name' => 'Maria Kosta']);
+            Guest::factory()->troublesome(2)->create(['name' => 'Yannis Late']);
+            Guest::factory()->create(['name' => 'Anna Once']);
+        });
+
+        /*
+         * The count is the reason this screen gets opened — "how many come
+         * back" is the question, and a dropdown hides the answer until
+         * somebody opens it.
+         */
+        $this->get(route('dashboard.guests.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Everyone', 'Came back', 'No-shows'])
+            // Three guests in all, one of whom has been back.
+            ->assertSee('<span class="chip__count">3</span>', false)
+            ->assertSee('<span class="chip__count">1</span>', false);
+
+        // And a segment does not throw away what is already typed.
+        $this->get(route('dashboard.guests.index', ['q' => 'Maria']))
+            ->assertOk()
+            ->assertSee(route('dashboard.guests.index', ['q' => 'Maria', 'show' => 'repeat']));
+    }
+
+    #[Test]
     public function the_search_covers_name_email_and_phone(): void
     {
         $this->asTenant(function (): void {

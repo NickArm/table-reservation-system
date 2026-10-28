@@ -3,7 +3,9 @@
 
     Sorted by last visit, because the question is almost always about somebody
     recent. The two filters that matter are the two an owner acts on: people who
-    come back, and people who do not turn up.
+    come back, and people who do not turn up — so both are one tap, with their
+    counts on them. A dropdown hides the counts, and the counts are the reason
+    an owner opens this screen at all.
 --}}
 @extends('layouts.dashboard')
 
@@ -13,7 +15,12 @@
     <div class="page-head">
         <div>
             <h1>Guests</h1>
-            <p>Everyone who has ever booked with you.</p>
+            <p class="muted">
+                Everyone who has ever booked with you.
+                @if ($totals['repeat'] > 0)
+                    <strong>{{ $totals['repeat'] }}</strong> have come back.
+                @endif
+            </p>
         </div>
 
         @if ($totals['all'] > 0)
@@ -32,63 +39,65 @@
             </p>
         </div>
     @else
-        <form method="GET" action="{{ route('dashboard.guests.index') }}"
-              class="card filters" style="margin-bottom:16px">
-            <div style="flex:1 1 240px">
-                <label class="label" for="q">Search</label>
-                <input class="field" type="search" id="q" name="q" value="{{ $search }}"
-                       placeholder="Name, email or phone">
-            </div>
+        <form method="GET" action="{{ route('dashboard.guests.index') }}" class="searchbar">
+            @foreach (request()->only(['show', 'sort']) as $key => $value)
+                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+            @endforeach
 
-            <div>
-                <label class="label" for="show">Show</label>
-                <select class="field" id="show" name="show">
-                    <option value="all" @selected($filter === 'all')>
-                        Everyone ({{ $totals['all'] }})
-                    </option>
-                    <option value="repeat" @selected($filter === 'repeat')>
-                        Came back ({{ $totals['repeat'] }})
-                    </option>
-                    <option value="trouble" @selected($filter === 'trouble')>
-                        No-shows ({{ $totals['trouble'] }})
-                    </option>
-                </select>
-            </div>
-
-            <div>
-                <label class="label" for="sort">Sort</label>
-                <select class="field" id="sort" name="sort">
-                    <option value="recent" @selected($sort !== 'bookings')>Last visit</option>
-                    <option value="bookings" @selected($sort === 'bookings')>Most bookings</option>
-                </select>
-            </div>
-
-            <div>
-                <button class="btn" type="submit">Apply</button>
-            </div>
+            <label class="label" for="q"
+                   style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">
+                Search guests
+            </label>
+            <input class="field" type="search" id="q" name="q" value="{{ $search }}"
+                   placeholder="Name, email or phone">
+            <button class="btn" type="submit">Search</button>
         </form>
+
+        <div class="chips" style="margin-bottom:10px">
+            @foreach ($segments as $segment)
+                <a class="chip" href="{{ $segment['href'] }}"
+                   @if ($segment['on']) aria-current="page" @endif>
+                    {{ $segment['label'] }}
+                    <span class="chip__count">{{ $segment['count'] }}</span>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="chips" style="margin-bottom:16px">
+            @foreach ($sorts as $option)
+                <a class="chip" href="{{ $option['href'] }}"
+                   @if ($option['on']) aria-current="page" @endif>{{ $option['label'] }}</a>
+            @endforeach
+        </div>
 
         @if ($guests->isEmpty())
             <div class="empty">
                 <p style="margin:0">Nobody matches that.</p>
             </div>
         @else
-            <section class="card">
+            <section class="card" style="padding:0;overflow:hidden">
                 <div class="guests">
                     @foreach ($guests as $guest)
-                        <div class="guest">
+                        <a class="guest" href="{{ route('dashboard.guests.show', $guest) }}">
+                            <span class="guest__avatar @if ($guest->warning()) guest__avatar--warn @endif"
+                                  aria-hidden="true">{{ $guest->initials() }}</span>
+
                             <span class="guest__name">
                                 <strong>
-                                    <a href="{{ route('dashboard.guests.show', $guest) }}">{{ $guest->name }}</a>
+                                    {{ $guest->name }}
+
+                                    {{-- The one thing worth interrupting
+                                         somebody for, before the tags. --}}
+                                    @if ($guest->warning())
+                                        <span class="flag flag--warn">{{ $guest->warning() }}</span>
+                                    @elseif ($guest->visitLabel())
+                                        <span class="flag">{{ $guest->visitLabel() }}</span>
+                                    @endif
+
+                                    @foreach ($guest->tagList() as $tag)
+                                        <span class="flag">{{ $tag }}</span>
+                                    @endforeach
                                 </strong>
-
-                                @if ($guest->warning())
-                                    <span class="flag flag--warn">{{ $guest->warning() }}</span>
-                                @endif
-
-                                @foreach ($guest->tagList() as $tag)
-                                    <span class="flag">{{ $tag }}</span>
-                                @endforeach
 
                                 <small>
                                     {{ $guest->email ?? 'no email' }}
@@ -96,12 +105,23 @@
                                 </small>
                             </span>
 
+                            {{-- Labelled, because three bare numbers in a row
+                                 are three numbers somebody has to decode. --}}
                             <span class="guest__counts">
-                                <span><b>{{ $guest->bookings_count }}</b> bookings</span>
-                                <span>{{ \App\Support\Money::format((int) $guest->total_spent_cents) }}</span>
-                                <span>{{ $guest->last_seen_at?->format('j M Y') ?? '—' }}</span>
+                                <span class="guest__stat">
+                                    <b>{{ $guest->bookings_count }}</b>
+                                    <small>bookings</small>
+                                </span>
+                                <span class="guest__stat">
+                                    <b>{{ \App\Support\Money::format((int) $guest->total_spent_cents) }}</b>
+                                    <small>spent</small>
+                                </span>
+                                <span class="guest__stat">
+                                    <b>{{ $guest->last_seen_at?->format('j M Y') ?? '—' }}</b>
+                                    <small>last here</small>
+                                </span>
                             </span>
-                        </div>
+                        </a>
                     @endforeach
                 </div>
             </section>

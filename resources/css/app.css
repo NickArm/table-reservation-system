@@ -1334,28 +1334,48 @@ details.advanced > summary {
 
 .guest {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 4px 16px;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 4px 14px;
     align-items: center;
-    padding: 13px 0;
+    padding: 12px 20px;
     border-top: 1px solid var(--line);
+    color: inherit;
+    text-decoration: none;
 }
 
 .guest:first-child {
     border-top: 0;
 }
 
+.guest:hover {
+    background: var(--surface);
+}
+
+/*
+ * Two letters where a photograph will never exist. A column of initials
+ * gives the eye something to land on while scrolling; a column of names in
+ * one weight does not.
+ */
+.guest__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: var(--step--1);
+    font-weight: 700;
+}
+
+.guest__avatar--warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
 .guest__name {
     min-width: 0;
-}
-
-.guest__name strong a {
-    color: inherit;
-    text-decoration: none;
-}
-
-.guest__name strong a:hover {
-    text-decoration: underline;
 }
 
 .guest__name small {
@@ -1367,17 +1387,59 @@ details.advanced > summary {
 
 .guest__counts {
     display: flex;
-    gap: 14px;
+    gap: 20px;
     align-items: baseline;
-    color: var(--muted);
-    font-size: var(--step--1);
-    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
-.guest__counts b {
+/* Labelled: three bare numbers in a row are three numbers to decode. */
+.guest__stat {
+    display: block;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.guest__stat b {
+    display: block;
     color: var(--ink);
+    font-size: var(--step--1);
     font-weight: 600;
+}
+
+.guest__stat small {
+    display: block;
+    color: var(--faint);
+    font-size: var(--step--2);
+}
+
+.chip__count {
+    margin-left: 7px;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: var(--step--2);
+    font-weight: 700;
+}
+
+.chip[aria-current='page'] .chip__count {
+    background: rgb(255 255 255 / 0.22);
+    color: var(--bg);
+}
+
+@media (max-width: 720px) {
+    .guest {
+        grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+    .guest__counts {
+        grid-column: 2;
+        gap: 16px;
+    }
+
+    .guest__stat {
+        text-align: left;
+    }
 }
 
 .filters {

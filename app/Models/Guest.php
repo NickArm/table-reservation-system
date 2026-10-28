@@ -147,6 +147,25 @@ class Guest extends Model
     }
 
     /**
+     * Two letters for the list, where a photograph will never exist.
+     *
+     * A column of initials gives the eye something to land on while
+     * scrolling, which a column of names in the same weight does not.
+     */
+    public function initials(): string
+    {
+        $words = preg_split('/\s+/', trim((string) $this->name)) ?: [];
+
+        $letters = collect($words)
+            ->filter()
+            ->take(2)
+            ->map(static fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->implode('');
+
+        return $letters === '' ? '?' : $letters;
+    }
+
+    /**
      * The warning worth interrupting somebody for, or nothing at all.
      */
     public function warning(): ?string
