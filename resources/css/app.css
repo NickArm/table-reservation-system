@@ -543,6 +543,128 @@ a:focus-visible {
     font-variant-numeric: tabular-nums;
 }
 
+.stat--ok {
+    color: var(--ok);
+}
+
+.stat--warn {
+    color: var(--warn);
+}
+
+.stat__note {
+    display: block;
+    margin-top: 8px;
+    color: var(--faint);
+    font-size: var(--step--2);
+}
+
+/* --- Today: the list and the rail beside it ----------------------------- */
+
+/*
+ * The list is the screen; the rail is what is going wrong. On a narrow
+ * screen the rail goes underneath, because during service the list is what
+ * the owner scrolls and an alarm they have already read should not push it
+ * down the page.
+ */
+.work {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 18px;
+    align-items: start;
+}
+
+.work__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+@media (max-width: 1080px) {
+    .work {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 0 13px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.chip:hover {
+    color: var(--ink);
+}
+
+.chip[aria-current='page'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+    font-weight: 600;
+}
+
+.needs {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+}
+
+.needs:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.needs__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-top: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+}
+
+.needs__dot--late {
+    background: var(--danger);
+}
+
+.needs__dot--table {
+    background: var(--warn);
+}
+
+.needs__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--step--1);
+}
+
+.needs__text small {
+    font-size: var(--step--2);
+    line-height: 1.45;
+}
+
+.card--soft {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
 .progress {
     height: 8px;
     border-radius: var(--radius-pill);
@@ -806,6 +928,50 @@ details.advanced > summary {
     gap: 10px;
     align-items: center;
     margin-left: auto;
+}
+
+/*
+ * The table number, read as a shape rather than a word. A seated table
+ * wears the accent, so a full room is a block of colour down the left of
+ * the list and an owner can count what is still to come without reading.
+ */
+.booking__table {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.booking__table--on {
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+
+/* Spelled out, not hidden in a title attribute: a phone has no hover. */
+.booking__note {
+    margin-top: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--warn-line);
+    border-radius: var(--radius-control);
+    background: var(--warn-soft);
+    color: var(--warn);
+    font-size: var(--step--2);
+    line-height: 1.45;
+}
+
+.btn--small {
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: var(--step--1);
 }
 
 @media (max-width: 600px) {

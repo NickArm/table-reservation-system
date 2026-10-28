@@ -117,7 +117,7 @@ final class TodayScreenTest extends TestCase
             ->assertRedirect();
 
         $this->get(route('dashboard.today'))
-            ->assertSee('stopped today')
+            ->assertSee('Stopped for today')
             ->assertSee('Start again');
 
         $this->assertSame([], $this->asTenant(
@@ -130,6 +130,85 @@ final class TodayScreenTest extends TestCase
         $this->assertNotSame([], $this->asTenant(
             fn () => $this->engine()->times($this->bookingType, '2026-07-04', 2)
         ));
+    }
+
+    #[Test]
+    public function a_guest_is_seated_without_leaving_this_screen(): void
+    {
+        $reservation = $this->asTenant(fn (): Reservation => $this->booking('19:00', 'Maria Rossi', 4));
+
+        $this->get(route('dashboard.today'))
+            ->assertOk()
+            ->assertSee('Seat');
+
+        /*
+         * Walking somebody to a table and then opening their booking to say
+         * so is two jobs for one event, and the second one is the one that
+         * gets skipped on a full Saturday.
+         */
+        $this->patch(route('dashboard.reservations.check-in', $reservation))->assertRedirect();
+
+        $this->get(route('dashboard.today'))
+            ->assertOk()
+            ->assertSee('Seated');
+
+        $this->assertNotNull(
+            $this->asTenant(static fn (): Reservation => Reservation::query()->firstOrFail())->checked_in_at
+        );
+    }
+
+    #[Test]
+    public function a_note_is_spelled_out_on_the_row(): void
+    {
+        $this->asTenant(function (): void {
+            $this->booking('19:00', 'Maria Rossi', 4)
+                ->forceFill(['notes' => 'Allergic to shellfish'])
+                ->save();
+        });
+
+        // Not behind a pill with a title attribute: a phone has no hover,
+        // and this is the one line the kitchen has to see.
+        $this->get(route('dashboard.today'))
+            ->assertOk()
+            ->assertSee('Allergic to shellfish');
+    }
+
+    #[Test]
+    public function somebody_standing_at_the_door_is_raised_on_the_screen(): void
+    {
+        $this->asTenant(function (): void {
+            // Booked for half past nine, and it is now ten.
+            $this->booking('09:30', 'Hunter Pappas', 2);
+        });
+
+        $this->get(route('dashboard.today'))
+            ->assertOk()
+            ->assertSee('Needs you')
+            ->assertSee('Hunter Pappas is 30 minutes late');
+    }
+
+    #[Test]
+    public function a_guest_four_minutes_late_is_simply_a_guest(): void
+    {
+        $this->asTenant(fn () => $this->booking('09:56', 'Maria Rossi', 2));
+
+        // A table is held for a while on purpose. An alarm at four minutes
+        // is an alarm nobody reads by the end of the week.
+        $this->get(route('dashboard.today'))
+            ->assertOk()
+            ->assertDontSee('Needs you');
+    }
+
+    #[Test]
+    public function covers_are_counted_against_the_size_of_the_room(): void
+    {
+        $this->asTenant(fn () => $this->booking('19:00', 'Maria Rossi', 4));
+
+        // "4 covers" says nothing on its own; "4 of 16 seats" is the number
+        // an owner can act on.
+        $this->get(route('dashboard.today'))
+            ->assertOk()
+            ->assertSee('of 16 seats');
     }
 
     #[Test]

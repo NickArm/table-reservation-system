@@ -204,6 +204,18 @@ class Reservation extends Model
         return $this->checked_in_at !== null;
     }
 
+    /**
+     * When the table is theirs until, in the venue's own time.
+     *
+     * The pair of `startsAtLocal`. A run sheet that says 13:00 and nothing
+     * else leaves whoever is reading it to work out when the table frees up,
+     * which is the one thing they are trying to find out (SPEC §3.5).
+     */
+    public function endsAtLocal(string $timezone): CarbonImmutable
+    {
+        return $this->ends_at->setTimezone($timezone);
+    }
+
     private static function generateCode(): string
     {
         do {
