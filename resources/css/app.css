@@ -251,44 +251,276 @@ a:focus-visible {
     }
 }
 
-/* --- Dashboard ---------------------------------------------------------- */
+/* --- The back-office shell ----------------------------------------------
+ *
+ * A rail down the left and one command bar across the top, for both the
+ * venue dashboard and the platform admin.
+ *
+ * The rail is dark and keeps its own colours, deliberately not the venue's
+ * accent: a yellow beach bar would otherwise get a yellow sidebar, and the
+ * one piece of furniture that must look the same on every screen would be
+ * the one piece that changes per account.
+ */
 
-.topbar {
-    background: var(--bg);
-    border-bottom: 1px solid var(--line);
+.app {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
 }
 
-.topbar__inner {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding-inline: 24px;
+.app .shell {
+    max-width: 1240px;
+    padding-block: 24px;
+}
+
+.rail {
+    --rail: #102221;
+    --rail-ink: #c9e3df;
+    --rail-ink-strong: #ffffff;
+    --rail-mark: #5eead4;
+    --rail-line: rgb(255 255 255 / 0.09);
+
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    width: 250px;
+    height: 100vh;
+    flex: none;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    background: var(--rail);
+    color: var(--rail-ink);
+}
+
+/* The platform's own screens, so one glance says whose data this is. */
+.rail--admin {
+    --rail: #1e1b33;
+    --rail-ink: #c7c4e6;
+    --rail-mark: #a5b4fc;
+}
+
+.rail__head {
+    padding: 16px 14px 14px;
+    border-bottom: 1px solid var(--rail-line);
+}
+
+.rail__brand {
+    display: flex;
     align-items: center;
-    gap: 10px 24px;
-    min-height: 60px;
+    gap: 9px;
+    margin-bottom: 12px;
+    color: var(--rail-ink-strong);
+    font-size: var(--step--1);
+    font-weight: 700;
+    text-decoration: none;
 }
 
-.nav {
+.rail__brand svg {
+    color: var(--rail-mark);
+}
+
+.rail__venue {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    flex: 1 1 auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 46px;
+    padding: 6px 10px;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: var(--radius-card);
+    background: rgb(255 255 255 / 0.05);
+    color: var(--rail-ink-strong);
+    text-align: left;
+    text-decoration: none;
 }
 
-.nav a {
-    padding: 8px 12px;
+.rail__initials {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: var(--step--2);
+    font-weight: 700;
+}
+
+.rail__venue span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rail__venue small {
+    display: block;
+    color: var(--rail-ink);
+    font-size: 11px;
+}
+
+.rail__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.12);
+    color: var(--rail-ink-strong);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.rail__nav {
+    flex: 1 1 auto;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.rail__group {
+    margin: 10px 8px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.42);
+}
+
+.rail__link {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 10px;
+    margin-bottom: 2px;
     border-radius: var(--radius-control);
-    color: var(--muted);
+    color: var(--rail-ink);
     font-size: var(--step--1);
     font-weight: 500;
     text-decoration: none;
 }
 
-.nav a[aria-current='page'] {
-    background: var(--surface-2);
-    color: var(--ink);
+.rail__link:hover {
+    background: rgb(255 255 255 / 0.06);
+    color: var(--rail-ink-strong);
+}
+
+.rail__link[aria-current='page'] {
+    background: rgb(255 255 255 / 0.12);
+    box-shadow: inset 2.5px 0 0 var(--rail-mark);
+    color: var(--rail-ink-strong);
     font-weight: 600;
+}
+
+.rail__link svg {
+    flex: none;
+}
+
+.rail__count {
+    flex: none;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.16);
+    color: var(--rail-ink-strong);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 19px;
+    text-align: center;
+}
+
+.rail__foot {
+    padding: 10px;
+    border-top: 1px solid var(--rail-line);
+}
+
+.app__main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cmdbar {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 10px 24px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+}
+
+.cmdbar__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--step--1);
+    font-weight: 600;
+}
+
+.cmdbar__title small {
+    display: block;
+    color: var(--muted);
+    font-size: var(--step--2);
+    font-weight: 400;
+}
+
+.cmdbar__quiet {
+    padding: 8px 12px;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--step--1);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cmdbar__quiet:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+}
+
+/*
+ * Narrow screens get the same rail laid on its side rather than a menu
+ * behind a button: a taverna owner on a phone should not have to open
+ * anything to see where they are.
+ */
+@media (max-width: 900px) {
+    .app {
+        flex-direction: column;
+    }
+
+    .rail {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    .rail__nav {
+        display: flex;
+        gap: 4px;
+        padding: 8px 10px;
+        overflow-x: auto;
+    }
+
+    .rail__group {
+        display: none;
+    }
+
+    .rail__link {
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+    .rail__link[aria-current='page'] {
+        box-shadow: inset 0 -2.5px 0 var(--rail-mark);
+    }
 }
 
 .stat-grid {
@@ -1276,13 +1508,6 @@ details.advanced > summary {
 .week__add:hover {
     color: var(--accent);
     text-decoration: underline;
-}
-
-.nav__sep {
-    width: 1px;
-    align-self: stretch;
-    margin-inline: 4px;
-    background: var(--line);
 }
 
 /* --- Developer page ------------------------------------------------------ */
