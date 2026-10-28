@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Guest;
 use App\Models\Reservation;
 use App\Models\Venue;
+use App\Support\StatusPill;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -129,6 +130,7 @@ final class GuestController extends Controller
                 ->limit(100)
                 ->get(),
             'canErase' => $this->isOwner($context),
+            'statusSkins' => StatusPill::map(),
         ]);
     }
 

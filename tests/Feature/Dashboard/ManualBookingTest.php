@@ -72,6 +72,53 @@ final class ManualBookingTest extends TestCase
     }
 
     #[Test]
+    public function a_booking_started_from_a_guests_card_arrives_filled_in(): void
+    {
+        $guest = $this->asTenant(fn (): Guest => Guest::factory()->create([
+            'name' => 'Maria Kosta',
+            'email' => 'maria@example.test',
+            'phone' => '+306941234567',
+        ]));
+
+        /*
+         * Typing a name, a number and an address that are already on file,
+         * while the person they belong to waits on the telephone, is the work
+         * this screen exists to remove. The stored number is E.164, so it is
+         * split back onto the two fields the form uses.
+         */
+        $this->get(route('dashboard.bookings.create', [
+            'type' => $this->bookingType->slug,
+            'date' => '2026-07-04',
+            'people' => 2,
+            'at' => $this->at('11:00')->toIso8601String(),
+            'guest' => $guest->id,
+        ]))
+            ->assertOk()
+            ->assertSee('Booking for Maria Kosta')
+            ->assertSee('value="Maria Kosta"', false)
+            ->assertSee('value="maria@example.test"', false)
+            ->assertSee('value="6941234567"', false);
+    }
+
+    #[Test]
+    public function the_guest_survives_the_walk_to_the_time_list(): void
+    {
+        $guest = $this->asTenant(fn (): Guest => Guest::factory()->create(['name' => 'Maria Kosta']));
+
+        // The times are links, and a link that drops the guest sends the
+        // owner back to typing — which is the whole point of starting from
+        // the card.
+        $this->get(route('dashboard.bookings.create', [
+            'type' => $this->bookingType->slug,
+            'date' => '2026-07-04',
+            'people' => 2,
+            'guest' => $guest->id,
+        ]))
+            ->assertOk()
+            ->assertSee('guest='.$guest->id);
+    }
+
+    #[Test]
     public function a_time_that_was_never_offered_does_not_open_the_form(): void
     {
         // Typing a timestamp into the address bar should not get a booking form

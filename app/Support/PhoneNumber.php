@@ -45,6 +45,36 @@ final class PhoneNumber
     }
 
     /**
+     * A stored E.164 number back onto the two fields the booking form uses.
+     *
+     * The longest matching code wins, because +1 is a prefix of nothing but
+     * +44 and +4 would both match a German number if the shortest did. A
+     * number whose code is not one we offer is dropped in whole rather than
+     * guessed at: wrong by a digit is worse than obviously unsplit.
+     *
+     * @return array{code: string, national: string}
+     */
+    public static function split(?string $number, string $fallbackCode = '+30'): array
+    {
+        $number = trim((string) $number);
+
+        if ($number === '') {
+            return ['code' => $fallbackCode, 'national' => ''];
+        }
+
+        $codes = array_keys(self::callingCodes());
+        usort($codes, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+
+        foreach ($codes as $code) {
+            if (str_starts_with($number, $code)) {
+                return ['code' => $code, 'national' => mb_substr($number, mb_strlen($code))];
+            }
+        }
+
+        return ['code' => $fallbackCode, 'national' => $number];
+    }
+
+    /**
      * Null when there is nothing usable in what was typed.
      */
     public static function normalize(?string $number, string $callingCode = '+30'): ?string

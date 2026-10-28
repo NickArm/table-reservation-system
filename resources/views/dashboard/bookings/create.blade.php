@@ -30,9 +30,23 @@
             </p>
         </div>
     @else
+        @if ($prefill !== null)
+            {{-- Said out loud, because a form that fills itself in without
+                 explaining why reads as a bug. --}}
+            <div class="notice" style="margin-bottom:16px">
+                <strong>Booking for {{ $prefill['name'] }}.</strong>
+                Their details are already filled in below — change any of them
+                if this one is for somebody else.
+            </div>
+        @endif
+
         {{-- Step one: what, when, how many. --}}
         <form method="GET" action="{{ route('dashboard.bookings.create') }}"
               class="card filters" style="margin-bottom:16px">
+            @if ($prefill !== null)
+                <input type="hidden" name="guest" value="{{ request('guest') }}">
+            @endif
+
             <div>
                 <label class="label" for="type">What</label>
                 <select class="field" id="type" name="type">
@@ -82,12 +96,13 @@
                             $isChosen = $chosen !== null && $offer->slot->startsAt->equalTo($chosen);
                         @endphp
                         <a class="time @if ($isChosen) time--on @endif"
-                           href="{{ route('dashboard.bookings.create', [
+                           href="{{ route('dashboard.bookings.create', array_filter([
                                'type' => $bookingType->slug,
                                'date' => $date,
                                'people' => $partySize,
                                'at' => $offer->slot->startsAt->toIso8601String(),
-                           ]) }}">
+                               'guest' => request('guest'),
+                           ])) }}">
                             {{ $offer->slot->startsAt->setTimezone($timezone)->format('H:i') }}
                             <small>{{ $offer->available }} free</small>
                         </a>
@@ -149,7 +164,7 @@
                             <label class="label" for="name">Name</label>
                             <input class="field" type="text" id="name" name="name" required
                                    maxlength="80" autocomplete="off"
-                                   value="{{ old('name') }}"
+                                   value="{{ old('name', $prefill['name'] ?? '') }}"
                                    data-suggest="{{ route('dashboard.guests.suggest') }}">
                             <div class="suggest__list" id="guest-suggestions" role="listbox"></div>
                             <p class="muted" style="margin:6px 0 0;font-size:var(--step--2)">
@@ -163,7 +178,7 @@
                                 <label class="label" for="calling_code">Code</label>
                                 <select class="field" id="calling_code" name="calling_code">
                                     @foreach ($callingCodes as $code => $label)
-                                        <option value="{{ $code }}" @selected(old('calling_code', '+30') === $code)>
+                                        <option value="{{ $code }}" @selected(old('calling_code', $prefill['code'] ?? '+30') === $code)>
                                             {{ $label }}
                                         </option>
                                     @endforeach
@@ -172,14 +187,14 @@
                             <div>
                                 <label class="label" for="phone">Phone</label>
                                 <input class="field" type="tel" id="phone" name="phone" required
-                                       maxlength="30" value="{{ old('phone') }}">
+                                       maxlength="30" value="{{ old('phone', $prefill['phone'] ?? '') }}">
                             </div>
                         </div>
 
                         <div>
                             <label class="label" for="email">Email <span class="muted">— optional</span></label>
                             <input class="field" type="email" id="email" name="email"
-                                   maxlength="160" value="{{ old('email') }}">
+                                   maxlength="160" value="{{ old('email', $prefill['email'] ?? '') }}">
                             <p class="muted" style="margin:6px 0 0;font-size:var(--step--2)">
                                 With an address they get the same confirmation and
                                 reminder as an online booking, and they join your

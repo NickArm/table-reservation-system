@@ -9,27 +9,58 @@
 @section('title', $guest->name.' — '.$tenant->name)
 
 @section('main')
-    <div class="page-head">
-        <div>
-            <p class="muted" style="margin:0 0 4px">
-                <a href="{{ route('dashboard.guests.index') }}">Guests</a>
-            </p>
+    <p class="muted" style="margin:0 0 10px">
+        <a href="{{ route('dashboard.guests.index') }}">Guests</a>
+    </p>
+
+    {{--
+        Name, how to reach them, and the one booking action, together at the
+        top. The reason this page is open is nearly always a telephone in
+        somebody's hand, so the number is a link and the booking button is
+        next to it rather than three screens away.
+    --}}
+    <div class="person">
+        <span class="person__avatar @if ($guest->warning()) person__avatar--warn @endif"
+              aria-hidden="true">{{ $guest->initials() }}</span>
+
+        <div class="person__who">
             <h1>{{ $guest->name }}</h1>
-            <p class="muted">
-                {{ $guest->email ?? 'No email address' }}
+
+            <p class="person__contact">
                 @if (filled($guest->phone))
-                    · <a href="tel:{{ $guest->phone }}">{{ $guest->phone }}</a>
+                    <a href="tel:{{ $guest->phone }}">{{ $guest->phone }}</a>
+                @endif
+                @if (filled($guest->email))
+                    <a href="mailto:{{ $guest->email }}">{{ $guest->email }}</a>
+                @else
+                    <span class="muted">No email address</span>
+                @endif
+            </p>
+
+            <p class="person__flags">
+                @if ($guest->warning())
+                    <span class="flag flag--warn">{{ $guest->warning() }}</span>
+                @elseif ($guest->visitLabel())
+                    <span class="flag">{{ $guest->visitLabel() }}</span>
+                @endif
+
+                @foreach ($guest->tagList() as $tag)
+                    <span class="flag">{{ $tag }}</span>
+                @endforeach
+
+                @if ($guest->first_seen_at)
+                    <span class="muted" style="font-size:var(--step--2)">
+                        Since {{ $guest->first_seen_at->setTimezone($timezone)->format('F Y') }}
+                    </span>
                 @endif
             </p>
         </div>
 
-        @if ($guest->warning())
-            <span class="pill" style="border-color:var(--warn-line);background:var(--warn-soft);color:var(--warn)">
-                {{ $guest->warning() }}
-            </span>
-        @elseif ($guest->isRepeat())
-            <span class="pill pill--ok">{{ $guest->visitLabel() }}</span>
-        @endif
+        @unless ($guest->isAnonymized())
+            <a class="btn" href="{{ route('dashboard.bookings.create', ['guest' => $guest->id]) }}">
+                Book them in
+            </a>
+        @endunless
     </div>
 
     @if ($guest->isAnonymized())
@@ -40,11 +71,21 @@
         </div>
     @endif
 
+    @if (filled($guest->internal_notes))
+        <div class="notice notice--warn" style="margin-bottom:16px">
+            <strong>What the floor should know.</strong>
+            {{ $guest->internal_notes }}
+        </div>
+    @endif
+
     <div class="stat-grid" style="margin-bottom:16px">
         <div class="stat"><b>{{ $guest->bookings_count }}</b><span class="muted">bookings</span></div>
         <div class="stat"><b>{{ $guest->completed_count }}</b><span class="muted">completed</span></div>
         <div class="stat"><b>{{ $guest->cancelled_count }}</b><span class="muted">cancelled</span></div>
-        <div class="stat"><b>{{ $guest->no_show_count }}</b><span class="muted">no-shows</span></div>
+        <div class="stat">
+            <b class="{{ (int) $guest->no_show_count > 0 ? 'stat--warn' : '' }}">{{ $guest->no_show_count }}</b>
+            <span class="muted">no-shows</span>
+        </div>
         <div class="stat">
             <b>{{ \App\Support\Money::format((int) $guest->total_spent_cents) }}</b>
             <span class="muted">booked in total</span>
@@ -75,7 +116,9 @@
                                 <span class="muted">
                                     · {{ $reservation->startsAtLocal($timezone)->format('H:i') }}
                                     · {{ $reservation->party_size }}p
-                                    · {{ $reservation->status->label() }}
+                                </span>
+                                <span class="pill {{ $statusSkins[$reservation->status->value] ?? '' }}">
+                                    {{ $reservation->status->label() }}
                                 </span>
                             </span>
 

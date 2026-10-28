@@ -1378,6 +1378,67 @@ details.advanced > summary {
     min-width: 0;
 }
 
+/* --- One guest's card --------------------------------------------------- */
+
+/*
+ * The reason this page is open is nearly always a telephone in somebody's
+ * hand, so the number and the booking button sit with the name rather than
+ * three screens away.
+ */
+.person {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.person__avatar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: var(--step-1);
+    font-weight: 700;
+}
+
+.person__avatar--warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
+.person__who {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.person__who h1 {
+    margin: 0;
+    font-size: var(--step-2);
+    letter-spacing: -0.02em;
+}
+
+.person__contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 3px 0 0;
+    font-size: var(--step--1);
+}
+
+.person__flags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+}
+
 .guest__name small {
     display: block;
     color: var(--muted);

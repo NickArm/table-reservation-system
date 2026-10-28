@@ -11,6 +11,7 @@ use App\Enums\Channel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reservations\StoreManualReservationRequest;
 use App\Models\BookingType;
+use App\Models\Guest;
 use App\Models\Resource;
 use App\Models\Venue;
 use App\Support\PhoneNumber;
@@ -68,7 +69,40 @@ final class ManualBookingController extends Controller
             'offers' => $offers,
             'callingCodes' => PhoneNumber::callingCodes(),
             'channels' => [Channel::Phone, Channel::Walkin],
+            // Arrived from a guest's card: their details are already known,
+            // and typing them again in front of somebody on the telephone is
+            // the kind of work this screen exists to remove.
+            'prefill' => $this->prefill($request),
         ]);
+    }
+
+    /**
+     * @return array{name: string, email: string, phone: string, code: string}|null
+     */
+    private function prefill(Request $request): ?array
+    {
+        $id = $request->integer('guest');
+
+        if ($id < 1) {
+            return null;
+        }
+
+        // Tenant-scoped like every other read, so a guessed id reaches
+        // nothing but this venue's own list.
+        $guest = Guest::query()->whereNull('anonymized_at')->find($id);
+
+        if (! $guest instanceof Guest) {
+            return null;
+        }
+
+        $phone = PhoneNumber::split($guest->phone);
+
+        return [
+            'name' => (string) $guest->name,
+            'email' => (string) $guest->email,
+            'phone' => $phone['national'],
+            'code' => $phone['code'],
+        ];
     }
 
     public function store(

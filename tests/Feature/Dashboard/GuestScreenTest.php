@@ -137,6 +137,50 @@ final class GuestScreenTest extends TestCase
     }
 
     #[Test]
+    public function the_card_offers_to_book_them_in(): void
+    {
+        $guest = $this->asTenant(fn (): Guest => Guest::factory()->create([
+            'name' => 'Maria Kosta',
+            'email' => 'maria@example.test',
+            'phone' => '+306941234567',
+        ]));
+
+        $this->get(route('dashboard.guests.show', $guest))
+            ->assertOk()
+            ->assertSee('Book them in')
+            ->assertSee(route('dashboard.bookings.create', ['guest' => $guest->id]));
+    }
+
+    #[Test]
+    public function another_venues_guest_cannot_be_prefilled_by_guessing_an_id(): void
+    {
+        $guest = $this->asTenant(fn (): Guest => Guest::factory()->create(['name' => 'Maria Kosta']));
+
+        $this->signInAsOwner('Another Place');
+
+        // The tenant scope covers the prefill like every other read: the id
+        // reaches nothing, and the form simply opens empty.
+        $this->get(route('dashboard.bookings.create', ['guest' => $guest->id]))
+            ->assertOk()
+            ->assertDontSee('Maria Kosta');
+    }
+
+    #[Test]
+    public function the_floor_note_is_at_the_top_of_the_card(): void
+    {
+        $guest = $this->asTenant(fn (): Guest => Guest::factory()->create([
+            'name' => 'Maria Kosta',
+            'internal_notes' => 'Allergic to shellfish.',
+        ]));
+
+        // It was only readable inside the edit box at the bottom, which is
+        // not where anybody looks before a service.
+        $this->get(route('dashboard.guests.show', $guest))
+            ->assertOk()
+            ->assertSeeInOrder(['What the floor should know', 'Allergic to shellfish.', 'History']);
+    }
+
+    #[Test]
     public function private_notes_and_tags_save(): void
     {
         $guest = $this->asTenant(static fn (): Guest => Guest::factory()->create());

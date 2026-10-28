@@ -13,6 +13,7 @@ use App\Models\Reservation;
 use App\Models\Venue;
 use App\Queries\ReservationSearch;
 use App\Support\Money;
+use App\Support\StatusPill;
 use App\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ final class ReservationListController extends Controller
             // on the telephone.
             'whenFilters' => $this->whenFilters($request, $search, $timezone),
             'statusFilters' => $this->statusFilters($request, $search),
-            'statusSkins' => $this->statusSkins(),
+            'statusSkins' => StatusPill::map(),
         ]);
     }
 
@@ -123,29 +124,6 @@ final class ReservationListController extends Controller
             ],
             $options,
         );
-    }
-
-    /**
-     * Which pill a status wears.
-     *
-     * Here rather than on the enum: a CSS class is this screen's business,
-     * and an enum that knows about stylesheets is an enum that changes when
-     * the stylesheet does.
-     *
-     * @return array<string, string>
-     */
-    private function statusSkins(): array
-    {
-        return [
-            ReservationStatus::Confirmed->value => 'pill--ok',
-            ReservationStatus::CheckedIn->value => 'pill--ok',
-            ReservationStatus::Completed->value => 'pill--muted',
-            ReservationStatus::NoShow->value => 'pill--warn',
-            ReservationStatus::PendingPayment->value => 'pill--warn',
-            ReservationStatus::CancelledByVenue->value => 'pill--muted',
-            ReservationStatus::Expired->value => 'pill--muted',
-            ReservationStatus::Refunded->value => 'pill--muted',
-        ];
     }
 
     /**
