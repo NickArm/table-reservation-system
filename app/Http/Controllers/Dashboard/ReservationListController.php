@@ -14,6 +14,7 @@ use App\Models\Venue;
 use App\Queries\ReservationSearch;
 use App\Support\Money;
 use App\Tenancy\TenantContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -48,7 +49,103 @@ final class ReservationListController extends Controller
             'channels' => Channel::cases(),
             'areaNames' => $this->areaNames($reservations->getCollection()),
             'totals' => $this->totals($search),
+            // One tap each, instead of a form filled in while a guest waits
+            // on the telephone.
+            'whenFilters' => $this->whenFilters($request, $search, $timezone),
+            'statusFilters' => $this->statusFilters($request, $search),
+            'statusSkins' => $this->statusSkins(),
         ]);
+    }
+
+    /**
+     * The date ranges actually asked for, as links.
+     *
+     * "Upcoming" first and on by default in spirit: the telephone call is
+     * nearly always about a booking that has not happened yet.
+     *
+     * @return list<array{label: string, href: string, on: bool}>
+     */
+    private function whenFilters(Request $request, ReservationSearch $search, string $timezone): array
+    {
+        $today = CarbonImmutable::now($timezone);
+        $keep = $request->only(['q', 'type', 'channel', 'sort', 'status']);
+
+        $ranges = [
+            ['label' => 'Everything', 'from' => null, 'to' => null],
+            ['label' => 'Upcoming', 'from' => $today->toDateString(), 'to' => null],
+            ['label' => 'Today', 'from' => $today->toDateString(), 'to' => $today->toDateString()],
+            ['label' => 'Next 7 days', 'from' => $today->toDateString(), 'to' => $today->addDays(6)->toDateString()],
+            ['label' => 'Past', 'from' => null, 'to' => $today->subDay()->toDateString()],
+        ];
+
+        return array_map(
+            static fn (array $range): array => [
+                'label' => $range['label'],
+                'href' => route('dashboard.reservations.index', array_filter(
+                    [...$keep, 'from' => $range['from'], 'to' => $range['to']],
+                    static fn (mixed $value): bool => $value !== null && $value !== '',
+                )),
+                'on' => $search->from === $range['from'] && $search->to === $range['to'],
+            ],
+            $ranges,
+        );
+    }
+
+    /**
+     * The three answers a venue wants from a status: all of them, the ones
+     * that still stand, and the ones that fell through.
+     *
+     * Not every case the enum has. A dropdown of nine statuses is a list
+     * somebody reads twice; the full set stays in the advanced form.
+     *
+     * @return list<array{label: string, href: string, on: bool}>
+     */
+    private function statusFilters(Request $request, ReservationSearch $search): array
+    {
+        $keep = $request->only(['q', 'type', 'channel', 'sort', 'from', 'to']);
+
+        $options = [
+            ['label' => 'Any status', 'status' => null],
+            ['label' => 'Confirmed', 'status' => ReservationStatus::Confirmed->value],
+            ['label' => 'Waiting to pay', 'status' => ReservationStatus::PendingPayment->value],
+            ['label' => 'Cancelled', 'status' => ReservationStatus::CancelledByVenue->value],
+            ['label' => 'No-show', 'status' => ReservationStatus::NoShow->value],
+        ];
+
+        return array_map(
+            static fn (array $option): array => [
+                'label' => $option['label'],
+                'href' => route('dashboard.reservations.index', array_filter(
+                    [...$keep, 'status' => $option['status']],
+                    static fn (mixed $value): bool => $value !== null && $value !== '',
+                )),
+                'on' => $search->status === $option['status'],
+            ],
+            $options,
+        );
+    }
+
+    /**
+     * Which pill a status wears.
+     *
+     * Here rather than on the enum: a CSS class is this screen's business,
+     * and an enum that knows about stylesheets is an enum that changes when
+     * the stylesheet does.
+     *
+     * @return array<string, string>
+     */
+    private function statusSkins(): array
+    {
+        return [
+            ReservationStatus::Confirmed->value => 'pill--ok',
+            ReservationStatus::CheckedIn->value => 'pill--ok',
+            ReservationStatus::Completed->value => 'pill--muted',
+            ReservationStatus::NoShow->value => 'pill--warn',
+            ReservationStatus::PendingPayment->value => 'pill--warn',
+            ReservationStatus::CancelledByVenue->value => 'pill--muted',
+            ReservationStatus::Expired->value => 'pill--muted',
+            ReservationStatus::Refunded->value => 'pill--muted',
+        ];
     }
 
     /**

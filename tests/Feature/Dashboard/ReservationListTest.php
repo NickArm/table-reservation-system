@@ -160,6 +160,68 @@ final class ReservationListTest extends TestCase
         );
     }
 
+    #[Test]
+    public function upcoming_and_past_are_one_tap_each(): void
+    {
+        $this->booking('2026-07-10 20:00', ['customer_name' => 'Last Week']);
+        $this->booking('2026-07-20 20:00', ['customer_name' => 'Next Week']);
+
+        /*
+         * The chips are links with the dates already worked out. An owner
+         * with a guest on the telephone should not be typing 2026-07-15 into
+         * two date fields to answer "are they coming or have they been".
+         */
+        $this->get(route('dashboard.reservations.index', ['from' => '2026-07-15']))
+            ->assertOk()
+            ->assertSee('Next Week')
+            ->assertDontSee('Last Week');
+
+        $this->get(route('dashboard.reservations.index', ['to' => '2026-07-14']))
+            ->assertOk()
+            ->assertSee('Last Week')
+            ->assertDontSee('Next Week');
+    }
+
+    #[Test]
+    public function a_chip_keeps_the_search_that_is_already_typed(): void
+    {
+        $this->booking('2026-07-20 20:00', ['customer_name' => 'Maria Rossi']);
+
+        // Losing the search term on the way to a date filter is how a screen
+        // teaches somebody to use it twice.
+        $this->get(route('dashboard.reservations.index', ['q' => 'Maria']))
+            ->assertOk()
+            // Escaped on purpose: the ampersand in the href is `&amp;` in
+            // the HTML, and the default `assertSee` escapes to match it.
+            ->assertSee(route('dashboard.reservations.index', ['q' => 'Maria', 'from' => '2026-07-15']));
+    }
+
+    #[Test]
+    public function the_list_is_broken_up_by_day(): void
+    {
+        $this->booking('2026-07-20 20:00', ['customer_name' => 'Monday Guest']);
+        $this->booking('2026-07-21 20:00', ['customer_name' => 'Tuesday Guest']);
+
+        // Fifty rows of numbers with no date between them is a list somebody
+        // counts down to find Friday.
+        $this->get(route('dashboard.reservations.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Monday 20 July 2026', 'Monday Guest', 'Tuesday 21 July 2026', 'Tuesday Guest']);
+    }
+
+    #[Test]
+    public function a_note_is_on_the_row_rather_than_behind_a_hover(): void
+    {
+        $this->booking('2026-07-20 20:00', [
+            'customer_name' => 'Maria Rossi',
+            'notes' => 'Allergic to shellfish',
+        ]);
+
+        $this->get(route('dashboard.reservations.index'))
+            ->assertOk()
+            ->assertSee('Allergic to shellfish');
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

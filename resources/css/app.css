@@ -1516,7 +1516,7 @@ details.advanced > summary {
     grid-template-columns: 76px minmax(0, 1fr) auto auto;
     gap: 6px 14px;
     align-items: center;
-    padding: 12px 0;
+    padding: 12px 20px;
     border-top: 1px solid var(--line);
     color: inherit;
     text-decoration: none;
@@ -1543,6 +1543,45 @@ details.advanced > summary {
 }
 
 .ledger__who {
+    min-width: 0;
+}
+
+/*
+ * A date the eye can rest on. Without it a page of fifty bookings is fifty
+ * rows of numbers and the reader counts downwards to find Friday.
+ */
+.ledger__day {
+    margin: 0;
+    padding: 9px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: var(--step--2);
+    font-weight: 700;
+}
+
+.ledger__day:first-child {
+    border-top: 0;
+}
+
+.ledger__note {
+    display: block;
+    margin-top: 5px;
+    color: var(--warn);
+    font-size: var(--step--2);
+    line-height: 1.4;
+}
+
+/* The one control this screen exists for, on its own line and wide. */
+.searchbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.searchbar .field {
+    flex: 1 1 auto;
     min-width: 0;
 }
 

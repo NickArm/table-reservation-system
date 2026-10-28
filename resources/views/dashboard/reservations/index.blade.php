@@ -5,95 +5,131 @@
     when somebody telephones about a booking — not during service. The totals
     are for the whole filtered set, not the page on screen: the question behind
     a date filter is almost always "how much was that week".
+
+    The common filters are one tap each. Seven dropdowns and an Apply button is
+    a form, and a form is something an owner fills in while a guest waits on
+    the telephone; chips answer the two questions actually asked — which ones
+    are cancelled, and what is coming up — without a round of typing.
 --}}
 @extends('layouts.dashboard')
 
-@section('title', 'Reservations — '.$tenant->name)
+@section('title', 'Bookings — '.$tenant->name)
 
 @section('main')
     <div class="page-head">
         <div>
-            <h1>Reservations</h1>
-            <p>Everything you have ever taken.</p>
+            <h1>Bookings</h1>
+            <p class="muted">Everything you have ever taken.</p>
         </div>
 
-        <div class="row">
-            <a class="btn btn--ghost" href="{{ route('dashboard.reservations.export', request()->query()) }}">
-                Export CSV
-            </a>
-            <a class="btn" href="{{ route('dashboard.bookings.create') }}">New booking</a>
-        </div>
+        <a class="btn btn--ghost" href="{{ route('dashboard.reservations.export', request()->query()) }}">
+            Export CSV
+        </a>
     </div>
 
-    <form method="GET" action="{{ route('dashboard.reservations.index') }}"
-          class="card filters" style="margin-bottom:16px">
-        <div style="flex:1 1 220px">
-            <label class="label" for="q">Search</label>
-            <input class="field" type="search" id="q" name="q" value="{{ $search->term }}"
-                   placeholder="Name, email, phone or code">
-        </div>
-
-        <div>
-            <label class="label" for="from">From</label>
-            <input class="field" type="date" id="from" name="from" value="{{ $search->from }}">
-        </div>
-
-        <div>
-            <label class="label" for="to">To</label>
-            <input class="field" type="date" id="to" name="to" value="{{ $search->to }}">
-        </div>
-
-        <div>
-            <label class="label" for="type">What</label>
-            <select class="field" id="type" name="type">
-                <option value="">Everything</option>
-                @foreach ($bookingTypes as $bookingType)
-                    <option value="{{ $bookingType->id }}" @selected($search->bookingTypeId === $bookingType->id)>
-                        {{ $bookingType->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label class="label" for="status">Status</label>
-            <select class="field" id="status" name="status">
-                <option value="">Any</option>
-                @foreach ($statuses as $status)
-                    <option value="{{ $status->value }}" @selected($search->status === $status->value)>
-                        {{ $status->label() }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label class="label" for="channel">Came from</label>
-            <select class="field" id="channel" name="channel">
-                <option value="">Anywhere</option>
-                @foreach ($channels as $channel)
-                    <option value="{{ $channel->value }}" @selected($search->channel === $channel->value)>
-                        {{ $channel->label() }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label class="label" for="sort">Sort</label>
-            <select class="field" id="sort" name="sort">
-                <option value="soonest" @selected($search->sort === 'soonest')>By date</option>
-                <option value="newest" @selected($search->sort === 'newest')>Most recently booked</option>
-            </select>
-        </div>
-
-        <div class="row">
-            <button class="btn" type="submit">Apply</button>
-            @if ($search->isFiltered())
-                <a class="btn btn--ghost" href="{{ route('dashboard.reservations.index') }}">Clear</a>
+    {{-- Search on its own line and wide: it is the reason this screen exists. --}}
+    <form method="GET" action="{{ route('dashboard.reservations.index') }}" class="searchbar">
+        @foreach (request()->except(['q', 'page']) as $key => $value)
+            @if (! is_array($value))
+                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
             @endif
-        </div>
+        @endforeach
+
+        <label class="label" for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">
+            Search bookings
+        </label>
+        <input class="field" type="search" id="q" name="q" value="{{ $search->term }}"
+               placeholder="Name, email, phone or booking code">
+        <button class="btn" type="submit">Search</button>
     </form>
+
+    <div class="chips" style="margin-bottom:10px">
+        @foreach ($whenFilters as $filter)
+            <a class="chip" href="{{ $filter['href'] }}"
+               @if ($filter['on']) aria-current="page" @endif>{{ $filter['label'] }}</a>
+        @endforeach
+    </div>
+
+    <div class="chips" style="margin-bottom:16px">
+        @foreach ($statusFilters as $filter)
+            <a class="chip" href="{{ $filter['href'] }}"
+               @if ($filter['on']) aria-current="page" @endif>{{ $filter['label'] }}</a>
+        @endforeach
+    </div>
+
+    {{-- Everything an owner reaches for once a season, out of the way but
+         never behind a different screen. --}}
+    <details class="advanced" style="margin-bottom:16px" @if ($search->isAdvanced()) open @endif>
+        <summary>Exact dates, booking type, where it came from</summary>
+
+        <form method="GET" action="{{ route('dashboard.reservations.index') }}"
+              class="filters" style="margin-top:14px">
+            @if (filled($search->term))
+                <input type="hidden" name="q" value="{{ $search->term }}">
+            @endif
+
+            <div>
+                <label class="label" for="from">From</label>
+                <input class="field" type="date" id="from" name="from" value="{{ $search->from }}">
+            </div>
+
+            <div>
+                <label class="label" for="to">To</label>
+                <input class="field" type="date" id="to" name="to" value="{{ $search->to }}">
+            </div>
+
+            <div>
+                <label class="label" for="type">What</label>
+                <select class="field" id="type" name="type">
+                    <option value="">Everything</option>
+                    @foreach ($bookingTypes as $bookingType)
+                        <option value="{{ $bookingType->id }}" @selected($search->bookingTypeId === $bookingType->id)>
+                            {{ $bookingType->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="label" for="status">Status</label>
+                <select class="field" id="status" name="status">
+                    <option value="">Any</option>
+                    @foreach ($statuses as $status)
+                        <option value="{{ $status->value }}" @selected($search->status === $status->value)>
+                            {{ $status->label() }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="label" for="channel">Came from</label>
+                <select class="field" id="channel" name="channel">
+                    <option value="">Anywhere</option>
+                    @foreach ($channels as $channel)
+                        <option value="{{ $channel->value }}" @selected($search->channel === $channel->value)>
+                            {{ $channel->label() }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="label" for="sort">Sort</label>
+                <select class="field" id="sort" name="sort">
+                    <option value="soonest" @selected($search->sort === 'soonest')>By date</option>
+                    <option value="newest" @selected($search->sort === 'newest')>Most recently booked</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <button class="btn" type="submit">Apply</button>
+                @if ($search->isFiltered())
+                    <a class="btn btn--ghost" href="{{ route('dashboard.reservations.index') }}">Clear</a>
+                @endif
+            </div>
+        </form>
+    </details>
 
     <div class="stat-grid" style="margin-bottom:16px">
         <div class="stat"><b>{{ $totals['bookings'] }}</b><span class="muted">bookings</span></div>
@@ -115,29 +151,46 @@
             @endif
         </div>
     @else
-        <section class="card">
+        <section class="card" style="padding:0;overflow:hidden">
             <div class="ledger">
+                @php $lastDay = null; @endphp
+
                 @foreach ($reservations as $reservation)
-                    @php $local = $reservation->startsAtLocal($timezone); @endphp
+                    @php
+                        $local = $reservation->startsAtLocal($timezone);
+                        $day = $local->format('Y-m-d');
+                    @endphp
+
+                    {{-- A date the eye can rest on. Without it the list is 50
+                         rows of numbers and the reader counts to find Friday. --}}
+                    @if ($day !== $lastDay)
+                        <p class="ledger__day">{{ $local->format('l j F Y') }}</p>
+                        @php $lastDay = $day; @endphp
+                    @endif
 
                     <a class="ledger__row" href="{{ route('dashboard.reservations.show', $reservation) }}">
                         <time class="ledger__when">
-                            {{ $local->format('j M') }}
-                            <small>{{ $local->format('H:i') }}</small>
+                            {{ $local->format('H:i') }}
+                            <small>{{ $reservation->code }}</small>
                         </time>
 
                         <span class="ledger__who">
                             <strong>{{ $reservation->customer_name }}</strong>
                             <small>
-                                {{ $reservation->party_size }}p
+                                {{ $reservation->party_size }}
+                                {{ \Illuminate\Support\Str::plural('guest', $reservation->party_size) }}
                                 @if ($reservation->resource_snapshot['label'] ?? null)
                                     · {{ $reservation->resource_snapshot['label'] }}
                                 @endif
                                 @if ($areaNames[$reservation->area_id] ?? null)
                                     · {{ $areaNames[$reservation->area_id] }}
                                 @endif
-                                · {{ $reservation->code }}
+                                · {{ $reservation->channel->label() }}
                             </small>
+
+                            @if (filled($reservation->notes))
+                                <span class="ledger__note">{{ $reservation->notes }}</span>
+                            @endif
                         </span>
 
                         <span class="ledger__money">
@@ -148,7 +201,7 @@
                         </span>
 
                         <span class="ledger__status">
-                            <span class="pill @if ($reservation->status === \App\Enums\ReservationStatus::NoShow) pill--muted @endif">
+                            <span class="pill {{ $statusSkins[$reservation->status->value] ?? '' }}">
                                 {{ $reservation->status->label() }}
                             </span>
                         </span>

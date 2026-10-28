@@ -98,6 +98,19 @@ final readonly class ReservationSearch
      * Whether anything at all is narrowing the list, so the screen can say
      * "nothing matches" rather than "no bookings yet".
      */
+    /**
+     * Whether anything the chips cannot express is switched on.
+     *
+     * Drives whether the advanced panel opens by itself: a filter that is
+     * active and out of sight is a filter the owner will blame the data for.
+     */
+    public function isAdvanced(): bool
+    {
+        return $this->channel !== null
+            || $this->bookingTypeId !== null
+            || $this->sort !== 'soonest';
+    }
+
     public function isFiltered(): bool
     {
         return $this->term !== null
