@@ -2093,6 +2093,74 @@ details.advanced.card[open] > summary {
     background: var(--accent-soft);
 }
 
+/* --- Reports: bars somebody can read without a legend -------------------- */
+
+/*
+ * Drawn in CSS rather than as an SVG chart. A taverna owner is not going to
+ * learn a legend, and a chart library would be the first thing on this
+ * dashboard that needs JavaScript before it means anything.
+ */
+.bars {
+    display: grid;
+    gap: 8px;
+}
+
+.bars__row {
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.bars__label {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+}
+
+.bars__label--wide {
+    overflow: hidden;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bars__row:has(.bars__label--wide) {
+    grid-template-columns: minmax(0, 96px) 1fr auto;
+}
+
+.bars__track {
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    overflow: hidden;
+}
+
+.bars__fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+}
+
+/* Bookings a member of staff took by hand, rather than ones that arrived on
+   their own. Pale because the point of the chart is the difference. */
+.bars__fill--muted {
+    background: var(--line-strong);
+}
+
+.bars__value {
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.bars__value small {
+    display: block;
+    font-size: var(--step--2);
+}
+
 /* --- Payments: what is happening to the money right now ------------------ */
 
 /*

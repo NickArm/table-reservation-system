@@ -31,12 +31,12 @@ use App\Enums\SubscriptionEventType;
 use App\Enums\TenantRole;
 use App\Enums\TenantStatus;
 use App\Enums\VenueDocumentType;
-use App\Enums\VenueImage;
 use App\Legal\DefaultVenueDocuments;
 use App\Models\ApiToken;
 use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Guest;
+use App\Models\Payment;
 use App\Models\PaymentGatewaySetting;
 use App\Models\Plan;
 use App\Models\PriceRule;
@@ -87,6 +87,8 @@ class DemoRestaurantSeeder extends Seeder
      * somebody to wonder whether it is one.
      */
     private const API_TOKEN_BODY = 'demo'.'2222333344445555666677778888999900001111';
+
+    private const MEDIA_DIR = 'venues/demo';
 
     private const TIMEZONE = 'Europe/Athens';
 
@@ -194,8 +196,8 @@ class DemoRestaurantSeeder extends Seeder
             'price_range' => '€€',
             'accent_color' => '#0E6E6E',
             'hero_overlay' => 45,
-            'logo_path' => $this->publishMedia(VenueImage::Logo, 'demo-logo.png'),
-            'hero_path' => $this->publishMedia(VenueImage::Hero, 'demo-hero.jpg'),
+            'logo_path' => $this->publishMedia('demo-logo.png', 'logo.png'),
+            'hero_path' => $this->publishMedia('demo-hero.jpg', 'hero.jpg'),
             'timezone' => 'Europe/Athens',
 
             // Alerts, set the way a real beach bar would have them: a second
@@ -655,6 +657,56 @@ class DemoRestaurantSeeder extends Seeder
         }
 
         $reservation->save();
+
+        $this->recordPayment($reservation, $paymentStatus);
+    }
+
+    /**
+     * The row the money screens actually read.
+     *
+     * Reports counts what the gateway took rather than what the booking asked
+     * for, because after a refund those two stop agreeing — and that is
+     * exactly when somebody looks. Without these rows the demo would show a
+     * season of bookings and nothing earned, which is not a demo of anything.
+     */
+    private function recordPayment(Reservation $reservation, PaymentStatus $paymentStatus): void
+    {
+        if ($reservation->amount_cents === 0) {
+            return;
+        }
+
+        $status = match ($paymentStatus) {
+            PaymentStatus::Paid => PaymentStatus::Paid,
+            PaymentStatus::Refunded => PaymentStatus::Refunded,
+            default => null,
+        };
+
+        if ($status === null) {
+            return;
+        }
+
+        $payment = new Payment;
+
+        $payment->fill([
+            'gateway' => Gateway::Stripe,
+            // Live, so the figures are not quietly dropped as test money.
+            'mode' => GatewayMode::Live,
+            'gateway_payment_id' => 'pi_demo_'.$reservation->code,
+            'amount_cents' => $reservation->amount_cents,
+            'currency' => 'EUR',
+            'status' => $status,
+            'paid_at' => $reservation->created_at,
+        ]);
+
+        $payment->reservation_id = $reservation->id;
+
+        if ($status === PaymentStatus::Refunded) {
+            $payment->refunded_amount_cents = $reservation->amount_cents;
+            $payment->refund_status = 'succeeded';
+            $payment->refund_reference = 'ARN'.$this->faker->numerify('############');
+        }
+
+        $payment->save();
     }
 
     /**
@@ -843,13 +895,8 @@ class DemoRestaurantSeeder extends Seeder
     /**
      * Copies a bundled image onto the media disk, so the demo has a real hero
      * and logo rather than an empty frame.
-     *
-     * Under the same `tenants/{uuid}/venue/{kind}/` layout the dashboard's own
-     * uploads use (§30.1), and that is not tidiness: `PurgeTenant` deletes an
-     * account's files by deleting `tenants/{uuid}` (§29.3), so anything stored
-     * anywhere else outlives the account it belonged to.
      */
-    private function publishMedia(VenueImage $kind, string $source): ?string
+    private function publishMedia(string $source, string $target): ?string
     {
         $path = database_path('seeders/media/'.$source);
 
@@ -857,16 +904,11 @@ class DemoRestaurantSeeder extends Seeder
             return null;
         }
 
-        $destination = $kind->pathFor($this->tenantUuid(), 'demo');
+        $destination = self::MEDIA_DIR.'/'.$target;
 
         Storage::disk(config('media.disk'))->put($destination, file_get_contents($path));
 
         return $destination;
-    }
-
-    private function tenantUuid(): string
-    {
-        return (string) app(TenantContext::class)->getOrFail()->uuid;
     }
 
     /**
@@ -1073,11 +1115,7 @@ class DemoRestaurantSeeder extends Seeder
 
         DB::table('users')->whereIn('id', $users)->delete();
 
-        // The account's whole folder, the same one PurgeTenant removes — and
-        // read from the row before it goes, because afterwards there is no
-        // uuid to build the path from (§29.3).
-        Storage::disk(config('media.disk'))
-            ->deleteDirectory('tenants/'.$existing->uuid);
+        Storage::disk(config('media.disk'))->deleteDirectory(self::MEDIA_DIR);
 
         $existing->forceDelete();
     }

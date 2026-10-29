@@ -33,6 +33,7 @@ use App\Http\Controllers\Dashboard\ManualBookingController;
 use App\Http\Controllers\Dashboard\NotificationController;
 use App\Http\Controllers\Dashboard\PaymentSettingsController;
 use App\Http\Controllers\Dashboard\PriceRuleController;
+use App\Http\Controllers\Dashboard\ReportController;
 use App\Http\Controllers\Dashboard\ReservationController as DashboardReservationController;
 use App\Http\Controllers\Dashboard\ReservationListController;
 use App\Http\Controllers\Dashboard\ResourceController;
@@ -337,6 +338,9 @@ Route::prefix('dashboard')
 
         // The shape of the week, for the Monday question (SPEC §13.1).
         Route::get('calendar', CalendarController::class)->name('calendar');
+
+        // How the season went, for the October question (SPEC §36).
+        Route::get('reports', ReportController::class)->name('reports');
 
         /*
          * Every booking, searchable. The export is a separate literal route

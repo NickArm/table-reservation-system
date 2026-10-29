@@ -28,6 +28,7 @@
         'shield' => 'M12 3.5l7 2.8v5.4c0 4-3 7.2-7 8.8-4-1.6-7-4.8-7-8.8V6.3z M9 12l2.2 2.2L15.5 10',
         'receipt' => 'M6 3.5h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z M9 8h6 M9 12h6',
         'terminal' => 'M4.5 5.5h15v13h-15z M8 10l2.5 2.5L8 15 M13 15h3.5',
+        'chart' => 'M4.5 19.5V4.5 M4.5 19.5h15 M8.5 16V11 M12.5 16V7 M16.5 16v-3',
     ];
 
     $railGroups = [
@@ -38,6 +39,15 @@
         ],
         'Guests' => [
             ['label' => 'Guests', 'icon' => 'guests', 'route' => 'dashboard.guests.index', 'active' => 'dashboard.guests.*'],
+        ],
+        /*
+         * Not in Service: this is the October screen, opened once a month at
+         * most. It earns a line of its own rather than a place in Setup only
+         * because nothing on it is a setting — there is nothing here to get
+         * wrong, just the season to read.
+         */
+        'Looking back' => [
+            ['label' => 'Reports', 'icon' => 'chart', 'route' => 'dashboard.reports', 'active' => 'dashboard.reports'],
         ],
     ];
 
