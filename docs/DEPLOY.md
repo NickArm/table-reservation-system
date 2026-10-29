@@ -51,9 +51,23 @@ php artisan down
 git pull
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
+php artisan optimize:clear  # ⚠️ before, not instead
 php artisan optimize        # config, routes and views cached in one go
 php artisan up
 ```
+
+**`optimize:clear` is not optional on a pull that adds a route.** `optimize`
+writes a route cache and a config cache; it does not notice that the old ones
+describe different code. Pull a commit that adds `/terms` without clearing,
+and every page that links to it dies with
+
+```
+Route [legal] not defined.
+```
+
+— pointing at a line that is plainly right in front of you, in a file that
+plainly registers the route. Both caches are generated files; clearing them
+costs nothing and the next command rebuilds them.
 
 ## 3. The environment file
 
@@ -231,8 +245,15 @@ returns `null` everywhere outside `config/`. Nothing here calls `env()` outside
 config files (SPEC §31.2) — keep it that way, or production breaks silently
 while development stays fine.
 
-**`APP_DEBUG=false`.** With it on, a stack trace on an error page shows the
-database credentials.
+**`APP_DEBUG=false`.** With it on, any error shows a full stack trace to
+whoever hit it — including, a few frames down, the database credentials. It is
+the one setting that turns a broken page into a disclosed password, so check
+it on the live host rather than trusting that the example file was copied
+unedited:
+
+```bash
+php artisan tinker --execute="echo config('app.debug') ? 'ON — fix this' : 'off';"
+```
 
 ---
 
