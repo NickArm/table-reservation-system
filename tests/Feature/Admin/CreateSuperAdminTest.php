@@ -48,6 +48,11 @@ final class CreateSuperAdminTest extends TestCase
 
         // And the things a live install does need are still there.
         $this->assertDatabaseCount('plans', 2);
+
+        // No demo venue either, and no attempt at one: the guard has to come
+        // before the Faker call, because production installs with --no-dev
+        // have no Faker to fail on.
+        $this->assertDatabaseCount('tenants', 0);
     }
 
     #[Test]

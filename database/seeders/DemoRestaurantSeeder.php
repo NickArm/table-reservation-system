@@ -108,16 +108,28 @@ class DemoRestaurantSeeder extends Seeder
 
     public function run(): void
     {
+        /*
+         * 🔒 First, before anything that needs a package.
+         *
+         * This guard used to sit below the Faker call, which made it
+         * unreachable on exactly the installs it was written for: production
+         * runs `composer install --no-dev`, Faker is a dev dependency, and
+         * `db:seed --force` died with `Class "Faker\\Factory" not found`
+         * instead of saying politely that it was not going to seed a demo
+         * venue. The two seeders a live install does need had already run, so
+         * the failure was noisy rather than harmful — but it reads like a
+         * broken deploy, which is its own cost at the worst moment.
+         */
+        if (app()->isProduction()) {
+            $this->command?->warn('No demo venue: this is production.');
+
+            return;
+        }
+
         // Seeded, so that re-running produces the same believable venue
         // rather than a different one every time (SPEC §22.2).
         $this->faker = FakerFactory::create();
         $this->faker->seed(20261011);
-
-        if (app()->isProduction()) {
-            $this->command?->error('The demo seeder refuses to run in production.');
-
-            return;
-        }
 
         $context = app(TenantContext::class);
 
