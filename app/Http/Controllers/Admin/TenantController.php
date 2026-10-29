@@ -55,7 +55,57 @@ final class TenantController extends Controller
             'tenants' => $tenants,
             'term' => $term,
             'status' => $status,
+            // The question after "find me this venue" is nearly always "who
+            // is past due", and that should not be a dropdown and a button.
+            'statusFilters' => $this->statusFilters($term, $status),
         ]);
+    }
+
+    /**
+     * The statuses worth a chip, with how many are in each.
+     *
+     * Counted in one grouped query rather than one per chip: this page is
+     * opened often and the counts are the reason it is.
+     *
+     * @return list<array{label: string, count: int, href: string, on: bool}>
+     */
+    private function statusFilters(string $term, ?TenantStatus $status): array
+    {
+        $counts = Tenant::query()
+            ->toBase()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $chips = [[
+            'label' => 'Everything',
+            'count' => (int) $counts->sum(),
+            'status' => null,
+        ]];
+
+        foreach (TenantStatus::cases() as $case) {
+            $count = (int) ($counts[$case->value] ?? 0);
+
+            // A status nobody is in is a chip nobody needs.
+            if ($count === 0) {
+                continue;
+            }
+
+            $chips[] = ['label' => $case->label(), 'count' => $count, 'status' => $case];
+        }
+
+        return array_map(
+            static fn (array $chip): array => [
+                'label' => $chip['label'],
+                'count' => $chip['count'],
+                'href' => route('admin.tenants.index', array_filter([
+                    'q' => $term,
+                    'status' => $chip['status']?->value,
+                ])),
+                'on' => $status === $chip['status'],
+            ],
+            $chips,
+        );
     }
 
     public function show(Tenant $tenant): View

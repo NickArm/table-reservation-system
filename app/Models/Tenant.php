@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\TenantStatus;
+use App\Support\Initials;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -129,5 +130,13 @@ class Tenant extends Model
         }
 
         return max(0, (int) now()->diffInDays($this->trial_ends_at, false));
+    }
+
+    /**
+     * Two letters for a list of accounts, the same way a guest gets them.
+     */
+    public function initials(): string
+    {
+        return Initials::of($this->name);
     }
 }

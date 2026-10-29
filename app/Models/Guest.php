@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\Initials;
 use Database\Factories\GuestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -154,15 +155,7 @@ class Guest extends Model
      */
     public function initials(): string
     {
-        $words = preg_split('/\s+/', trim((string) $this->name)) ?: [];
-
-        $letters = collect($words)
-            ->filter()
-            ->take(2)
-            ->map(static fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
-            ->implode('');
-
-        return $letters === '' ? '?' : $letters;
+        return Initials::of($this->name);
     }
 
     /**

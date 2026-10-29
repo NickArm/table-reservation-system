@@ -1378,6 +1378,100 @@ details.advanced > summary {
     min-width: 0;
 }
 
+/* --- Accounts, on the platform's own screens ---------------------------- */
+
+/*
+ * One row per account, saying what is wrong with it and carrying the way
+ * in. A row that shows only a status makes the reader work out what to do
+ * about it, and the whole value of the list on the overview is that it can
+ * be read with a telephone already in hand.
+ */
+.account {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto auto auto;
+    gap: 6px 14px;
+    align-items: center;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+}
+
+.account:first-child {
+    border-top: 0;
+}
+
+.account__mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: var(--step--2);
+    font-weight: 700;
+}
+
+.account__mark--late {
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
+.account__mark--table {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.account__who {
+    min-width: 0;
+}
+
+.account__who strong {
+    display: block;
+    font-size: var(--step--1);
+}
+
+.account__who small {
+    display: block;
+    font-size: var(--step--2);
+}
+
+.account__state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    text-align: right;
+}
+
+.account__renews {
+    min-width: 92px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.account__renews b {
+    display: block;
+    font-size: var(--step--1);
+    font-weight: 600;
+}
+
+.account__renews small {
+    display: block;
+    color: var(--faint);
+    font-size: var(--step--2);
+}
+
+@media (max-width: 860px) {
+    .account {
+        grid-template-columns: 38px minmax(0, 1fr) auto;
+    }
+
+    .account__renews {
+        display: none;
+    }
+}
+
 /* --- One guest's card --------------------------------------------------- */
 
 /*

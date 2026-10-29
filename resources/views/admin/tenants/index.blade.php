@@ -4,6 +4,10 @@
     The search covers name, slug and the owners' email addresses, because
     those are the three things somebody has in front of them when a venue
     rings up — and the email is usually the only one they say correctly.
+
+    So the search gets its own line, and the statuses are chips: the question
+    after "find me this venue" is nearly always "who is past due", and that
+    should not be a dropdown and a Filter button.
 --}}
 @extends('layouts.admin')
 
@@ -11,82 +15,82 @@
 
 @section('main')
     <div class="page-head">
-        <h1>Accounts</h1>
-        <p>{{ $tenants->total() }} in total.</p>
+        <div>
+            <h1>Accounts</h1>
+            <p class="muted">{{ $tenants->total() }} in total.</p>
+        </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.tenants.index') }}" class="filters" style="margin-bottom:24px">
-        <div class="field">
-            <label for="q">Search</label>
-            <input id="q" type="search" name="q" value="{{ $term }}"
-                   placeholder="Name, slug or owner's email">
-        </div>
+    <form method="GET" action="{{ route('admin.tenants.index') }}" class="searchbar">
+        @if ($status !== null)
+            <input type="hidden" name="status" value="{{ $status->value }}">
+        @endif
 
-        <div class="field">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-                <option value="">Any</option>
-                @foreach (\App\Enums\TenantStatus::cases() as $case)
-                    <option value="{{ $case->value }}" @selected($status === $case)>
-                        {{ $case->label() }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn--ghost">Filter</button>
+        <label class="label" for="q"
+               style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">
+            Search accounts
+        </label>
+        <input class="field" type="search" id="q" name="q" value="{{ $term }}"
+               placeholder="Name, slug or owner's email">
+        <button class="btn" type="submit">Search</button>
     </form>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Account</th>
-                <th>Status</th>
-                <th>Plan</th>
-                <th>Renews</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($tenants as $account)
-                <tr>
-                    <td>
-                        <a href="{{ route('admin.tenants.show', $account) }}">
-                            <strong>{{ $account->name }}</strong>
-                        </a>
-                        <br>
-                        <small class="muted">/reservation/{{ $account->slug }}</small>
-                    </td>
-                    <td>
-                        <span class="pill {{ $account->status->acceptsBookings() ? 'pill--ok' : 'pill--warn' }}">
-                            {{ $account->status->label() }}
-                        </span>
-                    </td>
-                    <td>
-                        {{ $account->subscription?->plan?->name ?? '—' }}
-                        @if ($account->subscription !== null && ! $account->subscription->plan?->is_public)
-                            <span class="pill pill--muted">custom</span>
+    <div class="chips" style="margin-bottom:16px">
+        @foreach ($statusFilters as $filter)
+            <a class="chip" href="{{ $filter['href'] }}"
+               @if ($filter['on']) aria-current="page" @endif>
+                {{ $filter['label'] }}
+                <span class="chip__count">{{ $filter['count'] }}</span>
+            </a>
+        @endforeach
+    </div>
+
+    <section class="card" style="padding:0;overflow:hidden">
+        @forelse ($tenants as $account)
+            <div class="account">
+                <span class="account__mark account__mark--{{ $account->status->acceptsBookings() ? 'plain' : 'late' }}"
+                      aria-hidden="true">{{ $account->initials() }}</span>
+
+                <span class="account__who">
+                    <strong>{{ $account->name }}</strong>
+                    <small class="muted">
+                        /reservation/{{ $account->slug }}
+                        @if (filled($account->venue?->city))
+                            · {{ $account->venue->city }}
                         @endif
-                    </td>
-                    <td>
+                    </small>
+                </span>
+
+                <span class="account__state">
+                    <span class="pill {{ $account->status->acceptsBookings() ? 'pill--ok' : 'pill--warn' }}">
+                        {{ $account->status->label() }}
+                    </span>
+                    <small class="muted">
                         @if ($account->isOnTrial())
-                            <small class="muted">
-                                Trial, {{ $account->trialDaysLeft() }}
-                                {{ \Illuminate\Support\Str::plural('day', $account->trialDaysLeft()) }} left
-                            </small>
+                            Trial, {{ $account->trialDaysLeft() }}
+                            {{ \Illuminate\Support\Str::plural('day', $account->trialDaysLeft()) }} left
                         @else
-                            <small class="muted">
-                                {{ $account->subscription?->current_period_end?->format('j M Y') ?? '—' }}
-                            </small>
+                            {{ $account->subscription?->plan?->name ?? 'No plan' }}
+                            @if ($account->subscription !== null && ! $account->subscription->plan?->is_public)
+                                · custom
+                            @endif
                         @endif
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4"><p class="empty">Nothing matches that.</p></td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                    </small>
+                </span>
+
+                <span class="account__renews">
+                    @unless ($account->isOnTrial())
+                        <b>{{ $account->subscription?->current_period_end?->format('j M Y') ?? '—' }}</b>
+                        <small>renews</small>
+                    @endunless
+                </span>
+
+                <a class="btn btn--ghost btn--small" href="{{ route('admin.tenants.show', $account) }}">Open</a>
+            </div>
+        @empty
+            <p class="empty" style="margin:0;border:0">Nothing matches that.</p>
+        @endforelse
+    </section>
 
     {{ $tenants->links() }}
 @endsection

@@ -73,6 +73,44 @@ final class TenantAdminTest extends TestCase
     }
 
     #[Test]
+    public function the_status_chips_carry_their_counts_and_keep_the_search(): void
+    {
+        $this->get(route('admin.tenants.index'))
+            ->assertOk()
+            ->assertSee('Everything')
+            ->assertSee('<span class="chip__count">1</span>', false);
+
+        // A status nobody is in is a chip nobody needs.
+        $this->get(route('admin.tenants.index'))
+            ->assertOk()
+            ->assertDontSee('Suspended');
+
+        // And narrowing by status does not throw away who was being looked for.
+        $this->get(route('admin.tenants.index', ['q' => 'Demo']))
+            ->assertOk()
+            ->assertSee(route('admin.tenants.index', ['q' => 'Demo', 'status' => $this->account->status->value]));
+    }
+
+    #[Test]
+    public function the_overview_says_why_each_account_is_on_the_list(): void
+    {
+        $this->asTenant(fn () => $this->account->forceFill([
+            'status' => TenantStatus::Trialing,
+            'trial_ends_at' => now()->addDays(2),
+        ])->save());
+
+        /*
+         * A row that shows only a status leaves the reader to work out what
+         * to do about it. The whole value of this list is that it can be
+         * read with a telephone already in hand.
+         */
+        $this->get(route('admin.overview'))
+            ->assertOk()
+            ->assertSee('Trial ends in 2 days')
+            ->assertSee('Worth a call');
+    }
+
+    #[Test]
     public function extending_moves_the_period_and_is_written_down_twice(): void
     {
         $until = CarbonImmutable::parse('2026-10-31', 'Europe/Athens');
