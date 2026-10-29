@@ -39,20 +39,29 @@
         'Guests' => [
             ['label' => 'Guests', 'icon' => 'guests', 'route' => 'dashboard.guests.index', 'active' => 'dashboard.guests.*'],
         ],
-        'Set up' => [
-            ['label' => 'Tables & areas', 'icon' => 'grid', 'route' => 'dashboard.booking-types.index', 'active' => 'dashboard.booking-types.*'],
-            ['label' => 'Venue', 'icon' => 'pin', 'route' => 'dashboard.profile.edit', 'active' => 'dashboard.profile.*'],
-            ['label' => 'Appearance', 'icon' => 'paint', 'route' => 'dashboard.branding.edit', 'active' => 'dashboard.branding.*'],
-            ['label' => 'Payments', 'icon' => 'card', 'route' => 'dashboard.payments.edit', 'active' => 'dashboard.payments.*'],
-            ['label' => 'Alerts', 'icon' => 'bell', 'route' => 'dashboard.notifications.edit', 'active' => 'dashboard.notifications.edit'],
-            ['label' => 'Widget', 'icon' => 'code', 'route' => 'dashboard.widget', 'active' => 'dashboard.widget'],
-        ],
-        'Account' => [
-            ['label' => 'Settings', 'icon' => 'gear', 'route' => 'dashboard.settings', 'active' => 'dashboard.settings'],
-            ['label' => 'Legal', 'icon' => 'shield', 'route' => 'dashboard.legal.edit', 'active' => 'dashboard.legal.*'],
-            ['label' => 'Billing', 'icon' => 'receipt', 'route' => 'dashboard.billing', 'active' => 'dashboard.billing'],
-            ['label' => 'Developer', 'icon' => 'terminal', 'route' => 'dashboard.developer', 'active' => 'dashboard.developer*'],
-        ],
+    ];
+
+    /*
+     * Everything set once lives behind one entry at the foot of the rail,
+     * not as ten more lines beside the four that matter during service. The
+     * hub says what each of them is set to, which the rail never could.
+     */
+    $setupRoutes = [
+        'dashboard.setup',
+        'dashboard.booking-types.*',
+        'dashboard.areas.*',
+        'dashboard.resources.*',
+        'dashboard.price-rules.*',
+        'dashboard.closures.*',
+        'dashboard.profile.*',
+        'dashboard.branding.*',
+        'dashboard.payments.*',
+        'dashboard.notifications.edit',
+        'dashboard.widget',
+        'dashboard.settings',
+        'dashboard.legal.*',
+        'dashboard.billing',
+        'dashboard.developer*',
     ];
 
     $initials = collect(preg_split('/\s+/', trim((string) $tenant->name)))
@@ -151,6 +160,15 @@
             </nav>
 
             <div class="rail__foot">
+                <a class="rail__link" href="{{ route('dashboard.setup') }}"
+                   @if (request()->routeIs($setupRoutes)) aria-current="page" @endif>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="{{ $railIcons['gear'] }}" stroke="currentColor" stroke-width="1.7"
+                              stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <span style="flex:1 1 auto">Setup</span>
+                </a>
+
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="rail__link" type="submit" style="width:100%;border:0;background:none;cursor:pointer">

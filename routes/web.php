@@ -37,6 +37,7 @@ use App\Http\Controllers\Dashboard\ReservationController as DashboardReservation
 use App\Http\Controllers\Dashboard\ReservationListController;
 use App\Http\Controllers\Dashboard\ResourceController;
 use App\Http\Controllers\Dashboard\SettingsController;
+use App\Http\Controllers\Dashboard\SetupController;
 use App\Http\Controllers\Dashboard\TermsAcceptanceController;
 use App\Http\Controllers\Dashboard\TodayController;
 use App\Http\Controllers\Dashboard\VenueProfileController;
@@ -439,6 +440,13 @@ Route::prefix('dashboard')
         Route::get('branding', [BrandingController::class, 'edit'])->name('branding.edit');
         Route::patch('branding', [BrandingController::class, 'update'])->name('branding.update');
 
+        /*
+         * One page for everything set once (SPEC §1.1). The rail holds what
+         * is touched during service; this holds the rest, so the menu stays
+         * short as the settings keep arriving.
+         */
+        Route::get('setup', SetupController::class)->name('setup');
+
         Route::get('settings', SettingsController::class)->name('settings');
         Route::get('settings/export', AccountExportController::class)->name('account.export');
 
@@ -476,14 +484,20 @@ Route::prefix('dashboard')
         Route::post('payments/{gateway}/test', [PaymentSettingsController::class, 'test'])
             ->name('payments.test');
 
-        Route::get('setup', [BookingTypeController::class, 'index'])
+        /*
+         * What there is to book. One level inside Setup rather than at it,
+         * because Setup itself is now the page that lists everything — and
+         * two screens cannot share a URL. The names are unchanged, so every
+         * link to these goes on working.
+         */
+        Route::get('setup/tables', [BookingTypeController::class, 'index'])
             ->name('booking-types.index');
-        Route::post('setup', [BookingTypeController::class, 'store'])
+        Route::post('setup/tables', [BookingTypeController::class, 'store'])
             ->name('booking-types.store');
-        Route::get('setup/{bookingType}', [BookingTypeController::class, 'show'])
+        Route::get('setup/tables/{bookingType}', [BookingTypeController::class, 'show'])
             ->name('booking-types.show');
 
-        Route::post('setup/{bookingType}/areas', [AreaController::class, 'store'])
+        Route::post('setup/tables/{bookingType}/areas', [AreaController::class, 'store'])
             ->name('booking-types.areas.store');
         Route::patch('areas/{area}', [AreaController::class, 'update'])
             ->name('areas.update');
@@ -498,9 +512,9 @@ Route::prefix('dashboard')
             ->name('closures.store');
         Route::delete('closures/{closure}', [ClosureController::class, 'destroy'])
             ->name('closures.destroy');
-        Route::patch('setup/{bookingType}/stop-today', [ClosureController::class, 'stopToday'])
+        Route::patch('setup/tables/{bookingType}/stop-today', [ClosureController::class, 'stopToday'])
             ->name('closures.stop-today');
-        Route::patch('setup/{bookingType}/resume-today', [ClosureController::class, 'resumeToday'])
+        Route::patch('setup/tables/{bookingType}/resume-today', [ClosureController::class, 'resumeToday'])
             ->name('closures.resume-today');
 
         // Optional everywhere: a venue with one price never comes here.
