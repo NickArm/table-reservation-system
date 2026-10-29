@@ -11,6 +11,11 @@
 @section('title', 'Developer — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Developer', null],
+    ]])
+
     <div class="page-head">
         <h1>Developer</h1>
         <p>

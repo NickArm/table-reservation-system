@@ -15,6 +15,11 @@
 @section('title', 'Payments')
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Payments', null],
+    ]])
+
     <div class="page-head">
         <div>
             <h1>Payments</h1>

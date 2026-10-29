@@ -24,10 +24,10 @@
     </div>
 
     @foreach ($groups as $group)
-        <section aria-label="{{ $group['title'] }}" style="margin-bottom:26px">
-            <div class="card__head" style="margin-bottom:10px">
+        <section aria-label="{{ $group['title'] }}" style="margin-bottom:18px">
+            <div class="card__head" style="margin-bottom:8px">
                 <h2 class="h2">{{ $group['title'] }}</h2>
-                <span class="muted">{{ $group['hint'] }}</span>
+                <span class="muted" style="font-size:var(--step--2)">{{ $group['hint'] }}</span>
             </div>
 
             <div class="setup">

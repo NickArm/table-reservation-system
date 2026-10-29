@@ -10,6 +10,11 @@
 @section('title', 'Settings — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Settings', null],
+    ]])
+
     <div class="page-head">
         <h1>Settings</h1>
         <p>Your account, and how to leave.</p>

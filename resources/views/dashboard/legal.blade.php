@@ -12,6 +12,11 @@
 @section('title', 'Legal — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Terms & cancellation', null],
+    ]])
+
     <div class="page-head">
         <h1>Terms &amp; cancellation</h1>
         <p>What your guests agree to when they book.</p>

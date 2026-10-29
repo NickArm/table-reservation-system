@@ -10,6 +10,11 @@
 @section('title', 'Alerts — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Alerts', null],
+    ]])
+
     <div class="page-head">
         <h1>Alerts</h1>
         <p>Who hears about a booking, and when.</p>

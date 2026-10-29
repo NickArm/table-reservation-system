@@ -10,11 +10,14 @@
         $open = $all->filter(fn (\App\Models\Resource $resource): bool => $resource->isBookable())->count();
     @endphp
 
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Tables and sunbeds', route('dashboard.booking-types.index')],
+        [$bookingType->name, null],
+    ]])
+
     <div class="page-head">
         <div>
-            <p class="muted" style="margin:0 0 4px">
-                <a href="{{ route('dashboard.booking-types.index') }}">Setup</a>
-            </p>
             <h1>{{ $bookingType->name }}</h1>
             <p class="muted">
                 {{ $open }} of {{ $total }} {{ $noun }} open for booking

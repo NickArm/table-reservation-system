@@ -102,4 +102,53 @@ final class SetupHubTest extends TestCase
             ->assertOk()
             ->assertSee('Nothing to book yet');
     }
+
+    #[Test]
+    public function every_screen_under_setup_has_a_way_back_to_it(): void
+    {
+        /*
+         * The rail points at the hub and nothing else, so without this the
+         * browser's own back button was the only route out of eleven screens
+         * — and from inside a booking type's areas, two presses of it.
+         */
+        $screens = [
+            'dashboard.profile.edit',
+            'dashboard.branding.edit',
+            'dashboard.billing',
+            'dashboard.payments.edit',
+            'dashboard.notifications.edit',
+            'dashboard.legal.edit',
+            'dashboard.widget',
+            'dashboard.developer',
+            'dashboard.settings',
+            'dashboard.booking-types.index',
+        ];
+
+        foreach ($screens as $screen) {
+            $this->get(route($screen))
+                ->assertOk()
+                ->assertSee(route('dashboard.setup'), false);
+        }
+    }
+
+    #[Test]
+    public function the_hub_and_the_screen_under_it_are_not_both_called_setup(): void
+    {
+        // Two screens with the same heading is how somebody stops being able
+        // to tell which one they are on.
+        $this->get(route('dashboard.booking-types.index'))
+            ->assertOk()
+            ->assertSee('Tables and sunbeds')
+            ->assertDontSee('<h1>Setup</h1>', false);
+    }
+
+    #[Test]
+    public function a_booking_type_says_where_it_sits(): void
+    {
+        $type = $this->asTenant(fn () => $this->tableType());
+
+        $this->get(route('dashboard.booking-types.show', $type))
+            ->assertOk()
+            ->assertSeeInOrder(['Setup', 'Tables and sunbeds', $type->name]);
+    }
 }

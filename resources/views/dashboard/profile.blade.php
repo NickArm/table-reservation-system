@@ -14,6 +14,11 @@
 @section('title', 'Your venue — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Your venue', null],
+    ]])
+
     <div class="page-head">
         <h1>Your venue</h1>
         <p>What a guest — and Google — sees about the place.</p>

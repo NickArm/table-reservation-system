@@ -10,6 +10,11 @@
 @section('title', 'Website widget — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Website widget', null],
+    ]])
+
     <div class="page-head">
         <h1>Website widget</h1>
         <p>

@@ -11,6 +11,11 @@
 @section('title', 'Billing — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Billing', null],
+    ]])
+
     <div class="page-head">
         <h1>Billing</h1>
         <p>Your subscription, and what it covers.</p>

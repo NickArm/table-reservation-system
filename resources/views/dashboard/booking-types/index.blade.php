@@ -3,9 +3,17 @@
 @section('title', 'Setup')
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Tables and sunbeds', null],
+    ]])
+
+    {{-- Not "Setup": that is the hub this sits under, and two screens with
+         the same heading is how somebody stops being able to tell which one
+         they are on. --}}
     <div class="page-head">
         <div>
-            <h1>Setup</h1>
+            <h1>Tables and sunbeds</h1>
             <p class="muted">What guests can book here, and what you have to give them.</p>
         </div>
 

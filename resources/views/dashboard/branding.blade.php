@@ -12,6 +12,11 @@
 @section('title', 'Appearance — '.$tenant->name)
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Setup', route('dashboard.setup')],
+        ['Appearance', null],
+    ]])
+
     <div class="page-head">
         <h1>Appearance</h1>
         <p>Your logo, a photograph, and one colour.</p>

@@ -1420,13 +1420,13 @@ details.advanced.card[open] > summary {
  */
 .setup {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+    gap: 8px;
 }
 
 .setup__card {
     display: block;
-    padding: 14px 16px;
+    padding: 11px 13px;
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
     background: var(--bg);
@@ -3010,4 +3010,45 @@ details.advanced.card[open] > summary {
         flex-direction: column;
         align-items: flex-start;
     }
+}
+
+/* --- The way back up ----------------------------------------------------- */
+
+/*
+ * Setup is a hub with eleven screens under it, and some of those have screens
+ * under them again. The rail only ever points at the hub, so from three
+ * levels down the browser's own back button was the way out and the heading
+ * never said where you were.
+ *
+ * Quiet on purpose: it is a route, not a control. The last entry is the page
+ * you are on and is not a link, because a link to where you already are is a
+ * dead control somebody presses once.
+ */
+.crumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: var(--step--2);
+}
+
+.crumb a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.crumb a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+}
+
+.crumb__sep {
+    color: var(--faint);
+}
+
+.crumb [aria-current='page'] {
+    color: var(--ink-2);
+    font-weight: 600;
 }
