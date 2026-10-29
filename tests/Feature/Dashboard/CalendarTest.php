@@ -52,12 +52,60 @@ final class CalendarTest extends TestCase
         $this->booking('2026-07-12 10:00', 'Last Week');
         $this->booking('2026-07-20 10:00', 'Next Week');
 
-        $this->get(route('dashboard.calendar'))
+        /*
+         * The week strip counts each day; the list underneath is the day
+         * being looked at. So the proof that the week runs Monday to Sunday
+         * is that both ends open, and that neither Monday outside it does.
+         */
+        $this->get(route('dashboard.calendar', ['day' => '2026-07-13']))
             ->assertOk()
             ->assertSee('Monday Guest')
-            ->assertSee('Sunday Guest')
             ->assertDontSee('Last Week')
             ->assertDontSee('Next Week');
+
+        $this->get(route('dashboard.calendar', ['day' => '2026-07-19']))
+            ->assertOk()
+            ->assertSee('Sunday Guest');
+
+        // A day outside the week on screen is ignored rather than obeyed.
+        $this->get(route('dashboard.calendar', ['day' => '2026-07-20']))
+            ->assertOk()
+            ->assertDontSee('Next Week');
+    }
+
+    #[Test]
+    public function the_day_underneath_says_when_people_arrive(): void
+    {
+        $this->booking('2026-07-15 10:00', 'Early One');
+        $this->booking('2026-07-15 10:20', 'Also Early');
+        $this->booking('2026-07-15 13:00', 'Lunchtime');
+
+        /*
+         * The question after "is Saturday busy" is always "busy when". Two
+         * at ten and one at one is a staffing decision that a total of three
+         * hides completely.
+         */
+        $this->get(route('dashboard.calendar'))
+            ->assertOk()
+            ->assertSee('When they arrive')
+            ->assertSee('2 at 10:00')
+            ->assertSee('1 at 13:00');
+    }
+
+    #[Test]
+    public function a_closure_is_named_so_a_quiet_day_is_not_read_as_a_slow_one(): void
+    {
+        $this->asTenant(fn () => \App\Models\BookingClosure::factory()->create([
+            'date_from' => '2026-07-16',
+            'date_to' => '2026-07-16',
+            'reason' => 'Kitchen deep clean',
+        ]));
+
+        // An empty Thursday and a closed Thursday look identical on a bar.
+        $this->get(route('dashboard.calendar'))
+            ->assertOk()
+            ->assertSee('Closed this week')
+            ->assertSee('Kitchen deep clean');
     }
 
     #[Test]
@@ -84,8 +132,8 @@ final class CalendarTest extends TestCase
 
         $response->assertSee('Real Booking')->assertDontSee('Called Off');
 
-        // One of four spots: the meter reads a quarter, not a half.
-        $response->assertSee('1 of 4 spots booked');
+        // One of four spots: the bar reads a quarter, not a half.
+        $response->assertSee('1<span class="muted">/4</span>', false);
     }
 
     #[Test]
@@ -93,15 +141,20 @@ final class CalendarTest extends TestCase
     {
         $this->booking('2026-07-20 10:00', 'Next Week');
 
+        /*
+         * All three stay on screen and the current one is marked, rather
+         * than one of them disappearing: a control that changes shape
+         * depending on where you are is one somebody has to look for.
+         */
         $this->get(route('dashboard.calendar'))
             ->assertOk()
-            // Already on this week, so there is nothing to go back to it with.
-            ->assertDontSee('This week');
+            ->assertSee('This week')
+            ->assertSee('aria-current="page"', false);
 
         $this->get(route('dashboard.calendar', ['week' => '2026-07-20']))
             ->assertOk()
-            ->assertSee('Next Week')
-            ->assertSee('This week');
+            ->assertSee('This week')
+            ->assertSee(route('dashboard.calendar'));
     }
 
     #[Test]
