@@ -53,21 +53,27 @@
             <button class="btn" type="submit">Search</button>
         </form>
 
-        <div class="chips" style="margin-bottom:10px">
-            @foreach ($segments as $segment)
-                <a class="chip" href="{{ $segment['href'] }}"
-                   @if ($segment['on']) aria-current="page" @endif>
-                    {{ $segment['label'] }}
-                    <span class="chip__count">{{ $segment['count'] }}</span>
-                </a>
-            @endforeach
-        </div>
+        {{-- Who, then in what order: one line, with a rule saying they are
+             two questions. --}}
+        <div class="filterbar">
+            <div class="chips">
+                @foreach ($segments as $segment)
+                    <a class="chip" href="{{ $segment['href'] }}"
+                       @if ($segment['on']) aria-current="page" @endif>
+                        {{ $segment['label'] }}
+                        <span class="chip__count">{{ $segment['count'] }}</span>
+                    </a>
+                @endforeach
+            </div>
 
-        <div class="chips" style="margin-bottom:16px">
-            @foreach ($sorts as $option)
-                <a class="chip" href="{{ $option['href'] }}"
-                   @if ($option['on']) aria-current="page" @endif>{{ $option['label'] }}</a>
-            @endforeach
+            <span class="filterbar__rule" aria-hidden="true"></span>
+
+            <div class="chips">
+                @foreach ($sorts as $option)
+                    <a class="chip" href="{{ $option['href'] }}"
+                       @if ($option['on']) aria-current="page" @endif>{{ $option['label'] }}</a>
+                @endforeach
+            </div>
         </div>
 
         @if ($guests->isEmpty())

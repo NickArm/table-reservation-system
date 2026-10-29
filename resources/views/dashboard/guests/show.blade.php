@@ -78,7 +78,7 @@
         </div>
     @endif
 
-    <div class="stat-grid" style="margin-bottom:16px">
+    <div class="stat-grid">
         <div class="stat"><b>{{ $guest->bookings_count }}</b><span class="muted">bookings</span></div>
         <div class="stat"><b>{{ $guest->completed_count }}</b><span class="muted">completed</span></div>
         <div class="stat"><b>{{ $guest->cancelled_count }}</b><span class="muted">cancelled</span></div>

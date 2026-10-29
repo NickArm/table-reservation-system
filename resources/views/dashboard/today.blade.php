@@ -49,7 +49,7 @@
         covers against the size of the room, and what is happening in the
         next half hour rather than a total for the day.
     --}}
-    <div class="stat-grid" style="margin-bottom:20px">
+    <div class="stat-grid">
         <div class="stat">
             <b>{{ $stats['guests'] }}</b>
             <span class="muted">

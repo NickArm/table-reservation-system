@@ -42,7 +42,7 @@
             </p>
         </div>
     @else
-        <div class="stat-grid" style="margin-bottom:16px">
+        <div class="stat-grid">
             <div class="stat">
                 <b>{{ \App\Support\Money::format($money['net']) }}</b>
                 <span class="muted">taken online</span>

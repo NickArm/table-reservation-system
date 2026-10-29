@@ -105,7 +105,7 @@ a {
     max-width: 1120px;
     margin: 0 auto;
     padding-inline: 24px;
-    padding-block: 32px;
+    padding-block: 20px;
 }
 
 .shell--narrow {
@@ -116,13 +116,13 @@ a {
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
-    padding: 20px;
+    padding: 14px 16px;
 }
 
 .stack {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .muted {
@@ -525,22 +525,41 @@ a:focus-visible {
 
 .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(146px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
 }
 
+/*
+ * The figure and what it is, on one line.
+ *
+ * Stacked, with the number at display size, each of these was 130px tall and
+ * four of them pushed the actual work below the fold. "4 bookings" is worth
+ * knowing and is not worth a card the size of a postcard: the number still
+ * reads first because it is heavier and larger, not because it has a line to
+ * itself.
+ */
 .stat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 7px;
+    padding: 9px 12px;
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
-    padding: 16px;
 }
 
 .stat b {
-    display: block;
-    font-size: var(--step-2);
+    font-size: var(--step-1);
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
+}
+
+/* Anything after the label drops to its own line, full width. */
+.stat .progress,
+.stat__note {
+    flex: 1 0 100%;
 }
 
 .stat--ok {
@@ -552,8 +571,7 @@ a:focus-visible {
 }
 
 .stat__note {
-    display: block;
-    margin-top: 8px;
+    margin-top: 2px;
     color: var(--faint);
     font-size: var(--step--2);
 }
@@ -568,15 +586,15 @@ a:focus-visible {
  */
 .work {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 14px;
     align-items: start;
 }
 
 .work__rail {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
 }
 
 @media (max-width: 1080px) {
@@ -588,14 +606,14 @@ a:focus-visible {
 .chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
 }
 
 .chip {
     display: inline-flex;
     align-items: center;
-    min-height: 34px;
-    padding: 0 13px;
+    min-height: 27px;
+    padding: 0 10px;
     border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--bg);
@@ -666,7 +684,8 @@ a:focus-visible {
 }
 
 .progress {
-    height: 8px;
+    height: 5px;
+    margin-top: 7px;
     border-radius: var(--radius-pill);
     background: var(--surface-2);
     overflow: hidden;
@@ -689,10 +708,10 @@ a:focus-visible {
 .page-head {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 24px;
+    gap: 10px 24px;
     align-items: flex-end;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .page-head h1 {
@@ -717,7 +736,7 @@ a:focus-visible {
     gap: 8px 16px;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 
 .grid {
@@ -2956,5 +2975,39 @@ details.advanced.card[open] > summary {
 
     .land__close {
         background: linear-gradient(135deg, #15201f 0%, var(--bg) 100%);
+    }
+}
+
+/* --- Filters: one line, two questions ------------------------------------ */
+
+/*
+ * When and status were a row each, and two rows of chips with their own
+ * margins came to seventy pixels of a screen whose job is a list. Neither is
+ * worth a row: the rule between the groups says they are two questions,
+ * which is all the separation they were getting from the blank line.
+ */
+.filterbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 10px;
+    margin-bottom: 12px;
+}
+
+.filterbar__rule {
+    width: 1px;
+    height: 18px;
+    background: var(--line);
+}
+
+/* Stacked, the rule is a stray mark rather than a divider. */
+@media (max-width: 760px) {
+    .filterbar__rule {
+        display: none;
+    }
+
+    .filterbar {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

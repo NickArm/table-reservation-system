@@ -43,23 +43,30 @@
         <button class="btn" type="submit">Search</button>
     </form>
 
-    <div class="chips" style="margin-bottom:10px">
-        @foreach ($whenFilters as $filter)
-            <a class="chip" href="{{ $filter['href'] }}"
-               @if ($filter['on']) aria-current="page" @endif>{{ $filter['label'] }}</a>
-        @endforeach
-    </div>
+    {{-- One line, not two. When and status are both one tap and neither is
+         worth a row of its own; the rule between them is what says they are
+         two questions rather than ten answers to one. --}}
+    <div class="filterbar">
+        <div class="chips">
+            @foreach ($whenFilters as $filter)
+                <a class="chip" href="{{ $filter['href'] }}"
+                   @if ($filter['on']) aria-current="page" @endif>{{ $filter['label'] }}</a>
+            @endforeach
+        </div>
 
-    <div class="chips" style="margin-bottom:16px">
-        @foreach ($statusFilters as $filter)
-            <a class="chip" href="{{ $filter['href'] }}"
-               @if ($filter['on']) aria-current="page" @endif>{{ $filter['label'] }}</a>
-        @endforeach
+        <span class="filterbar__rule" aria-hidden="true"></span>
+
+        <div class="chips">
+            @foreach ($statusFilters as $filter)
+                <a class="chip" href="{{ $filter['href'] }}"
+                   @if ($filter['on']) aria-current="page" @endif>{{ $filter['label'] }}</a>
+            @endforeach
+        </div>
     </div>
 
     {{-- Everything an owner reaches for once a season, out of the way but
          never behind a different screen. --}}
-    <details class="advanced" style="margin-bottom:16px" @if ($search->isAdvanced()) open @endif>
+    <details class="advanced" style="margin-bottom:12px" @if ($search->isAdvanced()) open @endif>
         <summary>Exact dates, booking type, where it came from</summary>
 
         <form method="GET" action="{{ route('dashboard.reservations.index') }}"
@@ -131,7 +138,7 @@
         </form>
     </details>
 
-    <div class="stat-grid" style="margin-bottom:16px">
+    <div class="stat-grid">
         <div class="stat"><b>{{ $totals['bookings'] }}</b><span class="muted">bookings</span></div>
         <div class="stat"><b>{{ $totals['guests'] }}</b><span class="muted">guests</span></div>
         <div class="stat"><b>{{ $totals['money'] }}</b><span class="muted">booked value</span></div>

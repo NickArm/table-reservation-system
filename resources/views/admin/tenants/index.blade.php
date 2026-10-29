@@ -35,7 +35,7 @@
         <button class="btn" type="submit">Search</button>
     </form>
 
-    <div class="chips" style="margin-bottom:16px">
+    <div class="chips" style="margin-bottom:12px">
         @foreach ($statusFilters as $filter)
             <a class="chip" href="{{ $filter['href'] }}"
                @if ($filter['on']) aria-current="page" @endif>

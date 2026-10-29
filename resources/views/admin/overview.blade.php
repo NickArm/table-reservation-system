@@ -20,7 +20,7 @@
         <a class="btn btn--ghost" href="{{ route('admin.tenants.index') }}">All accounts</a>
     </div>
 
-    <div class="stat-grid" style="margin-bottom:18px">
+    <div class="stat-grid">
         <div class="stat">
             <b>{{ \App\Support\Money::format($figures->mrrCents()) }}</b>
             <span class="muted">monthly recurring</span>
