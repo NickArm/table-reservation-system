@@ -15,6 +15,7 @@ use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Venue;
 use App\Support\Money;
+use App\Support\StatusPill;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,7 @@ final class ReservationController extends Controller
                 && $payment->refundableCents() > 0
                 && $this->isOwner($request, $tenant),
             'refundableCents' => $payment?->refundableCents() ?? 0,
+            'statusSkins' => StatusPill::map(),
             // Their whole history with this venue is one click away
             // (SPEC §28.3).
             'guest' => $reservation->guest_id === null

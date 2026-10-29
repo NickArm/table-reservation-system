@@ -844,6 +844,20 @@ details.advanced > summary {
     padding: 6px 0;
 }
 
+/* A fold that is its own card: cancelling a booking, refunding money. The
+   summary is the card's heading, so it carries the heading's weight rather
+   than reading as a stray line above the padding. */
+details.advanced.card > summary {
+    padding: 0;
+    font-size: var(--step-0);
+    color: var(--ink);
+}
+
+details.advanced.card[open] > summary {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+}
+
 /* --- Booking page: what is on offer -------------------------------------- */
 
 .hero__logo {
