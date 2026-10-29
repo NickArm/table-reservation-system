@@ -20,7 +20,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        if (User::where('email', 'admin@tablereserved.test')->doesntExist()) {
+        /*
+         * 🔒 Never in production.
+         *
+         * This account reads every venue on the platform, every guest list
+         * and every booking — and its address and password are in a public
+         * repository. A live install has to run `php artisan db:seed` to get
+         * the plans and the platform documents, and before this guard that
+         * same command handed out a super admin with the password
+         * "password". Use `php artisan admin:create` instead.
+         */
+        if (! app()->isProduction() && User::where('email', 'admin@tablereserved.test')->doesntExist()) {
             // forceCreate: is_super_admin and email_verified_at are not
             // fillable on purpose, and strict mode refuses to drop them.
             User::forceCreate([
