@@ -69,15 +69,22 @@ final class SentryTest extends TestCase
     #[Test]
     public function a_venues_gateway_secret_in_a_stack_frame_does_not_leave(): void
     {
-        // Exactly the shape of a real one: the arguments of the frame that
-        // threw inside the payment flow.
+        /*
+         * The arguments of the frame that threw inside the payment flow.
+         *
+         * 🔒 Deliberately too short to be mistaken for a Stripe key. These
+         * are redacted by the *name* of the variable, so the value carries no
+         * weight here — and a fixture shaped like a real `sk_live_` key makes
+         * GitHub's push protection reject every push to this repository until
+         * somebody allowlists it. Lengthening these back is how that returns.
+         */
         $frame = new Frame(
             'charge',
             'app/Payments/Gateways/StripeGateway.php',
             88,
             vars: [
-                'secret_key' => 'sk_live_51Hx2bQEXAMPLEkeythatmustnotleave',
-                'webhook_secret' => 'whsec_realsecretvalue0000',
+                'secret_key' => 'sk_live_notreal',
+                'webhook_secret' => 'whsec_notreal',
                 'amount_cents' => 7000,
                 'settings' => ['credentials' => ['secret_key' => 'sk_live_another']],
             ],
