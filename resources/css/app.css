@@ -2644,3 +2644,317 @@ details.advanced.card[open] > summary {
 }
 
 .terms-change button:hover { background: rgba(255, 255, 255, 0.14); }
+
+/* --- The front page ------------------------------------------------------ */
+
+/*
+ * Everything here is scoped under .land. The dashboard and the booking page
+ * share one neutral shell on purpose (§27), and a front page that wants a
+ * sunset in it must not drag one into a taverna's morning screen.
+ *
+ * No photograph. A stock picture of somebody else's beach is the first thing
+ * an owner on this coast recognises as not theirs, so the warmth comes from
+ * two gradients and the type.
+ */
+.land {
+    --sand: #fdf6ec;
+    --sand-line: #f0e2cd;
+    --sea: #0e6e6e;
+    --sea-deep: #0a4f52;
+    --sun: #f59e0b;
+}
+
+.land__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 18px;
+}
+
+.land__mark {
+    color: var(--ink);
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+
+.land__hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--sand-line);
+    background:
+        linear-gradient(180deg, var(--sand) 0%, #fff 86%);
+}
+
+/* Low sun over the water, cropped by the section. */
+.land__sun {
+    position: absolute;
+    top: -180px;
+    right: -120px;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.26) 0%, rgba(245, 158, 11, 0) 68%);
+    pointer-events: none;
+}
+
+.land__heroinner {
+    position: relative;
+    padding-block: 72px 84px;
+}
+
+.land__eyebrow {
+    margin: 0 0 14px;
+    color: var(--sea-deep);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.land__title {
+    max-width: 18ch;
+    margin: 0 0 20px;
+    font-size: clamp(34px, 6vw, 60px);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+}
+
+.land__sub {
+    max-width: 58ch;
+    margin: 0 0 30px;
+    color: var(--ink-2);
+    font-size: var(--step-1);
+    line-height: 1.55;
+}
+
+.land__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.btn--big {
+    padding: 14px 22px;
+    font-size: var(--step-0);
+}
+
+.land__fine {
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-size: var(--step--1);
+}
+
+/* --- The claim ----------------------------------------------------------- */
+
+.land__band {
+    padding-block: 40px;
+}
+
+/*
+ * The sentence the whole thing rests on. Dark, wide and alone, because a
+ * paragraph that matters this much does not go in a card with eight others.
+ */
+.land__claim {
+    padding: 26px 30px;
+    border-radius: var(--radius-card);
+    background: var(--sea-deep);
+    color: #eafaf7;
+    font-size: var(--step-1);
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+
+.land__claim strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+/* --- Sections ------------------------------------------------------------ */
+
+.land__section {
+    padding-block: 52px;
+}
+
+.land__h2 {
+    margin: 0 0 28px;
+    font-size: clamp(24px, 3.4vw, 34px);
+    letter-spacing: -0.025em;
+}
+
+.land__grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+}
+
+.land__card {
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--bg);
+}
+
+.land__card h3 {
+    margin: 14px 0 8px;
+    font-size: var(--step-0);
+    letter-spacing: -0.01em;
+}
+
+.land__card p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.6;
+}
+
+.land__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-control);
+    background: var(--accent-soft);
+    color: var(--sea);
+}
+
+.land__icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+/* --- Three taps ---------------------------------------------------------- */
+
+.land__steps {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.land__steps li {
+    padding: 22px;
+    border-radius: var(--radius-card);
+    background: var(--sand);
+}
+
+.land__steps b {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: var(--sea);
+    color: #fff;
+    font-size: var(--step--1);
+}
+
+.land__steps strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.land__steps span {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.6;
+}
+
+/* --- The demo login ------------------------------------------------------ */
+
+.land__demo {
+    display: grid;
+    gap: 22px;
+    padding: 30px;
+    border: 1px solid var(--sand-line);
+    border-radius: var(--radius-card);
+    background: var(--sand);
+}
+
+.land__logins {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.land__login {
+    padding: 18px;
+    border: 1px solid var(--sand-line);
+    border-radius: var(--radius-control);
+    background: var(--bg);
+}
+
+.land__login p.muted {
+    margin: 10px 0 0;
+    font-size: var(--step--2);
+}
+
+/* Selectable and obvious: somebody is about to copy these two lines. */
+.land__cred {
+    margin: 10px 0 0;
+}
+
+.land__cred code {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: var(--step--1);
+    user-select: all;
+    word-break: break-all;
+}
+
+/* --- Close & foot -------------------------------------------------------- */
+
+.land__close {
+    padding: 36px;
+    border-radius: var(--radius-card);
+    background: linear-gradient(135deg, var(--sand) 0%, #fff 100%);
+    border: 1px solid var(--sand-line);
+}
+
+.land__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding-block: 28px;
+    border-top: 1px solid var(--line);
+    font-size: var(--step--1);
+}
+
+/*
+ * The sand is a light-mode idea. Left alone in the dark it becomes a glowing
+ * slab, so it turns into deep water instead and keeps the same job.
+ */
+@media (prefers-color-scheme: dark) {
+    .land {
+        --sand: #15201f;
+        --sand-line: #24322f;
+    }
+
+    .land__hero {
+        background: linear-gradient(180deg, #15201f 0%, var(--bg) 86%);
+    }
+
+    .land__claim {
+        background: #0d3b3d;
+    }
+
+    .land__close {
+        background: linear-gradient(135deg, #15201f 0%, var(--bg) 100%);
+    }
+}

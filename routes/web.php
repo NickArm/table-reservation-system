@@ -63,7 +63,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'marketing.home')->name('home');
+// The one page we actually want in a search index (SPEC §33).
+Route::view('/', 'marketing.home', ['indexable' => true])->name('home');
 
 /*
  * Every booking page worth indexing (SPEC §33.2). Structured data tells a
