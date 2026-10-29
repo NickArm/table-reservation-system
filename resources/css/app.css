@@ -1894,10 +1894,22 @@ details.advanced.card[open] > summary {
 
 /* --- Week view ---------------------------------------------------------- */
 
+/*
+ * Seven columns, because it is a week. `auto-fit` with a 190px floor fitted
+ * five and wrapped the last two onto a second row, which reads as a week and
+ * a bit — and the whole point of the strip is comparing the seven at a
+ * glance. Narrow screens fall back below.
+ */
 .week {
     display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+    .week {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
 }
 
 .week__day {
@@ -1954,24 +1966,40 @@ details.advanced.card[open] > summary {
 .arrivals__chart {
     display: flex;
     align-items: flex-end;
-    gap: 4px;
+    justify-content: flex-start;
+    gap: 6px;
     height: 92px;
 }
 
+/*
+ * Capped and left-aligned. Stretching four half-hours across the full width
+ * turned a quiet Thursday into four teal slabs — an empty day drawn as loudly
+ * as a full one, which is the opposite of what a chart is for.
+ */
 .arrivals__slot {
-    flex: 1 1 0;
+    flex: 0 1 52px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 6px;
+    gap: 4px;
     height: 100%;
+    min-width: 0;
 }
 
 .arrivals__bar {
     width: 100%;
     border-radius: 5px 5px 2px 2px;
     background: var(--accent);
+}
+
+/* The count on top of the bar. Heights are relative to the busiest half
+   hour, so on a flat day every bar is full — true, and useless without the
+   number that says each one is a single booking. */
+.arrivals__count {
+    font-size: var(--step--2);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
 }
 
 .arrivals__slot small {
@@ -2000,7 +2028,14 @@ details.advanced.card[open] > summary {
     font-size: var(--step--1);
 }
 
+/*
+ * 🔒 `display: block` is load-bearing, not tidiness. This is a <span>, and an
+ * inline box ignores `height` — so the track collapsed to nothing and its
+ * filled child, still carrying a width percentage, painted straight over the
+ * line of text beside it. A green block sat on top of "Tables".
+ */
 .week__meter {
+    display: block;
     height: 4px;
     border-radius: var(--radius-pill);
     background: var(--surface-2);

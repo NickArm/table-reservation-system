@@ -102,6 +102,10 @@
                             <div class="arrivals__chart">
                                 @foreach ($arrivals as $slot)
                                     <span class="arrivals__slot" title="{{ $slot['count'] }} at {{ $slot['label'] }}">
+                                        {{-- The number, because the heights are
+                                             relative to the busiest half hour:
+                                             on a flat day every bar is full. --}}
+                                        <span class="arrivals__count">{{ $slot['count'] }}</span>
                                         <span class="arrivals__bar" style="height:{{ max(8, $slot['percent']) }}%"></span>
                                         <small>{{ $slot['label'] }}</small>
                                     </span>
