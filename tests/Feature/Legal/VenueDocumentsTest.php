@@ -55,7 +55,9 @@ final class VenueDocumentsTest extends TestCase
             ->assertSee('Terms of Booking')
             ->assertSee('Cancellation Policy')
             ->assertSee('deposit against your final')
-            ->assertSee('suggested wording');
+            ->assertSee('suggested wording')
+            // And the screen says plainly that no guest has seen any of it.
+            ->assertSee('Neither is published.');
 
         // Suggested, not saved. Nothing is live until they press the button.
         $this->assertSame(0, LegalDocument::query()->acrossTenants()->count());
@@ -148,6 +150,27 @@ final class VenueDocumentsTest extends TestCase
             ->assertOk()
             ->assertSee(route('public.legal', [$this->tenant, 'cancellation-policy']), false)
             ->assertSee('Cancel at least 24 hours before');
+    }
+
+    #[Test]
+    public function a_half_published_venue_is_told_which_half(): void
+    {
+        /*
+         * An unpublished cancellation policy is a refund argument waiting to
+         * happen, so the gap is stated at the top rather than inferred from a
+         * grey pill beside one of two headings.
+         */
+        $this->patch(route('dashboard.legal.update', 'cancellation-policy'), [
+            'content' => 'Cancel at least 24 hours before and we refund in full.',
+        ])->assertRedirect();
+
+        $this->get(route('dashboard.legal.edit'))
+            ->assertOk()
+            ->assertSee('1 of 2 published.')
+            // Wording already live is folded away: two editors of eighteen
+            // rows is most of a screen of monospace to scroll past.
+            ->assertSee('Change the wording')
+            ->assertSee('Read it through and publish it');
     }
 
     #[Test]

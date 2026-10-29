@@ -15,6 +15,35 @@
         <p>Who hears about a booking, and when.</p>
     </div>
 
+    {{-- What is on, in one line. Somebody who opened this to check whether
+         the morning email is still coming can close it again without reading
+         four cards. --}}
+    @php
+        $on = array_values(array_filter([
+            $venue->notify_on_booking ? 'an email for every booking' : null,
+            $venue->daily_summary_hour !== null
+                ? 'the day ahead at '.str_pad((string) $venue->daily_summary_hour, 2, '0', STR_PAD_LEFT).':00'
+                : null,
+            $venue->reminder_hours_before !== null
+                ? 'a reminder to guests '.$venue->reminder_hours_before.'h before'
+                : null,
+        ]));
+    @endphp
+
+    <div class="notice" style="margin-bottom:24px;max-width:640px">
+        @if ($on === [])
+            <strong>Nothing is being sent.</strong>
+            Bookings still arrive and the bell still fills — you just hear nothing
+            about them by email.
+        @else
+            <strong>Right now you get {{ implode(', and ', $on) }}.</strong>
+            @if ($venue->quiet_hours_from !== null)
+                Anything between {{ substr((string) $venue->quiet_hours_from, 0, 5) }}
+                and {{ substr((string) $venue->quiet_hours_to, 0, 5) }} waits until morning.
+            @endif
+        @endif
+    </div>
+
     <form method="POST" action="{{ route('dashboard.notifications.update') }}" class="stack" style="max-width:640px">
         @csrf
         @method('PATCH')
@@ -30,8 +59,8 @@
                 <span>
                     <strong>Email me every booking</strong>
                     <small class="muted">
-                        The bell in the top bar fills in either way. Turning this
-                        off only stops the emails.
+                        The bell beside your venue name fills in either way.
+                        Turning this off only stops the emails.
                     </small>
                 </span>
             </label>

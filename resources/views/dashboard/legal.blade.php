@@ -17,6 +17,29 @@
         <p>What your guests agree to when they book.</p>
     </div>
 
+    {{-- Whether a guest can actually read these, in one line. It is the only
+         thing about this screen that is urgent: an unpublished cancellation
+         policy is a refund argument waiting to happen. --}}
+    @php
+        $published = collect($documents)->filter(fn (array $entry): bool => $entry['document'] !== null)->count();
+        $total = count($documents);
+    @endphp
+
+    <div class="notice @if ($published < $total) notice--warn @endif" style="margin-bottom:24px;max-width:820px">
+        @if ($published === 0)
+            <strong>Neither is published.</strong>
+            Guests are booking without agreeing to anything, which leaves you
+            without a cancellation policy to point at.
+        @elseif ($published < $total)
+            <strong>{{ $published }} of {{ $total }} published.</strong>
+            The other one is still our suggested wording and no guest has seen it.
+        @else
+            <strong>Both are live.</strong>
+            Every guest ticks these before paying, and each booking keeps the
+            version its guest agreed to.
+        @endif
+    </div>
+
     <div class="stack" style="max-width:820px">
         @foreach ($documents as $entry)
             @php
@@ -49,39 +72,51 @@
                     </p>
                 @endif
 
-                <form method="POST" action="{{ route('dashboard.legal.update', $type->path()) }}"
-                      class="stack">
-                    @csrf
-                    @method('PATCH')
-
-                    <div class="field">
-                        <label for="content-{{ $type->value }}" class="label">
-                            {{ $type->title() }}
-                        </label>
-                        <textarea id="content-{{ $type->value }}" name="content" rows="18"
-                                  required class="field"
-                                  style="min-height:320px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px"
-                        >{{ old('content', $entry['content']) }}</textarea>
-                        <small class="muted">
-                            Headings start with <code>##</code>, lists with
-                            <code>-</code>. Everything else is plain writing.
-                        </small>
-                    </div>
-
-                    <p>
-                        <button type="submit" class="btn">
-                            {{ $document === null ? 'Publish it' : 'Save changes' }}
-                        </button>
-
-                        @if ($document !== null)
-                            <small class="muted" style="margin-left:12px">
-                                Last saved {{ $document->published_at?->format('j M Y') }}.
-                                Bookings already made keep the version their guest
-                                agreed to.
-                            </small>
+                {{-- Published wording is folded. Two editors of eighteen rows
+                     open at once is most of a screen of monospace to scroll
+                     past, on a page somebody usually opens to check a date. --}}
+                <details class="advanced" @if ($document === null) open @endif>
+                    <summary>
+                        @if ($document === null)
+                            Read it through and publish it
+                        @else
+                            Change the wording
                         @endif
+                    </summary>
+
+                    <form method="POST" action="{{ route('dashboard.legal.update', $type->path()) }}"
+                          class="stack" style="margin-top:14px">
+                        @csrf
+                        @method('PATCH')
+
+                        <div>
+                            <label for="content-{{ $type->value }}" class="label">
+                                {{ $type->title() }}
+                            </label>
+                            <textarea id="content-{{ $type->value }}" name="content" rows="18"
+                                      required class="field"
+                                      style="min-height:320px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px"
+                            >{{ old('content', $entry['content']) }}</textarea>
+                            <small class="muted">
+                                Headings start with <code>##</code>, lists with
+                                <code>-</code>. Everything else is plain writing.
+                            </small>
+                        </div>
+
+                        <div>
+                            <button type="submit" class="btn">
+                                {{ $document === null ? 'Publish it' : 'Save changes' }}
+                            </button>
+                        </div>
+                    </form>
+                </details>
+
+                @if ($document !== null)
+                    <p class="muted" style="margin:0;font-size:var(--step--2)">
+                        Last saved {{ $document->published_at?->format('j M Y') }}.
+                        Bookings already made keep the version their guest agreed to.
                     </p>
-                </form>
+                @endif
             </section>
         @endforeach
 

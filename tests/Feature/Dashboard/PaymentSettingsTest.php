@@ -201,7 +201,10 @@ final class PaymentSettingsTest extends TestCase
 
         $this->get(route('dashboard.payments.edit'))
             ->assertOk()
-            ->assertSee('Test mode.');
+            // Stated in a sentence at the top rather than as a pill in the
+            // corner: "is this live?" is the only question anybody opens this
+            // screen with.
+            ->assertSee('Test mode — no money is moving.', false);
 
         $this->get(route('public.search', [$this->tenant, 'people' => 2]))
             ->assertOk()
@@ -220,5 +223,75 @@ final class PaymentSettingsTest extends TestCase
             ->assertDontSee('sk_test');
 
         $this->post(route('dashboard.payments.test', Gateway::Stripe->value))->assertNotFound();
+    }
+
+    #[Test]
+    public function the_gateway_in_use_is_the_one_at_the_top(): void
+    {
+        /*
+         * Scrolling past PayPal to reach the Stripe keys you are trying to fix
+         * is the small daily tax of a screen that treats three options as
+         * equally likely. A venue takes money one way.
+         */
+        $this->asTenant(fn () => PaymentGatewaySetting::factory()->paypal()->create());
+
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSeeInOrder(['PayPal', 'Stripe']);
+    }
+
+    #[Test]
+    public function keys_that_are_already_in_are_folded_away(): void
+    {
+        // An open password box next to a working key invites somebody to type
+        // over it, and an empty box here means "leave it alone" — which is not
+        // what an open box looks like.
+        $this->asTenant(fn () => PaymentGatewaySetting::factory()->stripe()->create());
+
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSee('Keys are in · replace them', false);
+    }
+
+    #[Test]
+    public function a_venue_with_no_keys_gets_the_boxes_open(): void
+    {
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSee('Your Stripe keys')
+            ->assertDontSee('Keys are in', false);
+    }
+
+    #[Test]
+    public function the_webhook_address_is_given_to_be_copied(): void
+    {
+        /*
+         * Without it the guest pays, the gateway is happy and the booking
+         * never confirms — the worst failure this product has, and the one
+         * step an owner performs in somebody else's dashboard.
+         */
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSee('data-copy', false)
+            ->assertSee(route('webhooks', [Gateway::Stripe->value, $this->tenant->uuid]))
+            ->assertSee('checkout.session.completed');
+    }
+
+    #[Test]
+    public function a_failed_test_reads_as_a_failure(): void
+    {
+        $this->asTenant(function (): void {
+            $setting = PaymentGatewaySetting::factory()->stripe()->create();
+
+            $setting->forceFill([
+                'last_tested_at' => now(),
+                'last_test_result' => 'Stripe refused the key.',
+            ])->save();
+        });
+
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSee('Last test failed.')
+            ->assertSee('Stripe refused the key.');
     }
 }

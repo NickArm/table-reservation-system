@@ -2093,6 +2093,103 @@ details.advanced.card[open] > summary {
     background: var(--accent-soft);
 }
 
+/* --- Payments: what is happening to the money right now ------------------ */
+
+/*
+ * The only question anybody opens the payments screen with is "is this live?",
+ * and a pill in the corner is not an answer. This is, in a sentence, with a
+ * colour that means the same thing from across the room.
+ */
+.paystate {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+}
+
+.paystate__dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--faint);
+}
+
+.paystate__text strong {
+    display: block;
+}
+
+.paystate__text small {
+    display: block;
+    margin-top: 3px;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+}
+
+.paystate--live {
+    border-color: var(--ok);
+    background: var(--accent-soft);
+}
+
+.paystate--live .paystate__dot {
+    background: var(--ok);
+}
+
+.paystate--test {
+    border-color: var(--warn-line);
+    background: var(--warn-soft);
+}
+
+.paystate--test .paystate__dot {
+    background: var(--warn);
+}
+
+.paystate--venue .paystate__dot {
+    background: var(--accent);
+}
+
+/*
+ * The webhook address. Without it the guest pays, the gateway is happy and the
+ * booking never confirms — the worst failure this product has, and the one
+ * step an owner has to perform in somebody else's dashboard. So it is not a
+ * line of small print under a password box.
+ */
+.hook {
+    padding: 14px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-control);
+}
+
+.hook__title {
+    margin: 0 0 10px;
+    font-size: var(--step--1);
+    font-weight: 600;
+}
+
+.hook__title code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: var(--step--2);
+    word-break: break-all;
+}
+
+.hook__result {
+    margin: 0;
+    font-size: var(--step--1);
+}
+
+.hook__result--ok strong {
+    color: var(--ok);
+}
+
+.hook__result--bad strong {
+    color: var(--danger);
+}
+
 .snippet {
     margin: 0;
     padding: 14px;

@@ -54,6 +54,32 @@ final class NotificationSettingsTest extends TestCase
     }
 
     #[Test]
+    public function what_is_being_sent_is_stated_before_the_switches(): void
+    {
+        // Somebody who opened this to check whether the morning email is still
+        // coming should be able to close it again without reading four cards.
+        $this->get(route('dashboard.notifications.edit'))
+            ->assertOk()
+            ->assertSee('an email for every booking')
+            ->assertSee('the day ahead at 08:00')
+            ->assertSee('a reminder to guests 24h before');
+    }
+
+    #[Test]
+    public function a_venue_that_switched_everything_off_is_told_so(): void
+    {
+        $this->patch(route('dashboard.notifications.update'), [
+            'quiet_hours_from' => '',
+            'quiet_hours_to' => '',
+        ])->assertRedirect();
+
+        $this->get(route('dashboard.notifications.edit'))
+            ->assertOk()
+            ->assertSee('Nothing is being sent.')
+            ->assertSee('the bell still fills');
+    }
+
+    #[Test]
     public function the_settings_save(): void
     {
         $this->patch(route('dashboard.notifications.update'), [
