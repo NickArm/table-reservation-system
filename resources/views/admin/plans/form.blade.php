@@ -16,15 +16,22 @@
         $features = $plan->features ?? [];
     @endphp
 
+    @include('partials.crumb', ['trail' => [
+        ['Plans', route('admin.plans.index')],
+        [$plan?->name ?? 'New plan', null],
+    ]])
+
     <div class="page-head">
-        <h1>{{ $plan->exists ? $plan->name : 'A new plan' }}</h1>
-        <p>
-            @if ($plan->exists)
-                Changing the price here does not change what anybody is already paying.
-            @else
-                It cannot be bought until it exists at the payment provider too.
-            @endif
-        </p>
+        <div>
+            <h1>{{ $plan->exists ? $plan->name : 'A new plan' }}</h1>
+            <p class="muted">
+                @if ($plan->exists)
+                    Changing the price here does not change what anybody is already paying.
+                @else
+                    It cannot be bought until it exists at the payment provider too.
+                @endif
+            </p>
+        </div>
     </div>
 
     <form method="POST" class="stack" style="max-width:720px"

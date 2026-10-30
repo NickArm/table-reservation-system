@@ -10,13 +10,20 @@
 @section('title', $type->title().' — '.config('app.name'))
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Legal', route('admin.legal.index')],
+        [$type->title(), null],
+    ]])
+
     <div class="page-head">
-        <h1>{{ $type->title() }}</h1>
-        <p>
-            Published at <a href="{{ route('legal', $type->path()) }}" target="_blank"
-                            rel="noopener">/{{ $type->path() }}</a>
-            · {{ $type->who() }}
-        </p>
+        <div>
+            <h1>{{ $type->title() }}</h1>
+            <p class="muted">
+                Published at <a href="{{ route('legal', $type->path()) }}" target="_blank"
+                                rel="noopener">/{{ $type->path() }}</a>
+                · {{ $type->who() }}
+            </p>
+        </div>
     </div>
 
     @if ($isDraft)

@@ -11,8 +11,10 @@
 
 @section('main')
     <div class="page-head">
-        <h1>Subscriptions</h1>
-        <p>{{ $subscriptions->total() }} in total, anything bounced at the top.</p>
+        <div>
+            <h1>Subscriptions</h1>
+            <p class="muted">{{ $subscriptions->total() }} in total, anything bounced at the top.</p>
+        </div>
     </div>
 
     <div class="stat-grid">

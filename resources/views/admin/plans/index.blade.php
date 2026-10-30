@@ -10,8 +10,10 @@
 
 @section('main')
     <div class="page-head">
-        <h1>Plans</h1>
-        <p>Public packages, and the private ones written for one account.</p>
+        <div>
+            <h1>Plans</h1>
+            <p class="muted">Public packages, and the private ones written for one account.</p>
+        </div>
     </div>
 
     <p style="margin-bottom:24px">

@@ -13,8 +13,10 @@
 
 @section('main')
     <div class="page-head">
-        <h1>System</h1>
-        <p>The things that fail silently.</p>
+        <div>
+            <h1>System</h1>
+            <p class="muted">The things that fail silently.</p>
+        </div>
     </div>
 
     @if ($health->looksHealthy())

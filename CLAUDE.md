@@ -18,6 +18,11 @@ per area`.
 
 All three land in the same commit as the work.
 
+**A feature that introduces a setting, a credential, a webhook or a scheduled
+job also updates `docs/ADMIN-SETUP.md`**, in that same commit. A configuration
+step that exists only in somebody's memory is a step that gets missed on the
+second install, where it arrives as a bug report instead of a checklist line.
+
 ## Conventions
 
 - `declare(strict_types=1);` in every PHP file. Pint enforces the rest.

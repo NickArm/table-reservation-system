@@ -11,8 +11,10 @@
 
 @section('main')
     <div class="page-head">
-        <h1>Legal</h1>
-        <p>Edited here and live immediately. No deploy.</p>
+        <div>
+            <h1>Legal</h1>
+            <p class="muted">Edited here and live immediately. No deploy.</p>
+        </div>
     </div>
 
     <p class="notice" style="margin-bottom:24px">

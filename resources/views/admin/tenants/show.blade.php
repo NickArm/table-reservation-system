@@ -11,12 +11,23 @@
 @section('title', $tenant->name.' — '.config('app.name'))
 
 @section('main')
+    @include('partials.crumb', ['trail' => [
+        ['Accounts', route('admin.tenants.index')],
+        [$tenant->name, null],
+    ]])
+
     <div class="page-head">
-        <h1>{{ $tenant->name }}</h1>
-        <p>
-            <a href="{{ route('public.booking', $tenant) }}">/reservation/{{ $tenant->slug }}</a>
-            · created {{ $tenant->created_at->format('j M Y') }}
-        </p>
+        <div>
+            <h1>{{ $tenant->name }}</h1>
+            <p class="muted">
+                <a href="{{ route('public.booking', $tenant) }}">/reservation/{{ $tenant->slug }}</a>
+                · created {{ $tenant->created_at->format('j M Y') }}
+            </p>
+        </div>
+
+        <span class="pill {{ $tenant->status->acceptsBookings() ? 'pill--ok' : 'pill--warn' }}">
+            {{ $tenant->status->label() }}
+        </span>
     </div>
 
     <div class="stack" style="max-width:860px">
@@ -24,9 +35,6 @@
         <section class="card stack">
             <div class="card__head">
                 <h2 class="h2">Where they stand</h2>
-                <span class="pill {{ $tenant->status->acceptsBookings() ? 'pill--ok' : 'pill--warn' }}">
-                    {{ $tenant->status->label() }}
-                </span>
             </div>
 
             <div class="facts">

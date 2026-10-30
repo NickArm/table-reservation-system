@@ -11,8 +11,10 @@
 
 @section('main')
     <div class="page-head">
-        <h1>Log</h1>
-        <p>Everything done by hand to an account, with a name and a reason on it.</p>
+        <div>
+            <h1>Log</h1>
+            <p class="muted">Everything done by hand to an account, with a name and a reason on it.</p>
+        </div>
     </div>
 
     <form method="GET" action="{{ route('admin.audit') }}" class="filters" style="margin-bottom:24px">

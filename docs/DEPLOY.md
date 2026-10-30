@@ -3,6 +3,11 @@
 > First target: `https://table.armenisnick.gr/` — cPanel, MySQL, no Node.
 > Phase 1 is complete: billing, legal, the widget and the API are all in.
 > **Read §6 before running `db:seed` on a live host.**
+>
+> This file is about getting the code onto a server. What has to be *true*
+> before the first customer pays — your own payment credentials, the texts
+> every account agrees to, the jobs nobody watches — is in
+> [`ADMIN-SETUP.md`](ADMIN-SETUP.md).
 
 ---
 
