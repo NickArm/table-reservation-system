@@ -71,6 +71,11 @@
                     <span class="pill pill--muted">
                         {{ $areaResources->count() }} {{ $noun }}
                     </span>
+
+                    @include('partials.add-button', [
+                        'key' => 'spots-'.$area->id,
+                        'label' => 'Add '.$noun,
+                    ])
                 </div>
             </div>
 
@@ -131,7 +136,7 @@
                 </form>
             @endif
 
-            <details class="advanced" style="margin-top:14px">
+            <details class="advanced" style="margin-top:14px" id="add-spots-{{ $area->id }}" {{ request('add') === 'spots-'.$area->id ? 'open' : '' }}>
                 <summary>Add {{ $noun }} to {{ $area->name }}</summary>
 
                 <form method="POST" action="{{ route('dashboard.resources.store') }}"
@@ -294,9 +299,14 @@
     <section class="card" style="margin-bottom:16px">
         <div class="card__head">
             <h2 class="h2">Prices</h2>
-            <span class="muted">
-                Usually {{ \App\Support\Money::format($bookingType->default_price_cents) }}
-                {{ $bookingType->price_basis->suffix() }}
+
+            <span class="row" style="gap:10px">
+                <span class="muted">
+                    Usually {{ \App\Support\Money::format($bookingType->default_price_cents) }}
+                    {{ $bookingType->price_basis->suffix() }}
+                </span>
+
+                @include('partials.add-button', ['key' => 'price', 'label' => 'Add a price rule'])
             </span>
         </div>
 
@@ -335,7 +345,7 @@
             </ul>
         @endif
 
-        <details class="advanced">
+        <details class="advanced" id="add-price" {{ request('add') === 'price' ? 'open' : '' }}>
             <summary>
                 @if ($priceRules->isEmpty())
                     Charge a different price at weekends or in season
@@ -451,7 +461,11 @@
     <section class="card" style="margin-bottom:16px">
         <div class="card__head">
             <h2 class="h2">Closed dates</h2>
-            <span class="muted">Stops new bookings. Anything already booked stays.</span>
+
+            <span class="row" style="gap:10px">
+                <span class="muted">Stops new bookings. Anything already booked stays.</span>
+                @include('partials.add-button', ['key' => 'closure', 'label' => 'Close a date'])
+            </span>
         </div>
 
         @if ($closures->isEmpty())
@@ -494,7 +508,7 @@
             </ul>
         @endif
 
-        <details class="advanced">
+        <details class="advanced" id="add-closure" {{ request('add') === 'closure' ? 'open' : '' }}>
             <summary>Close a date</summary>
 
             <form method="POST" action="{{ route('dashboard.closures.store') }}"
@@ -557,8 +571,23 @@
         </details>
     </section>
 
+    {{-- Its own heading, rather than an unlabelled fold at the foot of the
+         page: a bare "Add another area" under the closed dates reads as
+         belonging to the closed dates. --}}
     <section class="card">
-        <details class="advanced">
+        <div class="card__head">
+            <h2 class="h2">Areas</h2>
+
+            <span class="row" style="gap:10px">
+                <span class="muted">
+                    {{ $areas->count() }} {{ \Illuminate\Support\Str::plural('area', $areas->count()) }}
+                    — the parts of the place a guest picks between
+                </span>
+                @include('partials.add-button', ['key' => 'area', 'label' => 'Add an area'])
+            </span>
+        </div>
+
+        <details class="advanced" id="add-area" {{ request('add') === 'area' ? 'open' : '' }}>
             <summary>Add another area</summary>
 
             <form method="POST"

@@ -18,7 +18,16 @@
         </div>
 
         @if ($bookingTypes->isNotEmpty())
-            <a class="btn btn--ghost" href="{{ route('public.booking', $tenant) }}">View your page</a>
+            <div class="row">
+                @include('partials.add-button', [
+                    'key' => 'type',
+                    'label' => 'Add something to book',
+                ])
+
+                <a class="btn btn--ghost btn--small" href="{{ route('public.booking', $tenant) }}">
+                    View your page
+                </a>
+            </div>
         @endif
     </div>
 
@@ -42,33 +51,32 @@
             </div>
         </div>
     @else
-        <div class="grid grid--2" style="margin-bottom:24px">
+        {{-- The same card as the Setup hub, because it is the same kind of
+             thing: a name, what it is set to, and the whole of it clickable.
+             A card you must find the button inside is a card that was only
+             mostly a link. --}}
+        <div class="setup" style="margin-bottom:16px">
             @foreach ($bookingTypes as $bookingType)
-                <section class="card">
-                    <div class="card__head">
-                        <h2 class="h2">{{ $bookingType->name }}</h2>
-                        <span class="pill">{{ $bookingType->booking_mode->label() }}</span>
-                    </div>
+                <a class="setup__card" href="{{ route('dashboard.booking-types.show', $bookingType) }}">
+                    <span class="setup__head">
+                        <strong>{{ $bookingType->name }}</strong>
+                        <span class="pill pill--muted">{{ $bookingType->booking_mode->label() }}</span>
+                    </span>
 
-                    <p class="muted" style="margin:0 0 14px">
+                    <span class="setup__body">
                         {{ $counts[$bookingType->id] ?? 0 }}
                         {{ $bookingType->resource_type->plural() }}
                         · {{ \App\Support\Money::format($bookingType->default_price_cents) }}
                         {{ $bookingType->price_basis->suffix() }}
                         · {{ $bookingType->payment_requirement->label() }}
-                    </p>
-
-                    <a class="btn btn--ghost"
-                       href="{{ route('dashboard.booking-types.show', $bookingType) }}">
-                        Manage {{ $bookingType->resource_type->plural() }}
-                    </a>
-                </section>
+                    </span>
+                </a>
             @endforeach
         </div>
     @endif
 
     <section class="card">
-        <details class="advanced" @if ($bookingTypes->isEmpty()) open @endif>
+        <details class="advanced" id="add-type" {{ $bookingTypes->isEmpty() || request('add') === 'type' ? 'open' : '' }}>
             <summary>
                 @if ($bookingTypes->isEmpty())
                     Set one up myself

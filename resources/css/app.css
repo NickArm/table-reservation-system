@@ -3052,3 +3052,27 @@ details.advanced.card[open] > summary {
     color: var(--ink-2);
     font-weight: 600;
 }
+
+/* --- "Add one of these", wherever it appears ----------------------------- */
+
+/*
+ * The fold a header button opens. Without a marker it is a heading somebody
+ * already pressed something to reach, which reads as the page having simply
+ * moved — so when it is open it says so, in the accent, where the button
+ * sent them.
+ */
+details.advanced[open] > summary {
+    color: var(--accent);
+}
+
+/*
+ * A section head that carries both a note and a button needs the two apart
+ * at a glance, and the button at the end of the line on every screen.
+ */
+.card__head .row {
+    align-items: center;
+}
+
+.card__head .row .muted {
+    font-size: var(--step--2);
+}

@@ -132,6 +132,55 @@ final class SetupHubTest extends TestCase
     }
 
     #[Test]
+    public function adding_something_is_offered_at_the_top_rather_than_the_foot(): void
+    {
+        /*
+         * A fold at the foot of a list sits furthest from the heading that
+         * explains it and closest to the next section's heading, which is
+         * where it gets read as belonging to the wrong thing. Every "add"
+         * control is in the head of what it adds to, and opens its fold
+         * through the query string — no JavaScript, and the back button
+         * closes it again.
+         */
+        $this->asTenant(function (): void {
+            $type = $this->tableType();
+            $this->areaIn($type, 'Terrace');
+        });
+
+        $this->get(route('dashboard.booking-types.index'))
+            ->assertOk()
+            // Offered beside the title, before the page's content.
+            ->assertSeeInOrder(['Add something to book', 'View your page', 'setup__card'])
+            ->assertSee('id="add-type"', false);
+
+        // And asking for it opens the form rather than landing on a fold the
+        // owner has to find and press a second time.
+        $this->get(route('dashboard.booking-types.index', ['add' => 'type']))
+            ->assertOk()
+            ->assertSee('id="add-type" open', false);
+    }
+
+    #[Test]
+    public function every_section_of_a_booking_type_offers_its_own_add(): void
+    {
+        $type = $this->asTenant(function () {
+            $type = $this->tableType();
+            $this->areaIn($type, 'Terrace');
+
+            return $type;
+        });
+
+        $this->get(route('dashboard.booking-types.show', $type))
+            ->assertOk()
+            ->assertSee('Add a price rule')
+            ->assertSee('Close a date')
+            ->assertSee('Add an area')
+            // Areas gained a heading of their own: an unlabelled fold under
+            // the closed dates reads as belonging to the closed dates.
+            ->assertSee('<h2 class="h2">Areas</h2>', false);
+    }
+
+    #[Test]
     public function the_hub_and_the_screen_under_it_are_not_both_called_setup(): void
     {
         // Two screens with the same heading is how somebody stops being able
