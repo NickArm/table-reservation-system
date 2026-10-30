@@ -31,8 +31,38 @@
                 {{ $bookingType->price_basis->suffix() }}
             </span>
             <span class="pill">{{ $bookingType->payment_requirement->label() }}</span>
+
+            @include('partials.add-button', [
+                'key' => 'area',
+                'label' => 'Add an area',
+                'primary' => true,
+            ])
         </div>
     </div>
+
+    <x-sheet key="area" title="Add an area">
+        <form method="POST"
+              action="{{ route('dashboard.booking-types.areas.store', $bookingType) }}"
+              class="stack">
+            @csrf
+
+            <div>
+                <label class="label" for="area_name">Name</label>
+                <input class="field" type="text" id="area_name" name="name" required
+                       maxlength="80" placeholder="2nd row" value="{{ old('name') }}">
+            </div>
+
+            <div>
+                <label class="label" for="area_description">Shown to guests</label>
+                <input class="field" type="text" id="area_description" name="description"
+                       maxlength="500" placeholder="Behind the front row, more shade">
+            </div>
+
+            <div>
+                <button type="submit" class="btn">Add area</button>
+            </div>
+        </form>
+    </x-sheet>
 
     @if ($areas->isEmpty())
         <div class="empty">
@@ -136,8 +166,7 @@
                 </form>
             @endif
 
-            <details class="advanced" style="margin-top:14px" id="add-spots-{{ $area->id }}" {{ request('add') === 'spots-'.$area->id ? 'open' : '' }}>
-                <summary>Add {{ $noun }} to {{ $area->name }}</summary>
+            <x-sheet :key="'spots-'.$area->id" :title="'Add '.$noun.' to '.$area->name">
 
                 <form method="POST" action="{{ route('dashboard.resources.store') }}"
                       class="stack" style="margin-top:14px">
@@ -195,7 +224,7 @@
                         <button type="submit" class="btn">Add</button>
                     </div>
                 </form>
-            </details>
+            </x-sheet>
 
             @if ($areaResources->isNotEmpty())
                 {{--
@@ -345,14 +374,7 @@
             </ul>
         @endif
 
-        <details class="advanced" id="add-price" {{ request('add') === 'price' ? 'open' : '' }}>
-            <summary>
-                @if ($priceRules->isEmpty())
-                    Charge a different price at weekends or in season
-                @else
-                    Add another price rule
-                @endif
-            </summary>
+        <x-sheet key="price" title="A different price, on certain days">
 
             <form method="POST" action="{{ route('dashboard.price-rules.store') }}"
                   class="stack" style="margin-top:14px">
@@ -455,7 +477,7 @@
                     <button type="submit" class="btn">Add price rule</button>
                 </div>
             </form>
-        </details>
+        </x-sheet>
     </section>
 
     <section class="card" style="margin-bottom:16px">
@@ -508,8 +530,7 @@
             </ul>
         @endif
 
-        <details class="advanced" id="add-closure" {{ request('add') === 'closure' ? 'open' : '' }}>
-            <summary>Close a date</summary>
+        <x-sheet key="closure" title="Close a date">
 
             <form method="POST" action="{{ route('dashboard.closures.store') }}"
                   class="stack" style="margin-top:14px">
@@ -568,49 +589,7 @@
                     <button type="submit" class="btn">Close these dates</button>
                 </div>
             </form>
-        </details>
+        </x-sheet>
     </section>
 
-    {{-- Its own heading, rather than an unlabelled fold at the foot of the
-         page: a bare "Add another area" under the closed dates reads as
-         belonging to the closed dates. --}}
-    <section class="card">
-        <div class="card__head">
-            <h2 class="h2">Areas</h2>
-
-            <span class="row" style="gap:10px">
-                <span class="muted">
-                    {{ $areas->count() }} {{ \Illuminate\Support\Str::plural('area', $areas->count()) }}
-                    — the parts of the place a guest picks between
-                </span>
-                @include('partials.add-button', ['key' => 'area', 'label' => 'Add an area'])
-            </span>
-        </div>
-
-        <details class="advanced" id="add-area" {{ request('add') === 'area' ? 'open' : '' }}>
-            <summary>Add another area</summary>
-
-            <form method="POST"
-                  action="{{ route('dashboard.booking-types.areas.store', $bookingType) }}"
-                  class="stack" style="margin-top:14px">
-                @csrf
-
-                <div>
-                    <label class="label" for="area_name">Name</label>
-                    <input class="field" type="text" id="area_name" name="name" required
-                           maxlength="80" placeholder="2nd row" value="{{ old('name') }}">
-                </div>
-
-                <div>
-                    <label class="label" for="area_description">Shown to guests</label>
-                    <input class="field" type="text" id="area_description" name="description"
-                           maxlength="500" placeholder="Behind the front row, more shade">
-                </div>
-
-                <div>
-                    <button type="submit" class="btn">Add area</button>
-                </div>
-            </form>
-        </details>
-    </section>
 @endsection

@@ -16,8 +16,10 @@
     ]])
 
     <div class="page-head">
-        <h1>Settings</h1>
-        <p>Your account, and how to leave.</p>
+        <div>
+            <h1>Settings</h1>
+            <p class="muted">Your account, and how to leave.</p>
+        </div>
     </div>
 
     <div class="stack" style="max-width:760px">

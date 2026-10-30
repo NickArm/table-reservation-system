@@ -17,11 +17,13 @@
     ]])
 
     <div class="page-head">
-        <h1>Developer</h1>
-        <p>
-            Read your availability from your own server, and send visitors here to book.
-            Pass this page to whoever builds your website.
-        </p>
+        <div>
+            <h1>Developer</h1>
+            <p class="muted">
+                Read your availability from your own server, and send visitors here to book.
+                Pass this page to whoever builds your website.
+            </p>
+        </div>
     </div>
 
     <div class="stack" style="max-width:760px">

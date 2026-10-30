@@ -3056,16 +3056,6 @@ details.advanced.card[open] > summary {
 /* --- "Add one of these", wherever it appears ----------------------------- */
 
 /*
- * The fold a header button opens. Without a marker it is a heading somebody
- * already pressed something to reach, which reads as the page having simply
- * moved — so when it is open it says so, in the accent, where the button
- * sent them.
- */
-details.advanced[open] > summary {
-    color: var(--accent);
-}
-
-/*
  * A section head that carries both a note and a button needs the two apart
  * at a glance, and the button at the end of the line on every screen.
  */
@@ -3075,4 +3065,98 @@ details.advanced[open] > summary {
 
 .card__head .row .muted {
     font-size: var(--step--2);
+}
+
+/* --- A form over the page ------------------------------------------------ */
+
+/*
+ * The sheet an "add" button opens.
+ *
+ * It replaces an accordion that sat below the list while its own button sat
+ * above it — two controls for one job, with the unpressed one left on screen
+ * looking like a third thing to do. While this is shut there is nothing on
+ * the page at all.
+ *
+ * Entirely CSS and links: the server decides whether to render it, and the
+ * scrim and the cross are ordinary navigation. Escape does not close it,
+ * which is the price of no JavaScript, so the cross is large and the scrim
+ * is the whole page.
+ */
+.sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+    overflow-y: auto;
+}
+
+.sheet__scrim {
+    position: fixed;
+    inset: 0;
+    background: rgb(28 25 23 / 46%);
+}
+
+.sheet__panel {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    margin: auto;
+    border-radius: var(--radius-card);
+    background: var(--bg);
+    box-shadow: 0 18px 50px rgb(28 25 23 / 22%);
+}
+
+.sheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.sheet__head .h2 {
+    margin: 0;
+}
+
+.sheet__close {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-control);
+    color: var(--muted);
+}
+
+.sheet__close:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+}
+
+.sheet__close svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sheet__body {
+    padding: 18px;
+}
+
+/* On a phone it is the page, because at that width a card floating over
+   another card is just two things to scroll. */
+@media (max-width: 620px) {
+    .sheet {
+        padding: 0;
+    }
+
+    .sheet__panel {
+        min-height: 100%;
+        border-radius: 0;
+        margin: 0;
+    }
 }

@@ -18,8 +18,10 @@
     ]])
 
     <div class="page-head">
-        <h1>Terms &amp; cancellation</h1>
-        <p>What your guests agree to when they book.</p>
+        <div>
+            <h1>Terms &amp; cancellation</h1>
+            <p class="muted">What your guests agree to when they book.</p>
+        </div>
     </div>
 
     {{-- Whether a guest can actually read these, in one line. It is the only

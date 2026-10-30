@@ -17,8 +17,10 @@
     ]])
 
     <div class="page-head">
-        <h1>Billing</h1>
-        <p>Your subscription, and what it covers.</p>
+        <div>
+            <h1>Billing</h1>
+            <p class="muted">Your subscription, and what it covers.</p>
+        </div>
     </div>
 
     <div class="stack" style="max-width:760px">

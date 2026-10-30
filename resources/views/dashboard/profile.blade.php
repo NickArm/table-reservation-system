@@ -20,8 +20,15 @@
     ]])
 
     <div class="page-head">
-        <h1>Your venue</h1>
-        <p>What a guest — and Google — sees about the place.</p>
+        <div>
+            <h1>Your venue</h1>
+            <p class="muted">What a guest — and Google — sees about the place.</p>
+        </div>
+
+        <a class="btn btn--ghost btn--small" href="{{ route('public.booking', $tenant) }}"
+           target="_blank" rel="noopener">
+            See the booking page
+        </a>
     </div>
 
     <div class="stack" style="max-width:760px">

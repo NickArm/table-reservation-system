@@ -151,13 +151,14 @@ final class SetupHubTest extends TestCase
             ->assertOk()
             // Offered beside the title, before the page's content.
             ->assertSeeInOrder(['Add something to book', 'View your page', 'setup__card'])
-            ->assertSee('id="add-type"', false);
+            // And nothing of the form itself while it is shut: a button above
+            // the list and an accordion below it are two controls for one job.
+            ->assertDontSee('name="booking_mode"', false);
 
-        // And asking for it opens the form rather than landing on a fold the
-        // owner has to find and press a second time.
         $this->get(route('dashboard.booking-types.index', ['add' => 'type']))
             ->assertOk()
-            ->assertSee('id="add-type" open', false);
+            ->assertSee('class="sheet"', false)
+            ->assertSee('name="booking_mode"', false);
     }
 
     #[Test]
@@ -174,10 +175,11 @@ final class SetupHubTest extends TestCase
             ->assertOk()
             ->assertSee('Add a price rule')
             ->assertSee('Close a date')
+            // Areas are the structure of this screen, so adding one is in its
+            // head rather than in a card at the foot that stands empty
+            // whenever the form is shut.
             ->assertSee('Add an area')
-            // Areas gained a heading of their own: an unlabelled fold under
-            // the closed dates reads as belonging to the closed dates.
-            ->assertSee('<h2 class="h2">Areas</h2>', false);
+            ->assertSeeInOrder(['Add an area', 'Add a price rule']);
     }
 
     #[Test]

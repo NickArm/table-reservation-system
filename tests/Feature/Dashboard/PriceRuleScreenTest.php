@@ -50,10 +50,21 @@ final class PriceRuleScreenTest extends TestCase
     #[Test]
     public function pricing_stays_out_of_the_way_until_somebody_asks_for_it(): void
     {
+        /*
+         * The form is not on the page at all until it is asked for. It used
+         * to be an accordion below the list, which is still something on
+         * screen to read past on a screen most owners open to change one
+         * table.
+         */
         $this->get(route('dashboard.booking-types.show', $this->bookingType))
             ->assertOk()
-            ->assertSee('Charge a different price at weekends or in season')
+            ->assertSee('Add a price rule')
+            ->assertDontSee('name="days_of_week[]"', false)
             ->assertDontSee('priority 10');
+
+        $this->get(route('dashboard.booking-types.show', [$this->bookingType, 'add' => 'price']))
+            ->assertOk()
+            ->assertSee('name="days_of_week[]"', false);
     }
 
     #[Test]

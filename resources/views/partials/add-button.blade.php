@@ -6,14 +6,14 @@
     that explains it and closest to the next section's heading, which is
     exactly where it gets read as belonging to the wrong thing.
 
-    No JavaScript: the link reloads the page with ?add=<key>, the matching
-    <details> is rendered open, and the fragment scrolls to it. Server-side
-    state for a server-rendered screen.
+    It opens an <x-sheet> over the page. No JavaScript: the link reloads with
+    ?add=<key> and the server renders the sheet.
 
-    @param string $key   matches the details' own key
-    @param string $label what the button says
+    @param string $key      matches the sheet's own key
+    @param string $label    what the button says
+    @param bool   $primary  true for the one thing the screen is for
 --}}
-<a class="btn btn--ghost btn--small"
-   href="{{ request()->fullUrlWithQuery(['add' => $key]) }}#add-{{ $key }}">
+<a class="btn btn--small @unless ($primary ?? false) btn--ghost @endunless"
+   href="{{ request()->fullUrlWithQuery(['add' => $key]) }}">
     {{ $label }}
 </a>

@@ -22,6 +22,7 @@
                 @include('partials.add-button', [
                     'key' => 'type',
                     'label' => 'Add something to book',
+                    'primary' => true,
                 ])
 
                 <a class="btn btn--ghost btn--small" href="{{ route('public.booking', $tenant) }}">
@@ -49,6 +50,13 @@
                     </form>
                 @endforeach
             </div>
+
+            <p style="margin:18px 0 0">
+                @include('partials.add-button', [
+                    'key' => 'type',
+                    'label' => 'Or set one up myself',
+                ])
+            </p>
         </div>
     @else
         {{-- The same card as the Setup hub, because it is the same kind of
@@ -75,19 +83,8 @@
         </div>
     @endif
 
-    <section class="card">
-        <details class="advanced" id="add-type" {{ $bookingTypes->isEmpty() || request('add') === 'type' ? 'open' : '' }}>
-            <summary>
-                @if ($bookingTypes->isEmpty())
-                    Set one up myself
-                @else
-                    Add another thing to book
-                @endif
-            </summary>
-
-            <hr class="divider">
-
-            <form method="POST" action="{{ route('dashboard.booking-types.store') }}" class="stack">
+    <x-sheet key="type" title="Add something to book">
+        <form method="POST" action="{{ route('dashboard.booking-types.store') }}" class="stack">
                 @csrf
 
                 <div class="grid grid--2">
@@ -181,10 +178,9 @@
                     </div>
                 </details>
 
-                <div>
-                    <button type="submit" class="btn">Create</button>
-                </div>
-            </form>
-        </details>
-    </section>
+            <div>
+                <button type="submit" class="btn">Create</button>
+            </div>
+        </form>
+    </x-sheet>
 @endsection

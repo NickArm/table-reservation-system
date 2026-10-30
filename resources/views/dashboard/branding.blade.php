@@ -18,8 +18,15 @@
     ]])
 
     <div class="page-head">
-        <h1>Appearance</h1>
-        <p>Your logo, a photograph, and one colour.</p>
+        <div>
+            <h1>Appearance</h1>
+            <p class="muted">Your logo, a photograph, and one colour.</p>
+        </div>
+
+        <a class="btn btn--ghost btn--small" href="{{ route('public.booking', $tenant) }}"
+           target="_blank" rel="noopener">
+            See the booking page
+        </a>
     </div>
 
     <form method="POST" action="{{ route('dashboard.branding.update') }}"

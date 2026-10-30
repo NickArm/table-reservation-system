@@ -16,8 +16,10 @@
     ]])
 
     <div class="page-head">
-        <h1>Alerts</h1>
-        <p>Who hears about a booking, and when.</p>
+        <div>
+            <h1>Alerts</h1>
+            <p class="muted">Who hears about a booking, and when.</p>
+        </div>
     </div>
 
     {{-- What is on, in one line. Somebody who opened this to check whether

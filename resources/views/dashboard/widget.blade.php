@@ -16,11 +16,13 @@
     ]])
 
     <div class="page-head">
-        <h1>Website widget</h1>
-        <p>
-            A search bar for your own site. Visitors pick a date and land on your
-            booking page with their choice already filled in.
-        </p>
+        <div>
+            <h1>Website widget</h1>
+            <p class="muted">
+                A search bar for your own site. Visitors pick a date and land on your
+                booking page with their choice already filled in.
+            </p>
+        </div>
     </div>
 
     <div class="stack" style="max-width:860px">
