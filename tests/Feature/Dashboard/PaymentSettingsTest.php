@@ -302,6 +302,35 @@ final class PaymentSettingsTest extends TestCase
     }
 
     #[Test]
+    public function paypal_repeats_what_paypal_said_rather_than_summarising_it(): void
+    {
+        /*
+         * "PayPal refused those credentials" covered five different causes —
+         * a wrong secret, an id copied from the truncated column in PayPal's
+         * own dashboard, sandbox keys on a live account, an app never
+         * enabled — and left the owner with nothing to act on. PayPal names
+         * which one it is.
+         */
+        Http::fake([
+            'api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'error' => 'invalid_client',
+                'error_description' => 'Client Authentication failed',
+            ], 401),
+        ]);
+
+        $this->asTenant(fn () => PaymentGatewaySetting::factory()->paypal()->create());
+
+        $this->post(route('dashboard.payments.test', Gateway::PayPal->value))->assertRedirect();
+
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSee('Client Authentication failed')
+            // And which PayPal it asked, because sandbox keys sent to the
+            // live host fail with exactly the same sentence.
+            ->assertSee('checked against PayPal sandbox');
+    }
+
+    #[Test]
     public function the_gateway_in_use_is_the_one_at_the_top(): void
     {
         /*

@@ -205,14 +205,28 @@ final class PayPalGateway implements PaymentGateway
     public function testConnection(PaymentGatewaySetting $setting): array
     {
         try {
-            $token = $this->accessToken($setting);
+            $attempt = $this->requestToken($setting);
         } catch (Throwable $exception) {
             return ['ok' => false, 'message' => 'Could not reach PayPal: '.$exception->getMessage()];
         }
 
-        return $token === null
-            ? ['ok' => false, 'message' => 'PayPal refused those credentials.']
-            : ['ok' => true, 'message' => 'Connected to PayPal.'];
+        if ($attempt['token'] !== null) {
+            return ['ok' => true, 'message' => 'Connected to PayPal.'];
+        }
+
+        /*
+         * PayPal's own words, not ours.
+         *
+         * "PayPal refused those credentials" covered five different causes —
+         * a wrong secret, an id copied from the truncated column in their
+         * dashboard, sandbox keys on a live account, an app that was never
+         * enabled — and left the owner with nothing to act on. PayPal says
+         * which one it is; there is no reason for us to stand in front of it.
+         */
+        return [
+            'ok' => false,
+            'message' => $attempt['error'] ?? 'PayPal refused those credentials.',
+        ];
     }
 
     private function capture(PaymentGatewaySetting $setting, string $orderId): PaymentResult
@@ -237,6 +251,16 @@ final class PayPalGateway implements PaymentGateway
 
     private function accessToken(PaymentGatewaySetting $setting): ?string
     {
+        return $this->requestToken($setting)['token'];
+    }
+
+    /**
+     * The token, or what PayPal said instead of giving one.
+     *
+     * @return array{token: ?string, error: ?string}
+     */
+    private function requestToken(PaymentGatewaySetting $setting): array
+    {
         $id = $setting->credential('client_id');
         $secret = $setting->credential('client_secret');
 
@@ -251,7 +275,30 @@ final class PayPalGateway implements PaymentGateway
 
         $token = $response->json('access_token');
 
-        return is_string($token) ? $token : null;
+        if (is_string($token)) {
+            return ['token' => $token, 'error' => null];
+        }
+
+        $description = $response->json('error_description');
+        $code = $response->json('error');
+        $live = ! $setting->isTestMode();
+
+        $error = is_string($description) ? $description : null;
+
+        if ($error === null && is_string($code)) {
+            $error = $code;
+        }
+
+        if ($error !== null) {
+            // Which PayPal they were sent to. Sandbox keys on the live host
+            // fail with the same "Client Authentication failed" as a typo,
+            // and the owner cannot tell those apart from the message alone.
+            $error .= $live
+                ? ' (checked against live PayPal — these must be your live keys)'
+                : ' (checked against PayPal sandbox — these must be your sandbox keys)';
+        }
+
+        return ['token' => null, 'error' => $error];
     }
 
     private function client(PaymentGatewaySetting $setting): PendingRequest
