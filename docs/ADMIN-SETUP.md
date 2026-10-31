@@ -58,6 +58,32 @@ fictional is created.
 | `APP_URL` | Vouchers, QR codes and every webhook address are built from this. A wrong value prints QR codes that point nowhere |
 | `DEMO_LOGIN_SHOWN=false` | The front page prints a working demo login. Off by default in production; set it anyway |
 
+### The demo venue
+
+`db:seed` never creates one on a live host, and must not: it runs on every
+deploy, and a deploy that invents a venue with a season of fabricated bookings
+is indefensible.
+
+A preview install is exactly where a demo *is* wanted, though, and exactly
+where it needs resetting after somebody has clicked through it. One command,
+which asks first:
+
+```bash
+php artisan demo:refresh
+```
+
+It wipes the previous demo venue and writes a new one from a fixed seed, so
+the result is the same believable place every time rather than a different one.
+Nothing belonging to a real account is touched. It needs Faker, which
+`--no-dev` leaves out:
+
+```bash
+composer require --dev fakerphp/faker
+```
+
+Remember `DEMO_LOGIN_SHOWN=false` once strangers can reach the front page: the
+demo venue existing is fine, advertising its password is not.
+
 ---
 
 ## 2. Taking the subscription money

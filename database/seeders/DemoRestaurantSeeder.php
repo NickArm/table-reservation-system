@@ -106,6 +106,17 @@ class DemoRestaurantSeeder extends Seeder
     /** @var array<int, Area|null> */
     private array $areaCache = [];
 
+    /**
+     * Set only by `demo:refresh`, which asks first.
+     *
+     * The guard below exists because `db:seed` runs on every deploy and must
+     * never invent a venue on a live host. Somebody standing at the console
+     * who has typed the command's name and answered its question is not that
+     * case, and refusing them leaves no way to put a demo on a preview
+     * install at all.
+     */
+    public bool $evenInProduction = false;
+
     public function run(): void
     {
         /*
@@ -120,8 +131,16 @@ class DemoRestaurantSeeder extends Seeder
          * the failure was noisy rather than harmful — but it reads like a
          * broken deploy, which is its own cost at the worst moment.
          */
-        if (app()->isProduction()) {
-            $this->command?->warn('No demo venue: this is production.');
+        if (app()->isProduction() && ! $this->evenInProduction) {
+            $this->command?->warn('No demo venue: this is production. Use `php artisan demo:refresh`.');
+
+            return;
+        }
+
+        if (! class_exists(FakerFactory::class)) {
+            $this->command?->error(
+                'The demo needs Faker, which --no-dev leaves out: composer require --dev fakerphp/faker'
+            );
 
             return;
         }
@@ -1073,7 +1092,19 @@ class DemoRestaurantSeeder extends Seeder
         foreach ([ApiTokenMode::Live, ApiTokenMode::Test] as $mode) {
             $token = $mode->tokenPrefix().self::API_TOKEN_BODY;
 
-            ApiToken::query()->create([
+            /*
+             * 🔒 forceCreate, because only `mode` is fillable on purpose —
+             * the secret and its hash must never be settable from request
+             * data.
+             *
+             * `create()` here was a silent hole that depended on which way
+             * strict mode happened to be set: on a laptop it throws, and on
+             * a live host, where Model::shouldBeStrict is off, Laravel drops
+             * the three columns without a word and the insert dies on a NOT
+             * NULL constraint — so the demo could never be built on exactly
+             * the kind of install that wants one.
+             */
+            ApiToken::forceCreate([
                 'mode' => $mode,
                 'token' => $token,
                 'token_hash' => ApiToken::hash($token),
