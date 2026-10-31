@@ -18,7 +18,7 @@
             <p class="muted">Everything about how this place takes bookings.</p>
         </div>
 
-        <a class="btn btn--ghost" href="{{ route('public.booking', $tenant) }}" target="_blank" rel="noopener">
+        <a class="btn btn--ghost btn--small" href="{{ route('public.booking', $tenant) }}" target="_blank" rel="noopener">
             See the booking page
         </a>
     </div>

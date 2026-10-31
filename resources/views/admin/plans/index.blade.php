@@ -14,11 +14,12 @@
             <h1>Plans</h1>
             <p class="muted">Public packages, and the private ones written for one account.</p>
         </div>
-    </div>
 
-    <p style="margin-bottom:24px">
-        <a href="{{ route('admin.plans.create') }}" class="btn">Write a new plan</a>
-    </p>
+        {{-- The one thing this screen is for, so it is the filled button and
+             it is in the head — not loose above the table, which is the one
+             place a control reads as a caption for what follows it. --}}
+        <a href="{{ route('admin.plans.create') }}" class="btn btn--small">Write a new plan</a>
+    </div>
 
     <table class="table">
         <thead>

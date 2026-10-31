@@ -24,7 +24,7 @@
         </div>
 
         @if ($totals['all'] > 0)
-            <a class="btn btn--ghost" href="{{ route('dashboard.guests.export', request()->only('q')) }}">
+            <a class="btn btn--ghost btn--small" href="{{ route('dashboard.guests.export', request()->only('q')) }}">
                 Export CSV
             </a>
         @endif

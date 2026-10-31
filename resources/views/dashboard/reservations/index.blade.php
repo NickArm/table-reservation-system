@@ -22,7 +22,7 @@
             <p class="muted">Everything you have ever taken.</p>
         </div>
 
-        <a class="btn btn--ghost" href="{{ route('dashboard.reservations.export', request()->query()) }}">
+        <a class="btn btn--ghost btn--small" href="{{ route('dashboard.reservations.export', request()->query()) }}">
             Export CSV
         </a>
     </div>

@@ -17,7 +17,7 @@
             <p class="muted">Where the platform stands today.</p>
         </div>
 
-        <a class="btn btn--ghost" href="{{ route('admin.tenants.index') }}">All accounts</a>
+        <a class="btn btn--ghost btn--small" href="{{ route('admin.tenants.index') }}">All accounts</a>
     </div>
 
     <div class="stat-grid">
