@@ -103,6 +103,20 @@
 
             <p class="muted" style="margin:0 0 14px">{{ $gateway->describe() }}</p>
 
+            {{-- Stored, but unreadable: APP_KEY is not the one the keys were
+                 saved with. "Add your keys" would be wrong advice to somebody
+                 whose keys are sitting right there — so say what happened,
+                 and that re-entering them fixes it. --}}
+            @if ($setting?->credentialsAreUnreadable())
+                <div class="notice notice--warn" style="margin-bottom:14px">
+                    <strong>We can no longer read the keys saved here.</strong>
+                    They were encrypted with a different application key —
+                    which happens when the site is moved, restored from a
+                    backup, or has its key regenerated. Nothing of yours has
+                    leaked. Paste them in again below and it is fixed.
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('dashboard.payments.update', $gateway->value) }}"
                   class="stack">
                 @csrf

@@ -72,7 +72,12 @@ final class PaymentSettingsController extends Controller
 
         // Only overwrite a key the owner actually typed: an empty box means
         // "leave it alone", not "delete it".
-        $credentials = $setting->credentials ?? [];
+        //
+        // Read through the model, which treats a value it can no longer
+        // decrypt as absent. Reading the attribute here would throw on the
+        // save that is trying to replace the unreadable key — the exact
+        // moment somebody is putting it right.
+        $credentials = $setting->readCredentials();
 
         foreach (['secret_key', 'webhook_secret', 'client_id', 'client_secret', 'webhook_id'] as $key) {
             if (filled($validated[$key] ?? null)) {

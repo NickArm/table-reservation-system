@@ -8,6 +8,7 @@ use App\Enums\Gateway;
 use App\Enums\GatewayMode;
 use App\Models\PaymentGatewaySetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\ActsAsVenueOwner;
@@ -110,7 +111,7 @@ final class PaymentSettingsTest extends TestCase
         $this->assertSame('sk_test_abcdefghijklmnop1234', $setting->credential('secret_key'));
 
         // On disk it is ciphertext, not a key anybody can read.
-        $raw = (string) $this->asTenant(static fn () => \Illuminate\Support\Facades\DB::table('payment_gateway_settings')
+        $raw = (string) $this->asTenant(static fn () => DB::table('payment_gateway_settings')
             ->where('id', $setting->id)
             ->value('credentials'));
 
@@ -223,6 +224,81 @@ final class PaymentSettingsTest extends TestCase
             ->assertDontSee('sk_test');
 
         $this->post(route('dashboard.payments.test', Gateway::Stripe->value))->assertNotFound();
+    }
+
+    #[Test]
+    public function keys_encrypted_with_a_different_app_key_do_not_take_the_screen_down(): void
+    {
+        /*
+         * 🔒 The encrypted cast throws when APP_KEY is not the one the row
+         * was written with — a rotated key, a database copied between
+         * environments, a key:generate run after the first save. The screen
+         * died with a stack trace, and the one page where an owner could
+         * replace the unreadable keys was the page that would not load.
+         */
+        $this->asTenant(function (): void {
+            $setting = PaymentGatewaySetting::factory()->stripe()->create();
+
+            // Exactly what the database holds after the key changes:
+            // ciphertext this installation cannot authenticate.
+            DB::table('payment_gateway_settings')
+                ->where('id', $setting->id)
+                ->update(['credentials' => 'eyJpdiI6Im5vdC1vdXJzIiwidmFsdWUiOiJ4Iiwi'.'bWFjIjoid3JvbmcifQ==']);
+        });
+
+        $this->get(route('dashboard.payments.edit'))
+            ->assertOk()
+            ->assertSee('We can no longer read the keys saved here.')
+            // And it says what happened rather than "add your keys", which
+            // is wrong advice to somebody whose keys are sitting right there.
+            ->assertSee('encrypted with a different application key');
+    }
+
+    #[Test]
+    public function unreadable_keys_can_be_replaced_rather_than_only_mourned(): void
+    {
+        $this->asTenant(function (): void {
+            $setting = PaymentGatewaySetting::factory()->stripe()->create();
+
+            DB::table('payment_gateway_settings')
+                ->where('id', $setting->id)
+                ->update(['credentials' => 'eyJpdiI6Im5vdC1vdXJzIiwidmFsdWUiOiJ4Iiwi'.'bWFjIjoid3JvbmcifQ==']);
+        });
+
+        // The save path read the attribute too, so putting it right threw at
+        // the exact moment somebody was putting it right.
+        $this->patch(route('dashboard.payments.update', Gateway::Stripe->value), [
+            'mode' => GatewayMode::Test->value,
+            'secret_key' => 'sk_test_replacement_key_1234',
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $setting = $this->asTenant(static fn (): PaymentGatewaySetting => PaymentGatewaySetting::query()->firstOrFail());
+
+        $this->assertSame('sk_test_replacement_key_1234', $setting->credential('secret_key'));
+        $this->assertFalse($setting->credentialsAreUnreadable());
+    }
+
+    #[Test]
+    public function an_unreadable_gateway_is_not_treated_as_configured(): void
+    {
+        /*
+         * Worse than the screen failing: a gateway that looks usable and
+         * fails at the moment a guest pays. A key we cannot decrypt is a key
+         * we cannot use, and the booking page has to know that.
+         */
+        $setting = $this->asTenant(function (): PaymentGatewaySetting {
+            $setting = PaymentGatewaySetting::factory()->stripe()->create();
+
+            DB::table('payment_gateway_settings')
+                ->where('id', $setting->id)
+                ->update(['credentials' => 'eyJpdiI6Im5vdC1vdXJzIiwidmFsdWUiOiJ4Iiwi'.'bWFjIjoid3JvbmcifQ==']);
+
+            return PaymentGatewaySetting::query()->firstOrFail();
+        });
+
+        $this->assertFalse($setting->hasCredentials());
+        $this->assertFalse($setting->isUsable());
     }
 
     #[Test]
