@@ -6,7 +6,7 @@
     arrived, less what went back — and everything after it is there to explain
     that number rather than to decorate it.
 
-    No charts beyond bars drawn in CSS. A taverna owner is not going to learn
+    No charts beyond meters drawn in CSS. A taverna owner is not going to learn
     a legend, and an SVG chart would be the first thing on this dashboard that
     needs JavaScript to be read.
 --}}
@@ -93,14 +93,14 @@
                     </div>
 
                     {{-- The one figure that changes a rota. --}}
-                    <div class="bars">
+                    <div class="meters">
                         @foreach ($weekdays as $day)
-                            <div class="bars__row">
-                                <span class="bars__label">{{ $day['day'] }}</span>
-                                <span class="bars__track">
-                                    <span class="bars__fill" style="width:{{ max(1, $day['percent']) }}%"></span>
+                            <div class="meter">
+                                <span class="meter__label">{{ $day['day'] }}</span>
+                                <span class="meter__track">
+                                    <span class="meter__fill" style="width:{{ max(1, $day['percent']) }}%"></span>
                                 </span>
-                                <span class="bars__value">
+                                <span class="meter__value">
                                     {{ $day['bookings'] }}
                                     <small class="muted">{{ $day['guests'] }} ppl</small>
                                 </span>
@@ -144,21 +144,21 @@
                         <h2 class="h2">Where they came from</h2>
                     </div>
 
-                    <div class="bars">
+                    <div class="meters">
                         @foreach ($channels as $channel)
-                            <div class="bars__row">
-                                <span class="bars__label bars__label--wide">{{ $channel['label'] }}</span>
-                                <span class="bars__track">
-                                    <span class="bars__fill @if ($channel['byStaff']) bars__fill--muted @endif"
+                            <div class="meter">
+                                <span class="meter__label meter__label--wide">{{ $channel['label'] }}</span>
+                                <span class="meter__track">
+                                    <span class="meter__fill @if ($channel['byStaff']) meter__fill--muted @endif"
                                           style="width:{{ max(1, $channel['percent']) }}%"></span>
                                 </span>
-                                <span class="bars__value">{{ $channel['percent'] }}%</span>
+                                <span class="meter__value">{{ $channel['percent'] }}%</span>
                             </div>
                         @endforeach
                     </div>
 
                     <p class="muted" style="margin:14px 0 0;font-size:var(--step--2)">
-                        The pale bars are bookings your own staff took by phone or at
+                        The pale meters are bookings your own staff took by phone or at
                         the door. The rest arrived without anybody answering.
                     </p>
                 </section>

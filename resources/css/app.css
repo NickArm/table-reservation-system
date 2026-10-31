@@ -2176,43 +2176,51 @@ details.advanced.card[open] > summary {
  * learn a legend, and a chart library would be the first thing on this
  * dashboard that needs JavaScript before it means anything.
  */
-.bars {
+/*
+ * 🔒 Named `meter`, not `bars`. The first version of this chart was `.bars`,
+ * which the Developer screen had already taken for a vertical column chart
+ * further down this file — so every rule here lost to it and the Reports
+ * charts rendered as seven labels in a row with no bar at all. Correct CSS,
+ * correct HTML, and a screen that looked broken: check a class name is free
+ * before claiming it.
+ */
+.meters {
     display: grid;
     gap: 8px;
 }
 
-.bars__row {
+.meter {
     display: grid;
     grid-template-columns: 38px 1fr auto;
     gap: 10px;
     align-items: center;
 }
 
-.bars__label {
+.meter__label {
     color: var(--ink-2);
     font-size: var(--step--1);
     font-weight: 600;
 }
 
-.bars__label--wide {
+.meter__label--wide {
     overflow: hidden;
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.bars__row:has(.bars__label--wide) {
+.meter:has(.meter__label--wide) {
     grid-template-columns: minmax(0, 96px) 1fr auto;
 }
 
-.bars__track {
+.meter__track {
     height: 10px;
     border-radius: var(--radius-pill);
     background: var(--surface-2);
     overflow: hidden;
 }
 
-.bars__fill {
+.meter__fill {
     display: block;
     height: 100%;
     border-radius: var(--radius-pill);
@@ -2221,18 +2229,18 @@ details.advanced.card[open] > summary {
 
 /* Bookings a member of staff took by hand, rather than ones that arrived on
    their own. Pale because the point of the chart is the difference. */
-.bars__fill--muted {
+.meter__fill--muted {
     background: var(--line-strong);
 }
 
-.bars__value {
+.meter__value {
     font-size: var(--step--1);
     font-variant-numeric: tabular-nums;
     text-align: right;
     white-space: nowrap;
 }
 
-.bars__value small {
+.meter__value small {
     display: block;
     font-size: var(--step--2);
 }
