@@ -18,6 +18,13 @@ per area`.
 
 All three land in the same commit as the work.
 
+**Every feature stays reachable.** A redesign may move a control, rename it,
+or put it one tap further away — it may never quietly drop it. Anything that
+existed and now has no route to it is lost: nobody files a bug for a feature
+they cannot find, so it is never noticed and never fixed. When a screen is
+rebuilt, list what was on it first and account for every item: kept here,
+moved there, or deliberately removed and written down as removed.
+
 **A feature that introduces a setting, a credential, a webhook or a scheduled
 job also updates `docs/ADMIN-SETUP.md`**, in that same commit. A configuration
 step that exists only in somebody's memory is a step that gets missed on the

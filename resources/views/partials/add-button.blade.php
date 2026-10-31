@@ -1,5 +1,5 @@
 {{--
-    "Add one of these", in the head of the thing you are adding to.
+    "Do this one thing", in the head or the foot of what it acts on.
 
     One mechanism everywhere, because the alternative — a fold at the foot of
     whatever list it belongs to — put the control furthest from the heading
@@ -10,10 +10,21 @@
     ?add=<key> and the server renders the sheet.
 
     @param string $key      matches the sheet's own key
-    @param string $label    what the button says
-    @param bool   $primary  true for the one thing the screen is for
+    @param string $label    what the control says
+    @param bool   $primary  the one thing the screen is for
+    @param bool   $quiet    a link rather than a button, for the rare ones
+    @param bool   $danger   the one that destroys something
 --}}
-<a class="btn btn--small @unless ($primary ?? false) btn--ghost @endunless"
-   href="{{ request()->fullUrlWithQuery(['add' => $key]) }}">
-    {{ $label }}
-</a>
+@php
+    $href = request()->fullUrlWithQuery(['add' => $key]);
+@endphp
+
+@if ($quiet ?? false)
+    <a class="quietlink @if ($danger ?? false) quietlink--danger @endif" href="{{ $href }}">
+        {{ $label }}
+    </a>
+@else
+    <a class="btn btn--small @unless ($primary ?? false) btn--ghost @endunless" href="{{ $href }}">
+        {{ $label }}
+    </a>
+@endif

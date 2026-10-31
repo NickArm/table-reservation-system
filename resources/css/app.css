@@ -3160,3 +3160,77 @@ details.advanced.card[open] > summary {
         margin: 0;
     }
 }
+
+/* --- An area's own row of rare actions ----------------------------------- */
+
+/*
+ * What used to be four buttons and two folds. They were between the tiles and
+ * the next area's heading, with nothing saying which of the two they acted on
+ * — and the four that set the place up sat at the same weight as the twenty
+ * that run the evening.
+ */
+.arearow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.arearow__acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.quietlink {
+    color: var(--accent);
+    font-size: var(--step--2);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.quietlink:hover {
+    text-decoration: underline;
+}
+
+.quietlink--danger {
+    color: var(--warn);
+}
+
+/* The tile that adds another tile. Dashed, because an outline that is not
+   quite a thing is how a space for one reads. */
+.tile--add {
+    border-style: dashed;
+    border-color: var(--line-strong);
+    background: var(--surface);
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.tile--add:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.tile--add svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Closed: struck through, and warm rather than grey — a grey tile reads as
+   disabled, and this one is a decision somebody made. */
+.tile--closed {
+    border-color: var(--warn-line);
+    background: var(--warn-soft);
+    color: var(--warn);
+    text-decoration: line-through;
+}
+
+.tile--closed small {
+    color: var(--warn);
+    text-decoration: none;
+}

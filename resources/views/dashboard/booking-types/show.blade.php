@@ -89,24 +89,29 @@
         @php $areaResources = $resources[$area->id] ?? collect(); @endphp
 
         <section class="card" style="margin-bottom:16px">
+            @php
+                $areaSeats = (int) $areaResources->sum('capacity_max');
+                $areaShut = $areaResources->reject(fn (\App\Models\Resource $r): bool => $r->isBookable())->count();
+            @endphp
+
             <div class="card__head">
-                <h2 class="h2">{{ $area->name }}</h2>
+                <div>
+                    <h2 class="h2">{{ $area->name }}</h2>
 
-                <div class="row">
-                    @if ($area->occupancy !== null)
-                        <span class="pill pill--ok">
-                            {{ $area->effectiveOccupancy($bookingType)->label() }}
-                        </span>
-                    @endif
-                    <span class="pill pill--muted">
-                        {{ $areaResources->count() }} {{ $noun }}
-                    </span>
-
-                    @include('partials.add-button', [
-                        'key' => 'spots-'.$area->id,
-                        'label' => 'Add '.$noun,
-                    ])
+                    {{-- One sentence where two pills were. The count and the
+                         seats are the same fact and belong in the same line. --}}
+                    <p class="muted" style="margin:2px 0 0;font-size:var(--step--2)">
+                        {{ $areaResources->count() }} {{ $noun }}@if ($areaSeats > 0), seats {{ $areaSeats }}@endif
+                        @if ($area->occupancy !== null)
+                            · held {{ $area->effectiveOccupancy($bookingType)->label() }}
+                        @endif
+                    </p>
                 </div>
+
+                @include('partials.add-button', [
+                    'key' => 'spots-'.$area->id,
+                    'label' => 'Add '.$noun,
+                ])
             </div>
 
             @if ($areaResources->isEmpty())
@@ -114,6 +119,12 @@
                     Nothing here yet. Add your {{ $noun }} below.
                 </p>
             @else
+                {{-- The tile carries how many people fit, not the price. The
+                     price is the same for every spot in the area unless a rule
+                     says otherwise, so printing it twenty times taught nothing
+                     — and printed €0 twenty times for a venue that takes no
+                     deposit, which reads as a fault. How many a table seats is
+                     the one thing that actually differs between them. --}}
                 <div class="tiles">
                     @foreach ($areaResources as $resource)
                         <form method="POST" action="{{ route('dashboard.resources.toggle', $resource) }}">
@@ -122,48 +133,23 @@
                             <button type="submit"
                                     class="tile @unless ($resource->isBookable()) tile--closed @endunless"
                                     aria-pressed="{{ $resource->isBookable() ? 'true' : 'false' }}"
-                                    title="{{ $resource->isBookable() ? 'Open — tap to close' : 'Closed — tap to open' }}">
+                                    aria-label="{{ $resource->label }}, seats {{ $resource->capacity_max }}, {{ $resource->isBookable() ? 'taking bookings — press to close it' : 'closed — press to open it' }}">
                                 {{ $resource->label }}
-                                <small>
-                                    @if ($resource->isBookable())
-                                        {{ \App\Support\Money::format($resource->base_price_cents) }}
-                                    @else
-                                        closed
-                                    @endif
-                                </small>
+                                <small>{{ $resource->capacity_max }}</small>
                             </button>
                         </form>
                     @endforeach
+
+                    {{-- Adding, where the things being added are. --}}
+                    <a class="tile tile--add"
+                       href="{{ request()->fullUrlWithQuery(['add' => 'spots-'.$area->id]) }}"
+                       aria-label="Add {{ $noun }} to {{ $area->name }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                             stroke-linecap="round" aria-hidden="true">
+                            <path d="M12 5.5v13M5.5 12h13"></path>
+                        </svg>
+                    </a>
                 </div>
-
-                <hr class="divider">
-
-                <form method="POST"
-                      action="{{ route('dashboard.areas.availability', $area) }}"
-                      class="row">
-                    @csrf
-                    @method('PATCH')
-
-                    <button type="submit" name="status" value="open" class="btn btn--ghost">
-                        Open all
-                    </button>
-                    <button type="submit" name="status" value="closed" class="btn btn--ghost">
-                        Close all
-                    </button>
-
-                    <div class="row" style="gap:8px">
-                        <label class="label" for="open_first_{{ $area->id }}"
-                               style="margin:0 0 14px">
-                            Open only the first
-                        </label>
-                        <input class="field" type="number" min="0"
-                               max="{{ $areaResources->count() }}"
-                               id="open_first_{{ $area->id }}" name="open_first"
-                               style="width:84px"
-                               placeholder="{{ $areaResources->count() }}">
-                        <button type="submit" class="btn btn--ghost">Apply</button>
-                    </div>
-                </form>
             @endif
 
             <x-sheet :key="'spots-'.$area->id" :title="'Add '.$noun.' to '.$area->name">
@@ -226,44 +212,90 @@
                 </form>
             </x-sheet>
 
-            @if ($areaResources->isNotEmpty())
-                {{--
-                    Removing is for a range that was typed wrong, which is why it
-                    is in here and not on the tiles. During service the tile is a
-                    close button, and a remove control next to it would be mistapped
-                    by somebody holding three plates.
-                --}}
-                <details class="advanced" style="margin-top:8px">
-                    <summary>Remove {{ $noun }}</summary>
+            {{--
+                The quiet line. Everything the old card showed as four buttons
+                and two folds is still here, one tap away and named:
 
-                    <p class="muted" style="margin:8px 0 12px">
-                        For good. If what you want is to stop taking bookings for one
-                        today, tap it above instead — that is reversible, and it leaves
-                        the bookings you already have alone.
-                    </p>
+                  Rename              — was unreachable: the only form that
+                                        wrote a name passed it as a hidden
+                                        field to preserve it
+                  Seats & timing      — was "How long a booking holds a spot
+                                        here"
+                  Open or close several — was Open all / Close all / Open only
+                                        the first N, sitting between the tiles
+                                        and the next area with nothing to say
+                                        which they acted on
+                  Remove {noun}       — unchanged, still behind a confirm
+            --}}
+            <div class="arearow">
+                <p class="muted" style="margin:0;font-size:var(--step--2)">
+                    @if ($areaResources->isEmpty())
+                        Nothing here yet.
+                    @elseif ($areaShut === 0)
+                        All taking bookings. Tap one to close it.
+                    @else
+                        {{ $areaShut }} closed — tap to open again
+                    @endif
+                </p>
 
-                    <div class="row" style="flex-wrap:wrap;gap:8px">
-                        @foreach ($areaResources as $resource)
-                            <form method="POST"
-                                  action="{{ route('dashboard.resources.destroy', $resource) }}"
-                                  onsubmit="return confirm('Remove this permanently? Closing it is reversible; this is not.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn--ghost"
-                                        style="min-height:36px;padding:0 14px">
-                                    {{ $resource->label }} ✕
-                                </button>
-                            </form>
-                        @endforeach
+                <div class="arearow__acts">
+                    @include('partials.add-button', [
+                        'key' => 'rename-'.$area->id,
+                        'label' => 'Rename',
+                        'quiet' => true,
+                    ])
+                    @include('partials.add-button', [
+                        'key' => 'timing-'.$area->id,
+                        'label' => 'Seats & timing',
+                        'quiet' => true,
+                    ])
+
+                    @if ($areaResources->isNotEmpty())
+                        @include('partials.add-button', [
+                            'key' => 'bulk-'.$area->id,
+                            'label' => 'Open or close several',
+                            'quiet' => true,
+                        ])
+                        @include('partials.add-button', [
+                            'key' => 'remove-'.$area->id,
+                            'label' => 'Remove '.$noun,
+                            'quiet' => true,
+                            'danger' => true,
+                        ])
+                    @endif
+                </div>
+            </div>
+
+            <x-sheet :key="'rename-'.$area->id" title="Rename this area">
+                <form method="POST" action="{{ route('dashboard.areas.update', $area) }}" class="stack">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="occupancy" value="{{ $area->occupancy?->value }}">
+                    <input type="hidden" name="max_stay_minutes" value="{{ $area->max_stay_minutes }}">
+                    <input type="hidden" name="turnover_buffer_minutes" value="{{ $area->turnover_buffer_minutes }}">
+
+                    <div>
+                        <label class="label" for="name_{{ $area->id }}">Name</label>
+                        <input class="field" type="text" id="name_{{ $area->id }}" name="name"
+                               required maxlength="80" value="{{ $area->name }}">
+                        <p class="muted" style="margin:6px 0 0;font-size:var(--step--2)">
+                            Guests see this when they pick a spot.
+                        </p>
                     </div>
-                </details>
-            @endif
 
-            <details class="advanced" style="margin-top:8px">
-                <summary>How long a booking holds a spot here</summary>
+                    <div>
+                        <label class="label" for="desc_{{ $area->id }}">Shown to guests</label>
+                        <input class="field" type="text" id="desc_{{ $area->id }}" name="description"
+                               maxlength="500" value="{{ $area->description }}"
+                               placeholder="Behind the front row, more shade">
+                    </div>
 
-                <form method="POST" action="{{ route('dashboard.areas.update', $area) }}"
-                      class="stack" style="margin-top:14px">
+                    <div><button type="submit" class="btn">Save</button></div>
+                </form>
+            </x-sheet>
+
+            <x-sheet :key="'timing-'.$area->id" title="How long a booking holds a spot here">
+                <form method="POST" action="{{ route('dashboard.areas.update', $area) }}" class="stack">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="name" value="{{ $area->name }}">
@@ -297,31 +329,85 @@
                             <label class="label" for="buffer_{{ $area->id }}">Gap between bookings</label>
                             <input class="field" type="number" id="buffer_{{ $area->id }}"
                                    name="turnover_buffer_minutes" min="0" max="240" step="5"
-                                   value="{{ $area->turnover_buffer_minutes }}"
-                                   placeholder="{{ $bookingType->turnover_buffer_minutes }}">
+                                   value="{{ $area->turnover_buffer_minutes }}">
                         </div>
                     </div>
 
-                    <div class="row" style="justify-content:space-between">
-                        <button type="submit" class="btn">Save</button>
+                    <p class="muted" style="margin:0;font-size:var(--step--2)">
+                        The front row sells a whole day while the back row turns over.
+                        Leave these alone and the area follows {{ $bookingType->name }}.
+                    </p>
 
-                        @if ($areaResources->isEmpty())
-                            <button type="submit" class="btn btn--ghost"
-                                    form="remove-area-{{ $area->id }}">
-                                Remove {{ $area->name }}
-                            </button>
-                        @endif
-                    </div>
+                    <div><button type="submit" class="btn">Save</button></div>
                 </form>
+            </x-sheet>
 
-                @if ($areaResources->isEmpty())
-                    <form method="POST" action="{{ route('dashboard.areas.destroy', $area) }}"
-                          id="remove-area-{{ $area->id }}">
+            @if ($areaResources->isNotEmpty())
+                <x-sheet :key="'bulk-'.$area->id" :title="'Open or close several in '.$area->name">
+                    <form method="POST" action="{{ route('dashboard.areas.availability', $area) }}"
+                          class="stack">
                         @csrf
-                        @method('DELETE')
+                        @method('PATCH')
+
+                        <div class="row">
+                            <button type="submit" name="status" value="open" class="btn btn--ghost">
+                                Open all {{ $areaResources->count() }}
+                            </button>
+                            <button type="submit" name="status" value="closed" class="btn btn--ghost">
+                                Close all {{ $areaResources->count() }}
+                            </button>
+                        </div>
+
+                        <div>
+                            <label class="label" for="open_first_{{ $area->id }}">
+                                Or open only the first
+                            </label>
+                            <div class="row" style="gap:8px">
+                                <input class="field" type="number" min="0"
+                                       max="{{ $areaResources->count() }}"
+                                       id="open_first_{{ $area->id }}" name="open_first"
+                                       style="max-width:110px"
+                                       placeholder="{{ $areaResources->count() }}">
+                                <button type="submit" class="btn">Apply</button>
+                            </div>
+                            <p class="muted" style="margin:6px 0 0;font-size:var(--step--2)">
+                                For a quiet evening: take bookings for the first few and
+                                keep the rest for whoever walks in.
+                            </p>
+                        </div>
                     </form>
-                @endif
-            </details>
+                </x-sheet>
+
+                {{--
+                    Removing is for a range that was typed wrong, which is why
+                    it is in here and not on the tiles. During service the tile
+                    is a close button, and a remove control next to it would be
+                    mistapped by somebody holding three plates.
+                --}}
+                <x-sheet :key="'remove-'.$area->id" :title="'Remove '.$noun.' from '.$area->name">
+                    <p class="muted" style="margin:0 0 12px">
+                        For good. If what you want is to stop taking bookings for one
+                        today, tap it on the card instead — that is reversible, and it
+                        leaves the bookings you already have alone.
+                    </p>
+
+                    <div class="row" style="flex-wrap:wrap;gap:8px">
+                        @foreach ($areaResources as $resource)
+                            <form method="POST"
+                                  action="{{ route('dashboard.resources.destroy', $resource) }}"
+                                  onsubmit="return confirm('Remove this permanently? Closing it is reversible; this is not.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn--ghost"
+                                        style="min-height:36px;padding:0 14px">
+                                    {{ $resource->label }} &times;
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                </x-sheet>
+            @endif
+
         </section>
     @endforeach
 
