@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Enums\PaymentRequirement;
 use App\Http\Controllers\Controller;
 use App\Models\BookingType;
 use App\Models\Venue;
@@ -55,6 +56,23 @@ final class ReportController extends Controller
             'byType' => $figures->byBookingType($bookingTypes),
             'occupancy' => $figures->occupancy(),
             'bookingTypes' => $bookingTypes,
+
+            /*
+             * Whether this venue takes money up front at all.
+             *
+             * Most do not: a Greek taverna confirms the table and the guest
+             * pays at it. For them the first and largest figure on the screen
+             * was "€0 taken online", which gives the most important place on
+             * the page to a zero — and reads as a fault rather than as how
+             * they chose to run.
+             */
+            'takesMoney' => $bookingTypes->contains(
+                fn (BookingType $type): bool => $type->payment_requirement !== PaymentRequirement::None
+            ),
+
+            // Below this, a chart is a shape drawn through noise. Six
+            // bookings split five ways is not a channel mix.
+            'thin' => $figures->totals()['bookings'] < 20,
         ]);
     }
 

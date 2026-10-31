@@ -264,15 +264,21 @@ final readonly class SeasonFigures
     }
 
     /**
-     * How full the place was, stated as something true.
+     * How full the place was, in figures that survive the size of the place.
      *
-     * Not a percentage of a theoretical maximum nobody could reach: on an
-     * average day the venue was open, this many of its spots were booked at
-     * least once. It undercounts a table that turns three times, which is
-     * why the sentence says "at least once" rather than pretending to a
-     * precision the data does not carry.
+     * 🔒 No average. A season has a handful of heavy days and a long tail of
+     * quiet ones, so the mean lands between the two and describes neither:
+     * 194 bookings over 212 open days reported "0.9 of 43 spots on an average
+     * day", which reads as a catastrophe to a venue that was turning people
+     * away in August. A four-table taverna got "0.4 of 4" and learned the
+     * same nothing. The mean breaks at both ends of the scale, which is
+     * exactly what it must not do.
      *
-     * @return array{spots: int, averageBooked: float, openDays: int, bestDay: ?string, bestBooked: int}
+     * The busiest day and the count of days more than half full are both
+     * plain counts of real days. They mean the same thing at four tables as
+     * at four hundred.
+     *
+     * @return array{spots: int, openDays: int, bestDay: ?string, bestBooked: int, halfFullDays: int, busyDays: int}
      */
     public function occupancy(): array
     {
@@ -287,16 +293,19 @@ final readonly class SeasonFigures
                 ->toDateString())
             ->map(static fn (Collection $rows): int => $rows->pluck('resource_id')->filter()->unique()->count());
 
-        $openDays = $this->openDays();
-
         $best = $perDay->sortDesc()->take(1);
+
+        // Half of one spot is still one spot: a venue with a single table is
+        // half full the day it is booked, not never.
+        $half = max(1, (int) ceil($spots / 2));
 
         return [
             'spots' => $spots,
-            'averageBooked' => $openDays > 0 ? round($perDay->sum() / $openDays, 1) : 0.0,
-            'openDays' => $openDays,
+            'openDays' => $this->openDays(),
             'bestDay' => $best->keys()->first(),
             'bestBooked' => (int) ($best->first() ?? 0),
+            'halfFullDays' => $perDay->filter(static fn (int $booked): bool => $booked >= $half)->count(),
+            'busyDays' => $perDay->count(),
         ];
     }
 

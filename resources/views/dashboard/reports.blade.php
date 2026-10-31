@@ -42,16 +42,21 @@
             </p>
         </div>
     @else
+        {{-- The four figures, in the order this venue cares about them.
+             A place that takes nothing up front should not be shown a zero
+             in the largest type on the page. --}}
         <div class="stat-grid">
-            <div class="stat">
-                <b>{{ \App\Support\Money::format($money['net']) }}</b>
-                <span class="muted">taken online</span>
-                @if ($money['refunded'] > 0)
-                    <small class="stat__note">
-                        after {{ \App\Support\Money::format($money['refunded']) }} refunded
-                    </small>
-                @endif
-            </div>
+            @if ($takesMoney)
+                <div class="stat">
+                    <b>{{ \App\Support\Money::format($money['net']) }}</b>
+                    <span class="muted">taken online</span>
+                    @if ($money['refunded'] > 0)
+                        <small class="stat__note">
+                            after {{ \App\Support\Money::format($money['refunded']) }} refunded
+                        </small>
+                    @endif
+                </div>
+            @endif
 
             <div class="stat">
                 <b>{{ number_format($totals['bookings']) }}</b>
@@ -66,20 +71,42 @@
                 <span class="muted">people through the door</span>
             </div>
 
+            {{-- Counts of real days, not a mean. See SeasonFigures. --}}
             <div class="stat">
-                <b>{{ $occupancy['averageBooked'] }}<span class="muted">/{{ $occupancy['spots'] }}</span></b>
-                <span class="muted">spots on an average day</span>
-                @if ($occupancy['openDays'] > 0)
-                    <small class="stat__note">across {{ $occupancy['openDays'] }} open days</small>
+                <b>{{ $occupancy['bestBooked'] }}<span class="muted">/{{ $occupancy['spots'] }}</span></b>
+                <span class="muted">on your busiest day</span>
+                @if ($occupancy['bestDay'] !== null)
+                    <small class="stat__note">
+                        {{ \Carbon\CarbonImmutable::parse($occupancy['bestDay'])->format('l j F') }}
+                    </small>
                 @endif
             </div>
+
+            <div class="stat">
+                <b>{{ $occupancy['halfFullDays'] }}</b>
+                <span class="muted">days more than half full</span>
+                <small class="stat__note">
+                    of {{ $occupancy['busyDays'] }} with anything booked
+                </small>
+            </div>
         </div>
+
+        {{-- Six bookings split five ways is not a channel mix. Say so, rather
+             than drawing a confident chart through noise. --}}
+        @if ($thin)
+            <div class="notice" style="margin-bottom:16px">
+                <strong>Not much to go on yet.</strong>
+                {{ $totals['bookings'] }} {{ \Illuminate\Support\Str::plural('booking', $totals['bookings']) }}
+                in this period. The counts below are real; the shares and the
+                shapes will not mean much until there are a few dozen.
+            </div>
+        @endif
 
         {{-- Money the guest still owes at the table is not revenue, and a
              report that adds the two together is a wish. --}}
         @if ($money['atVenue'] > 0)
             <div class="notice" style="margin-bottom:16px">
-                <strong>{{ \App\Support\Money::format($money['atVenue']) }} more was due at the venue.</strong>
+                <strong>{{ \App\Support\Money::format($money['atVenue']) }}{{ $takesMoney ? ' more' : '' }} was due at the venue.</strong>
                 Those guests pay you at the table, so whether it arrived is
                 something only your till knows.
             </div>
@@ -152,7 +179,10 @@
                                     <span class="meter__fill @if ($channel['byStaff']) meter__fill--muted @endif"
                                           style="width:{{ max(1, $channel['percent']) }}%"></span>
                                 </span>
-                                <span class="meter__value">{{ $channel['percent'] }}%</span>
+                                <span class="meter__value">
+                                    {{ $channel['count'] }}
+                                    <small class="muted">{{ $channel['percent'] }}%</small>
+                                </span>
                             </div>
                         @endforeach
                     </div>
@@ -197,24 +227,6 @@
                     @endif
                 </section>
 
-                @if ($occupancy['bestDay'] !== null)
-                    <section class="card">
-                        <div class="card__head">
-                            <h2 class="h2">The fullest day</h2>
-                        </div>
-
-                        <div class="needs">
-                            <span class="needs__text">
-                                <strong>
-                                    {{ \Carbon\CarbonImmutable::parse($occupancy['bestDay'])->format('l j F') }}
-                                </strong>
-                                <small class="muted">
-                                    {{ $occupancy['bestBooked'] }} of {{ $occupancy['spots'] }} spots booked
-                                </small>
-                            </span>
-                        </div>
-                    </section>
-                @endif
             </aside>
         </div>
     @endif
@@ -242,8 +254,11 @@
     </details>
 
     <p class="muted" style="margin-top:20px;font-size:var(--step--2)">
-        Money counts what your gateway actually took, less refunds, and leaves
-        out anything taken with test keys. Cancelled bookings are left out of
-        everything except the cancellation count.
+        Cancelled bookings are left out of everything except the cancellation
+        count.
+        @if ($takesMoney)
+            Money counts what your gateway actually took, less refunds, and
+            leaves out anything taken with test keys.
+        @endif
     </p>
 @endsection

@@ -151,6 +151,82 @@ final class ReportsTest extends TestCase
     }
 
     #[Test]
+    public function a_venue_that_takes_no_money_is_not_shown_a_zero_in_the_largest_type(): void
+    {
+        /*
+         * Most places here confirm the table and the guest pays at it. The
+         * first and biggest figure on their screen was "€0 taken online",
+         * which gives the most important place on the page to a zero and
+         * reads as a fault rather than as how they chose to run.
+         */
+        $this->asTenant(function (): void {
+            // The booking first: its factory makes a booking type of its own,
+            // so switching payment off before it exists leaves it paying.
+            $this->booking(0);
+
+            \App\Models\BookingType::query()->update([
+                'payment_requirement' => \App\Enums\PaymentRequirement::None->value,
+            ]);
+        });
+
+        $this->get(route('dashboard.reports', ['period' => 'season']))
+            ->assertOk()
+            ->assertDontSee('taken online')
+            ->assertSee('people through the door');
+    }
+
+    #[Test]
+    public function how_full_it_was_is_counted_in_real_days_rather_than_averaged(): void
+    {
+        /*
+         * A season has a few heavy days and a long tail of quiet ones, so a
+         * mean lands between the two and describes neither — "0.9 of 43 spots
+         * on an average day" to a venue that was turning people away in
+         * August. Counts of real days mean the same thing at four tables as
+         * at four hundred.
+         */
+        $this->asTenant(fn () => $this->booking(0));
+
+        $this->get(route('dashboard.reports', ['period' => 'season']))
+            ->assertOk()
+            ->assertSee('on your busiest day')
+            ->assertSee('days more than half full')
+            ->assertDontSee('on an average day');
+    }
+
+    #[Test]
+    public function a_thin_period_says_so_instead_of_drawing_a_confident_chart(): void
+    {
+        // Six bookings split five ways is not a channel mix.
+        $this->asTenant(function (): void {
+            $this->booking(0, channel: Channel::Widget);
+            $this->booking(0, channel: Channel::Phone);
+        });
+
+        $this->get(route('dashboard.reports', ['period' => 'season']))
+            ->assertOk()
+            ->assertSee('Not much to go on yet.')
+            // The counts are still real, and still shown beside the share.
+            ->assertSee('50%');
+    }
+
+    #[Test]
+    public function a_share_always_carries_the_count_it_came_from(): void
+    {
+        $this->asTenant(function (): void {
+            foreach (range(1, 3) as $ignored) {
+                $this->booking(0, channel: Channel::Widget);
+            }
+
+            $this->booking(0, channel: Channel::Phone);
+        });
+
+        $this->get(route('dashboard.reports', ['period' => 'season']))
+            ->assertOk()
+            ->assertSeeInOrder(['Website widget', '3', '75%']);
+    }
+
+    #[Test]
     public function a_period_with_nothing_in_it_says_so_instead_of_showing_zeroes(): void
     {
         $this->get(route('dashboard.reports', ['period' => 'last-season']))
