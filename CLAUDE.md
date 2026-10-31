@@ -30,6 +30,23 @@ job also updates `docs/ADMIN-SETUP.md`**, in that same commit. A configuration
 step that exists only in somebody's memory is a step that gets missed on the
 second install, where it arrives as a bug report instead of a checklist line.
 
+**Anything a user would notice gets a line in `docs/CHANGELOG.md`**, in that
+same commit, under today's date. Written for somebody who wants to know what is
+different, not why — the why belongs in `PROGRESS.md`. A pure refactor, a test
+and a rename nobody sees get no line; a changed button, a new screen, a fixed
+bug and a moved control all do. Written afterwards from the commit log, a
+changelog is a list of forty subjects with no way to tell which one a customer
+would have noticed.
+
+## Where the documentation lives
+
+The files in `docs/` are the source. The Confluence space **TableReserved**
+(`armenisnick.atlassian.net/wiki/spaces/TableReser`) is a reading copy of them,
+organised for somebody who is not in the code — and it is only as true as its
+last sync, so a question about current behaviour is answered from `docs/`.
+`docs/CONFLUENCE.md` maps every page to the file behind it, and says what to
+re-publish after a change.
+
 ## Conventions
 
 - `declare(strict_types=1);` in every PHP file. Pint enforces the rest.

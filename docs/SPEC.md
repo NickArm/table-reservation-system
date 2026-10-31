@@ -1,10 +1,10 @@
 # TableReserved — Functional & Technical Spec
 
 > **Status:** Draft v2.5 — 2026-10-15
-> **Συνοδευτικά:** `PROGRESS.md` — τι υλοποιήθηκε & τι μένει · `COMPETITORS.md` — ανάλυση resOS / Tableo / SevenRooms / i-host
+> **Συνοδευτικά:** `PROGRESS.md` — τι υλοποιήθηκε & τι μένει · `CHANGELOG.md` — τι άλλαξε, ανά ημέρα · `DEPLOY.md` — εγκατάσταση σε νέο server · `ADMIN-SETUP.md` — τι στήνει ο διαχειριστής της πλατφόρμας · `COMPETITORS.md` — ανάλυση resOS / Tableo / SevenRooms / i-host · `CONFLUENCE.md` — ποια σελίδα του wiki βγαίνει από ποιο αρχείο
 > **Owner:** Nick
 > **Working name:** TableReserved (τελικό όνομα/domain TBD)
-> **Stack:** Laravel · React/Inertia · Next.js · MariaDB · Redis (ή DB drivers)
+> **Stack:** Laravel · Blade · MariaDB · DB queue & cache (§3.3, §21) — **όχι** Inertia/React, **όχι** Next.js
 > **Benchmark:** [i-host.gr](https://www.i-host.gr)
 
 ---
@@ -1482,7 +1482,7 @@ api_requests
 | **Πελατολόγιο** | **Ανά venue, `UNIQUE(venue_id, email)`** — ίδιο email σε δύο μαγαζιά = δύο εγγραφές· ίδιο μαγαζί ξανά = μία εγγραφή με πλήρες ιστορικό. Ποτέ κοινό μεταξύ tenants (§28) |
 | **Νομικά πλατφόρμας** | **Υποδομή & views τώρα** με versioning και placeholder· τα κείμενα από τον δικηγόρο χωρίς deploy (§12.2) |
 | **Διαγραφή λογαριασμού** | **Μπλοκάρεται** με ενεργές μελλοντικές κρατήσεις· μετά export + ρητή επιβεβαίωση + οριστική διαγραφή σε 30 ημέρες, slug δεσμευμένο για πάντα (§29) |
-| **Frontend** | **Blade** για τη δημόσια σελίδα (SEO, μηδέν Node), **Inertia + React** για το dashboard από το M7 (§3.3) |
+| **Frontend** | **Blade για όλα** — δημόσια σελίδα και dashboard (SEO, μηδέν Node, κανένα build step). Το Inertia + React **δεν μπήκε** στο M7· η απόφαση και οι τρεις λόγοι της είναι στο §3.3 |
 | **Design** | Ουδέτερο κέλυφος + **ένα accent χρώμα** από τον tenant· minimal, χωρίς σκιές & διακοσμητικά (§27) |
 | **Framework** | **Laravel**, PHP 8.3+, κοινοτικές συμβάσεις — όχι ιδιωτικό framework (§31.1) |
 | **Ποιότητα κώδικα** | strict types, Pint, Larastan, Form Requests, API Resources, Actions, backed enums, χρήματα σε λεπτά (§31.2) |
