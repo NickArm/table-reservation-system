@@ -42,6 +42,9 @@ need the reasoning.
   a shape drawn from four.
 - One size and one place for a page's own action, on every screen that had
   drifted.
+- The documentation space moved from Confluence to Notion, same eighteen pages
+  and the same text. `docs/WIKI.md` replaces `docs/CONFLUENCE.md` and maps every
+  page to the file behind it.
 
 ### Fixed
 - A PayPal refusal now repeats what PayPal said, and which of its two hosts was

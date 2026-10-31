@@ -1,7 +1,7 @@
 # TableReserved — Functional & Technical Spec
 
 > **Status:** Draft v2.5 — 2026-10-15
-> **Συνοδευτικά:** `PROGRESS.md` — τι υλοποιήθηκε & τι μένει · `CHANGELOG.md` — τι άλλαξε, ανά ημέρα · `DEPLOY.md` — εγκατάσταση σε νέο server · `ADMIN-SETUP.md` — τι στήνει ο διαχειριστής της πλατφόρμας · `COMPETITORS.md` — ανάλυση resOS / Tableo / SevenRooms / i-host · `CONFLUENCE.md` — ποια σελίδα του wiki βγαίνει από ποιο αρχείο
+> **Συνοδευτικά:** `PROGRESS.md` — τι υλοποιήθηκε & τι μένει · `CHANGELOG.md` — τι άλλαξε, ανά ημέρα · `DEPLOY.md` — εγκατάσταση σε νέο server · `ADMIN-SETUP.md` — τι στήνει ο διαχειριστής της πλατφόρμας · `COMPETITORS.md` — ανάλυση resOS / Tableo / SevenRooms / i-host · `WIKI.md` — ποια σελίδα του wiki βγαίνει από ποιο αρχείο
 > **Owner:** Nick
 > **Working name:** TableReserved (τελικό όνομα/domain TBD)
 > **Stack:** Laravel · Blade · MariaDB · DB queue & cache (§3.3, §21) — **όχι** Inertia/React, **όχι** Next.js

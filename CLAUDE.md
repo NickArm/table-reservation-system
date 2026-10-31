@@ -40,12 +40,11 @@ would have noticed.
 
 ## Where the documentation lives
 
-The files in `docs/` are the source. The Confluence space **TableReserved**
-(`armenisnick.atlassian.net/wiki/spaces/TableReser`) is a reading copy of them,
-organised for somebody who is not in the code — and it is only as true as its
-last sync, so a question about current behaviour is answered from `docs/`.
-`docs/CONFLUENCE.md` maps every page to the file behind it, and says what to
-re-publish after a change.
+The files in `docs/` are the source. The Notion space **TableReserved** is a
+reading copy of them, organised for somebody who is not in the code — and it is
+only as true as its last sync, so a question about current behaviour is answered
+from `docs/`. `docs/WIKI.md` maps every page to the file behind it, and says what
+to re-publish after a change.
 
 ## Conventions
 
