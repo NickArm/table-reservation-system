@@ -788,10 +788,28 @@ a:focus-visible {
  * middle of service taps one thing and expects it to have happened — no
  * select, no save (SPEC §5.4).
  */
+/*
+ * A plan of the room, not a table of data.
+ *
+ * This was a grid of stretching columns, and the grid item was each tile's
+ * <form> rather than the button inside it — so every tile sat at its own
+ * content width, left-aligned in a cell two or three times wider. T1 and T10
+ * came out different sizes with a gulf between them, while the one tile that
+ * is not in a form, the dashed "add", filled its cell and sat there twice the
+ * width of its neighbours.
+ *
+ * Fixed squares, wrapped: twenty of them read as twenty spots at a glance,
+ * which a ragged row never does. `display: contents` makes the button the
+ * flex item and leaves the form submitting exactly as before.
+ */
 .tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+}
+
+.tiles form {
+    display: contents;
 }
 
 .tile {
@@ -799,16 +817,20 @@ a:focus-visible {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    min-height: 60px;
-    padding: 6px 4px;
+    gap: 1px;
+    width: 62px;
+    height: 62px;
+    flex: none;
+    box-sizing: border-box;
+    padding: 4px;
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-control);
     background: var(--bg);
     color: var(--ink);
     font: inherit;
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: var(--step--1);
+    font-weight: 700;
+    line-height: 1.15;
     text-align: center;
     cursor: pointer;
 }
@@ -3217,8 +3239,8 @@ details.advanced.card[open] > summary {
 }
 
 .tile--add svg {
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
 }
 
 /* Closed: struck through, and warm rather than grey — a grey tile reads as

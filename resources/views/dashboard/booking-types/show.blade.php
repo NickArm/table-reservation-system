@@ -26,11 +26,19 @@
 
         <div class="row">
             <span class="pill">{{ $bookingType->booking_mode->label() }}</span>
-            <span class="pill">
-                {{ \App\Support\Money::format($bookingType->default_price_cents) }}
-                {{ $bookingType->price_basis->suffix() }}
-            </span>
-            <span class="pill">{{ $bookingType->payment_requirement->label() }}</span>
+
+            {{-- A price beside "No payment" is the same noise the tiles used
+                 to carry: "€0 each · No payment" reads as a fault rather than
+                 as a choice. When nothing is taken up front, say that once. --}}
+            @if ($bookingType->payment_requirement === \App\Enums\PaymentRequirement::None)
+                <span class="pill pill--muted">Pay at the venue</span>
+            @else
+                <span class="pill">
+                    {{ \App\Support\Money::format($bookingType->default_price_cents) }}
+                    {{ $bookingType->price_basis->suffix() }}
+                </span>
+                <span class="pill">{{ $bookingType->payment_requirement->label() }}</span>
+            @endif
 
             @include('partials.add-button', [
                 'key' => 'area',
@@ -417,8 +425,12 @@
 
             <span class="row" style="gap:10px">
                 <span class="muted">
-                    Usually {{ \App\Support\Money::format($bookingType->default_price_cents) }}
-                    {{ $bookingType->price_basis->suffix() }}
+                    @if ($bookingType->payment_requirement === \App\Enums\PaymentRequirement::None)
+                        Nothing is taken up front — guests settle with you
+                    @else
+                        Usually {{ \App\Support\Money::format($bookingType->default_price_cents) }}
+                        {{ $bookingType->price_basis->suffix() }}
+                    @endif
                 </span>
 
                 @include('partials.add-button', ['key' => 'price', 'label' => 'Add a price rule'])

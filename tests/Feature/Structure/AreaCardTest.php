@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Structure;
 
 use App\Enums\OnlineStatus;
+use App\Enums\PaymentRequirement;
 use App\Models\Area;
 use App\Models\BookingType;
 use App\Models\Resource;
@@ -147,6 +148,26 @@ final class AreaCardTest extends TestCase
             ->assertOk()
             ->assertSee('tile--add', false)
             ->assertSee('Add sunbed sets to Front row');
+    }
+
+    #[Test]
+    public function a_price_is_not_stated_where_no_money_is_taken(): void
+    {
+        /*
+         * "€0 each · No payment" side by side reads as a fault rather than as
+         * a choice — the same noise the tiles used to carry. A venue that
+         * takes nothing up front should be told so once.
+         */
+        $this->asTenant(fn () => $this->bookingType->forceFill([
+            'payment_requirement' => PaymentRequirement::None,
+            'default_price_cents' => 0,
+        ])->save());
+
+        $this->get(route('dashboard.booking-types.show', $this->bookingType))
+            ->assertOk()
+            ->assertSee('Pay at the venue')
+            ->assertSee('Nothing is taken up front')
+            ->assertDontSee('€0');
     }
 
     #[Test]
