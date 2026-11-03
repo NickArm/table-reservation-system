@@ -30,9 +30,50 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'immutable_datetime',
+            'invitation_sent_at' => 'immutable_datetime',
             'password' => 'hashed',
             'is_super_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Has this person been invited and not yet arrived?
+     *
+     * An invitation that has run out is not open: the token is still on the
+     * row — nothing sweeps it — but it will be refused at the door, and a
+     * screen that called it open would be telling the operator to wait for
+     * somebody who cannot get in.
+     */
+    public function hasOpenInvitation(): bool
+    {
+        return $this->invitation_token !== null && ! $this->invitationHasExpired();
+    }
+
+    public function invitationHasExpired(): bool
+    {
+        if ($this->invitation_sent_at === null) {
+            return true;
+        }
+
+        return $this->invitation_sent_at
+            ->addDays((int) config('tenancy.invitation_days'))
+            ->isPast();
+    }
+
+    /**
+     * Where the invitation points.
+     *
+     * Built from the token rather than signed, because it is handed to a
+     * person: it gets pasted into a message, read off a screen and typed
+     * wrong, and a signature would make it longer without making it safer —
+     * the token is already 64 random characters and single-use.
+     */
+    public function invitationUrl(): ?string
+    {
+        return $this->invitation_token === null
+            ? null
+            : route('invitation.show', ['token' => $this->invitation_token]);
     }
 
     /**

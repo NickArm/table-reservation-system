@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Actions\Subscriptions\AdvanceLifecycle;
 use App\Actions\Subscriptions\SendDunningNotices;
 use App\Actions\Subscriptions\SendTrialReminders;
+use App\Actions\Subscriptions\WarnBeforeManualLapse;
 use App\Console\Concerns\RecordsItsRun;
 use Illuminate\Console\Command;
 
@@ -29,6 +30,7 @@ final class AdvanceSubscriptionsCommand extends Command
         AdvanceLifecycle $lifecycle,
         SendTrialReminders $reminders,
         SendDunningNotices $dunning,
+        WarnBeforeManualLapse $lapses,
     ): int {
         $moved = $lifecycle->handle();
 
@@ -63,13 +65,29 @@ final class AdvanceSubscriptionsCommand extends Command
         );
 
         /*
+         * And the accounts nothing is going to charge. The dunning above only
+         * ever sees a failed payment, which an account billed by invoice
+         * never produces — so without this line a hand-billed venue lapses in
+         * complete silence (SPEC §4.1).
+         */
+        $invoice = $lapses->handle();
+
+        if ($invoice['due'] > 0) {
+            $lines[] = sprintf(
+                'Hand-billed accounts running out: %d, reported %d.',
+                $invoice['due'],
+                $invoice['sent'],
+            );
+        }
+
+        /*
          * One line, recorded as well as printed. Nobody reads the output of a
          * cron; the System screen reads this (§13.2), and without it a
          * missing cron is indistinguishable from a quiet week.
          */
         return $this->report(
             implode(' ', $lines),
-            $sent['failed'] === 0 && $chased['failed'] === 0,
+            $sent['failed'] === 0 && $chased['failed'] === 0 && $invoice['failed'] === 0,
         );
     }
 }

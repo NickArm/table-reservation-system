@@ -75,6 +75,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Invitations
+    |--------------------------------------------------------------------------
+    |
+    | Days an invitation link stays good. Long, because an account opened by
+    | hand is usually opened during a telephone call and read the next
+    | morning — an invitation that expires like a password reset is an
+    | invitation that always has to be sent twice.
+    |
+    */
+
+    'invitation_days' => (int) env('TENANCY_INVITATION_DAYS', 7),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accounts that pay outside the system
+    |--------------------------------------------------------------------------
+    |
+    | Days before a hand-billed subscription runs out that the platform is
+    | told. Nothing is going to charge a card for these — the invoice is sent
+    | by a person — so without this warning the first anybody hears of a
+    | lapse is the customer ringing to say the booking page has stopped.
+    |
+    */
+
+    'manual_notice_days' => (int) env('TENANCY_MANUAL_NOTICE_DAYS', 10),
+
+    /*
+    |--------------------------------------------------------------------------
     | Reserved slugs
     |--------------------------------------------------------------------------
     |

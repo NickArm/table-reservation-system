@@ -48,6 +48,7 @@ class Subscription extends Model
             'current_period_end' => 'immutable_datetime',
             'cancelled_at' => 'immutable_datetime',
             'payment_failed_at' => 'immutable_datetime',
+            'manual_notice_sent_at' => 'immutable_datetime',
             'cancel_at_period_end' => 'boolean',
         ];
     }

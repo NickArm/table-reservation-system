@@ -19,6 +19,8 @@
             <h1>Accounts</h1>
             <p class="muted">{{ $tenants->total() }} in total.</p>
         </div>
+
+        <a class="btn" href="{{ route('admin.tenants.create') }}">Open an account</a>
     </div>
 
     <form method="GET" action="{{ route('admin.tenants.index') }}" class="searchbar">

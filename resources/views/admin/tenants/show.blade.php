@@ -20,8 +20,11 @@
         <div>
             <h1>{{ $tenant->name }}</h1>
             <p class="muted">
-                <a href="{{ route('public.booking', $tenant) }}">/reservation/{{ $tenant->slug }}</a>
-                · created {{ $tenant->created_at->format('j M Y') }}
+                Account opened {{ $tenant->created_at->format('j M Y') }}
+                · {{ $tenant->venues->count() }}
+                {{ \Illuminate\Support\Str::plural('venue', $tenant->venues->count()) }}
+                · {{ $tenant->users->count() }}
+                {{ \Illuminate\Support\Str::plural('person', $tenant->users->count()) }}
             </p>
         </div>
 
@@ -31,6 +34,30 @@
     </div>
 
     <div class="stack" style="max-width:860px">
+
+        {{--
+            The invitation link, right after it was minted.
+
+            Shown rather than only emailed because the common case is an
+            account opened during a telephone call: the operator wants to
+            send it over whatever the customer actually reads, and an email
+            sitting in a spam folder has not invited anybody.
+        --}}
+        @if (session('invitation'))
+            <section class="card stack">
+                <div class="card__head">
+                    <h2 class="h2">The way in</h2>
+                </div>
+
+                <p class="muted">
+                    Good for {{ (int) config('tenancy.invitation_days') }} days, and it
+                    stops working once it has been used. Send it however they will read
+                    it.
+                </p>
+
+                <p style="word-break:break-all"><code>{{ session('invitation') }}</code></p>
+            </section>
+        @endif
 
         <section class="card stack">
             <div class="card__head">
@@ -64,6 +91,22 @@
                     <strong>{{ $subscription?->provider?->label() ?? '—' }}</strong>
                 </div>
             </div>
+
+            {{--
+                Billed by hand. Worth saying out loud on the screen: nothing
+                in the system will renew this one, and the only reason it
+                does not lapse quietly is the notice that goes out
+                beforehand (§4.1).
+            --}}
+            @if ($subscription?->provider === \App\Enums\BillingProvider::Manual)
+                <p class="notice">
+                    <strong>This account pays you directly.</strong> Nothing will charge
+                    it and nothing will chase it. You are told
+                    {{ (int) config('tenancy.manual_notice_days') }} days before the
+                    period ends; when the money is in, use <em>Extend the
+                    subscription</em> below and put the invoice number in the reason.
+                </p>
+            @endif
 
             @if ($subscription?->payment_failed_at !== null)
                 <p class="notice notice--warn">
@@ -100,19 +143,159 @@
                     <span class="label">Bookings all time</span>
                     <strong>{{ $usage['reservations_total'] }}</strong>
                 </div>
-                <div>
-                    <span class="label">People on the account</span>
-                    <strong>{{ $tenant->users->count() }}</strong>
-                </div>
+            </div>
+        </section>
+
+        {{--
+            The venues.
+
+            A section of its own even though every account has exactly one
+            today, because `Tenant hasMany Venue` has been true since M0 and
+            the day a chain has two, the account screen must not be titled
+            with whichever one happens to be oldest.
+        --}}
+        <section class="card stack">
+            <div class="card__head">
+                <h2 class="h2">
+                    {{ $tenant->venues->count() === 1 ? 'The venue' : 'The venues' }}
+                </h2>
             </div>
 
-            <p class="muted">
-                @foreach ($tenant->users as $person)
-                    {{ $person->name }} &lt;{{ $person->email }}&gt;
-                    <span class="pill pill--muted">{{ $person->pivot->role }}</span>
-                    @if (! $loop->last) · @endif
-                @endforeach
-            </p>
+            @forelse ($tenant->venues as $venue)
+                <div class="history__row">
+                    <div>
+                        <strong>{{ $venue->name }}</strong>
+                        <p class="muted" style="margin:4px 0 0">
+                            {{ $venue->city ? $venue->city.' · ' : '' }}{{ $venue->timezone }}
+                        </p>
+                    </div>
+                    <div class="event__meta">
+                        <a href="{{ route('public.booking', $tenant) }}" class="muted">
+                            /reservation/{{ $tenant->slug }}
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <p class="empty">No venue on this account, which should not happen.</p>
+            @endforelse
+        </section>
+
+        {{--
+            The people.
+
+            Three actions, and none of them is "set their password": support
+            that can type a customer's password is support that knows it, and
+            from then on every action from that account is arguable (§2.3).
+        --}}
+        <section class="card stack">
+            <div class="card__head">
+                <h2 class="h2">The people on it</h2>
+            </div>
+
+            @foreach ($tenant->users as $person)
+                @php
+                    // Off the pivot that is already loaded, not through
+                    // roleIn(): that issues a query, and a query inside a
+                    // loop is how an admin screen with four people on an
+                    // account becomes twelve round trips.
+                    $role = \App\Enums\TenantRole::tryFrom((string) $person->pivot->role);
+                @endphp
+                <div class="stack" @class(['history__row' => ! $loop->last])>
+                    <div>
+                        <strong>{{ $person->name }}</strong>
+                        <span class="pill pill--muted">
+                            {{ $role?->label() ?? 'Unknown' }}
+                        </span>
+
+                        <p class="muted" style="margin:4px 0 0">
+                            {{ $person->email }}
+                        </p>
+
+                        <p class="muted" style="margin:2px 0 0;font-size:13px">
+                            @if ($person->hasOpenInvitation())
+                                Invited {{ $person->invitation_sent_at?->diffForHumans() }}, not arrived yet
+                            @elseif ($person->last_login_at !== null)
+                                Last signed in {{ $person->last_login_at->diffForHumans() }}
+                            @else
+                                <strong>Has never signed in</strong>
+                            @endif
+
+                            ·
+
+                            @if ($person->hasVerifiedEmail())
+                                address verified
+                            @else
+                                <strong>address not verified</strong>
+                            @endif
+                        </p>
+                    </div>
+
+                    <details class="secret">
+                        <summary><strong>What you can do for them</strong></summary>
+
+                        <div class="stack">
+                            <form method="POST"
+                                  action="{{ route('admin.tenants.people.reset', [$tenant, $person]) }}">
+                                @csrf
+                                <button type="submit" class="btn btn--ghost btn--small">
+                                    Send a password reset
+                                </button>
+                                <small class="muted">
+                                    The same email the sign-in screen sends. They choose the
+                                    password, not you.
+                                </small>
+                            </form>
+
+                            @unless ($person->hasVerifiedEmail())
+                                <form method="POST"
+                                      action="{{ route('admin.tenants.people.verify', [$tenant, $person]) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn--ghost btn--small">
+                                        Send the verification again
+                                    </button>
+                                </form>
+                            @endunless
+
+                            <form method="POST"
+                                  action="{{ route('admin.tenants.people.invite', [$tenant, $person]) }}">
+                                @csrf
+                                <button type="submit" class="btn btn--ghost btn--small">
+                                    {{ $person->hasOpenInvitation() ? 'Send a fresh invitation' : 'Invite them again' }}
+                                </button>
+                                <small class="muted">
+                                    Makes a new link and kills the old one. The new one is shown
+                                    here as well as emailed.
+                                </small>
+                            </form>
+
+                            <form method="POST"
+                                  action="{{ route('admin.tenants.people.role', [$tenant, $person]) }}"
+                                  class="stack">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="field">
+                                    <label for="role-{{ $person->id }}">Role on this account</label>
+                                    <select id="role-{{ $person->id }}" name="role">
+                                        @foreach (\App\Enums\TenantRole::cases() as $option)
+                                            <option value="{{ $option->value }}"
+                                                @selected($role === $option)>
+                                                {{ $option->label() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="muted">
+                                        Staff run the floor. They never see the payment settings
+                                        or the subscription.
+                                    </small>
+                                </div>
+
+                                <button type="submit" class="btn btn--ghost btn--small">Save the role</button>
+                            </form>
+                        </div>
+                    </details>
+                </div>
+            @endforeach
         </section>
 
         <section class="card stack">

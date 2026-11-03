@@ -19,6 +19,37 @@ need the reasoning.
 
 ---
 
+## 2026-11-03
+
+### Added
+- **An account can be opened by hand**, from the platform screens: venue,
+  owner, email and a plan. It starts paid rather than on trial, and it is
+  billed outside the system — you send the invoice, and nothing here will ever
+  charge it or chase it.
+- The owner of an account opened that way is **invited rather than given a
+  password**. The link lets them choose their own, works once, lasts a week,
+  and is shown on screen as well as emailed — half of these are opened during
+  a telephone call.
+- **You are told before a hand-billed account runs out**, ten days ahead, as
+  one list rather than one email per account. Nothing else would have said
+  anything: the payment-failure emails only ever see a failed charge, and an
+  invoice nobody paid does not produce one.
+- The account screen now has **the people on it**: who they are, whether the
+  address is verified, whether they have ever managed to sign in, and an
+  invitation that has been sent and not taken up. Support can send a password
+  reset, send the verification again, re-invite, and change somebody between
+  owner and staff — the last owner cannot be demoted.
+- A sign-in is remembered, so "have you ever managed to get in?" is answered
+  on the screen instead of over the telephone.
+
+### Changed
+- The platform's **Venues** screen is called **Accounts**, which is what it
+  has always been: the subscription, the people and the suspension all belong
+  to the account, and the venue is one of the things on it. The venues are now
+  a section of their own, which is where a second one will go.
+
+---
+
 ## 2026-10-31
 
 ### Added

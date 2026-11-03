@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Platform\CreateAccountByHand;
 use App\Actions\Platform\ExtendSubscriptionByHand;
 use App\Actions\Platform\SuspendTenant;
 use App\Enums\TenantStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CreateAccountRequest;
 use App\Http\Requests\Admin\ExtendSubscriptionRequest;
 use App\Http\Requests\Admin\SuspendTenantRequest;
 use App\Models\AuditEntry;
@@ -108,9 +110,45 @@ final class TenantController extends Controller
         );
     }
 
+    /**
+     * The form for opening an account on somebody's behalf (SPEC §4.1).
+     */
+    public function create(): View
+    {
+        return view('admin.tenants.create', [
+            'plans' => Plan::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(),
+        ]);
+    }
+
+    public function store(
+        CreateAccountRequest $request,
+        CreateAccountByHand $create,
+    ): RedirectResponse {
+        $plan = Plan::query()->findOrFail($request->integer('plan_id'));
+
+        $result = $create->handle(
+            $request->string('venue_name')->toString(),
+            $request->string('owner_name')->toString(),
+            $request->string('owner_email')->toString(),
+            $plan,
+            $request->user(),
+            $request->boolean('send_invitation', true),
+        );
+
+        return redirect()
+            ->route('admin.tenants.show', $result['tenant'])
+            ->with('status', $result['tenant']->name.' is open and on '.$plan->name.'.')
+            // Shown on the account screen so it can be sent by hand as well.
+            // Half of these are opened during a telephone call.
+            ->with('invitation', $result['invitation']);
+    }
+
     public function show(Tenant $tenant): View
     {
-        $tenant->loadMissing(['venue', 'users', 'subscription.plan']);
+        $tenant->loadMissing(['venues', 'users', 'subscription.plan']);
 
         return view('admin.tenants.show', [
             'tenant' => $tenant,

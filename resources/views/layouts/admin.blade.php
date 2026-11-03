@@ -25,8 +25,8 @@
         'Overview' => [
             ['label' => 'Dashboard', 'icon' => 'home', 'route' => 'admin.overview', 'active' => 'admin.overview'],
         ],
-        'Accounts' => [
-            ['label' => 'Venues', 'icon' => 'building', 'route' => 'admin.tenants.index', 'active' => 'admin.tenants.*'],
+        'Customers' => [
+            ['label' => 'Accounts', 'icon' => 'building', 'route' => 'admin.tenants.index', 'active' => 'admin.tenants.*'],
             ['label' => 'Plans', 'icon' => 'tag', 'route' => 'admin.plans.index', 'active' => 'admin.plans.*'],
         ],
         'Money' => [

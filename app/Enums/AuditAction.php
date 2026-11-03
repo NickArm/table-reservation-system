@@ -14,6 +14,9 @@ namespace App\Enums;
  */
 enum AuditAction: string
 {
+    case TenantCreated = 'tenant_created';
+    case InvitationSent = 'invitation_sent';
+    case MemberRoleChanged = 'member_role_changed';
     case SubscriptionExtended = 'subscription_extended';
     case SubscriptionPlanChanged = 'subscription_plan_changed';
     case TenantSuspended = 'tenant_suspended';
@@ -32,6 +35,9 @@ enum AuditAction: string
     public function label(): string
     {
         return match ($this) {
+            self::TenantCreated => 'Account opened by hand',
+            self::InvitationSent => 'Invitation sent',
+            self::MemberRoleChanged => 'Role changed',
             self::SubscriptionExtended => 'Subscription extended',
             self::SubscriptionPlanChanged => 'Plan changed by support',
             self::TenantSuspended => 'Account suspended',

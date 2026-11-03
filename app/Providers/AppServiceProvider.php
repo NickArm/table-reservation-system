@@ -10,11 +10,13 @@ use App\Availability\OpeningHoursResolver;
 use App\Events\ReservationWasCancelled;
 use App\Events\ReservationWasConfirmed;
 use App\Listeners\AlertTheVenue;
+use App\Listeners\RecordSignIn;
 use App\Listeners\RecordVoucherDelivery;
 use App\Listeners\SendBookingVoucher;
 use App\Listeners\SendCancellationNotice;
 use App\Subscriptions\Entitlements;
 use App\Tenancy\TenantContext;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Events\MessageSent;
@@ -122,6 +124,12 @@ class AppServiceProvider extends ServiceProvider
             // notice can be traced back to it (SPEC §10.3).
             MessageSent::class => [
                 RecordVoucherDelivery::class,
+            ],
+
+            // "Have you ever managed to get in?" — answered on the account
+            // screen instead of guessed at over the telephone.
+            Login::class => [
+                RecordSignIn::class,
             ],
         ];
 

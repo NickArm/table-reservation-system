@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Actions\Closures\CloseBookings;
 use App\Actions\Guests\RecordGuest;
 use App\Actions\Legal\SaveVenueDocument;
+use App\Actions\Platform\CreateAccountByHand;
 use App\Actions\Structure\BulkCreateResources;
 use App\Actions\Structure\CreateBookingType;
 use App\Actions\Structure\SetResourceAvailability;
@@ -79,6 +80,14 @@ class DemoRestaurantSeeder extends Seeder
     private const OWNER_EMAIL = 'owner@demo.test';
 
     private const STAFF_EMAIL = 'staff@demo.test';
+
+    /**
+     * The second account, there so the platform screens have two kinds of
+     * account on them rather than one (SPEC §4.1).
+     */
+    private const NEIGHBOUR_NAME = 'Taverna Kerkyra';
+
+    private const NEIGHBOUR_EMAIL = 'spiros@taverna-kerkyra.test';
 
     private const PASSWORD = 'password';
 
@@ -199,6 +208,8 @@ class DemoRestaurantSeeder extends Seeder
             $this->createLegalDocuments($venue);
             $this->createSubscription();
         });
+
+        $this->createHandBilledNeighbour();
 
         $this->report();
     }
@@ -1004,6 +1015,57 @@ class DemoRestaurantSeeder extends Seeder
                 ten working days to show it, which is outside our control.
                 MD,
         );
+    }
+
+    /**
+     * A second account, opened the way most of them will be (SPEC §4.1).
+     *
+     * Empty on purpose — no tables, no bookings. What it is here for is the
+     * platform screens: without it the accounts list has one row and every
+     * path through it looks the same, when in fact the two kinds of account
+     * behave differently in ways that matter. This one is billed by hand,
+     * will never be charged or chased, and has an owner who has been invited
+     * and has not arrived.
+     *
+     * The invitation is minted but not emailed: a seeder that sends mail is
+     * a seeder that mails somebody the first time it is run against a host
+     * with real credentials.
+     */
+    private function createHandBilledNeighbour(): void
+    {
+        $plan = Plan::query()->where('slug', 'annual')->first()
+            ?? Plan::query()->where('slug', 'monthly')->first();
+
+        if (! $plan instanceof Plan) {
+            return;
+        }
+
+        app(TenantContext::class)->withoutScoping(function () use ($plan): void {
+            $this->wipeNeighbour();
+
+            app(CreateAccountByHand::class)->handle(
+                venueName: self::NEIGHBOUR_NAME,
+                ownerName: 'Spiros Vlachos',
+                ownerEmail: self::NEIGHBOUR_EMAIL,
+                plan: $plan,
+                actor: null,
+                sendInvitation: false,
+            );
+        });
+    }
+
+    /**
+     * The neighbour goes with the demo, or a second run collides on its
+     * owner's address and `demo:refresh` fails on something that has nothing
+     * to do with the demo.
+     */
+    private function wipeNeighbour(): void
+    {
+        $existing = Tenant::withTrashed()->where('name', self::NEIGHBOUR_NAME)->first();
+
+        DB::table('users')->where('email', self::NEIGHBOUR_EMAIL)->delete();
+
+        $existing?->forceDelete();
     }
 
     private function createSubscription(): void

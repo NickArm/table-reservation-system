@@ -156,6 +156,36 @@ is not set up" — correctly, but only at the moment a customer presses it.
 to the audit log with who did it. Use it for a bank transfer, a goodwill
 month, or a provider outage.
 
+### Accounts you invoice yourself
+
+`/admin` → **Accounts** → **Open an account**. Venue, owner, email, plan. It
+starts **paid rather than on trial**, and its billing provider is `manual`,
+which means exactly one thing: **nothing will ever charge it and nothing will
+ever chase it.** You send the invoice; the application only knows the date the
+paid period ends.
+
+Two consequences worth knowing before you use it.
+
+**No password is set by anybody, including you.** The owner gets a link that
+lets them choose one. It is good for `TENANCY_INVITATION_DAYS` and dies the
+moment it is used. The same link is shown on the account screen, because half
+of these are opened during a telephone call and the email is not always what
+the customer reads.
+
+**You are told before it lapses.** `TENANCY_MANUAL_NOTICE_DAYS` before the
+period ends, the nightly `subscriptions:advance` run emails every super admin
+one digest of the accounts coming due. Without it a hand-billed venue would
+lapse in complete silence — the dunning emails only ever look at a *failed
+payment*, and an invoice that nobody paid does not produce one.
+
+When the money arrives, **Extend** the subscription and put the invoice number
+in the reason. It goes in the audit log and in their billing history.
+
+| | Default | What it is |
+|---|---|---|
+| `TENANCY_INVITATION_DAYS` | 7 | How long an invitation link stays good |
+| `TENANCY_MANUAL_NOTICE_DAYS` | 10 | How far ahead you are told to invoice |
+
 ---
 
 ## 3. Email
@@ -213,7 +243,8 @@ Every minute, both:
 **Without these the system looks like it works and quietly does not.** No
 confirmations, no reminders, no morning list, no renewals processed — and **no
 trial ever ends**, so `/register` hands out the whole product for nothing, for
-ever.
+ever. It is also what tells you which hand-billed accounts to invoice, so an
+account you opened yourself lapses without warning too.
 
 Check the PHP path: the binary in cron is not always the one your shell gets.
 

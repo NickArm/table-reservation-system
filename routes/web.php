@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\PlatformDocumentType;
 use App\Enums\VenueDocumentType;
+use App\Http\Controllers\Admin\AccountPeopleController as AdminPeopleController;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LegalController as AdminLegalController;
@@ -43,6 +44,7 @@ use App\Http\Controllers\Dashboard\TermsAcceptanceController;
 use App\Http\Controllers\Dashboard\TodayController;
 use App\Http\Controllers\Dashboard\VenueProfileController;
 use App\Http\Controllers\Dashboard\WidgetController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MailWebhookController;
 use App\Http\Controllers\PublicSite\BookingPageController;
@@ -206,6 +208,20 @@ Route::middleware('guest')->group(function (): void {
         ->name('password.reset');
     Route::post('reset-password', [PasswordResetController::class, 'update'])
         ->name('password.update');
+
+    /*
+     * Where an owner we invited chooses their password (SPEC §4.1).
+     *
+     * Separate from the password reset above rather than borrowing its
+     * token: that one is minted by a broker that expires it in an hour,
+     * which is right for "I forgot" and useless for an invitation sent
+     * during a telephone call and read the next morning.
+     */
+    Route::get('invitation/{token}', [InvitationController::class, 'show'])
+        ->name('invitation.show');
+    Route::post('invitation/{token}', [InvitationController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('invitation.store');
 });
 
 Route::middleware('auth')->group(function (): void {
@@ -243,7 +259,29 @@ Route::prefix('admin')
         Route::get('/', AdminOverviewController::class)->name('overview');
 
         Route::get('tenants', [AdminTenantController::class, 'index'])->name('tenants.index');
+
+        /*
+         * Opening an account on somebody's behalf (SPEC §4.1). Above the
+         * {tenant} route, or "new" is read as a slug and 404s.
+         */
+        Route::get('tenants/new', [AdminTenantController::class, 'create'])->name('tenants.create');
+        Route::post('tenants', [AdminTenantController::class, 'store'])->name('tenants.store');
+
         Route::get('tenants/{tenant}', [AdminTenantController::class, 'show'])->name('tenants.show');
+
+        /*
+         * The people on one account. Scoped to the tenant in the path because
+         * a user can belong to more than one, so none of these three mean
+         * anything without saying which account they are about.
+         */
+        Route::post('tenants/{tenant}/people/{user}/reset', [AdminPeopleController::class, 'resetPassword'])
+            ->name('tenants.people.reset');
+        Route::post('tenants/{tenant}/people/{user}/verify', [AdminPeopleController::class, 'resendVerification'])
+            ->name('tenants.people.verify');
+        Route::post('tenants/{tenant}/people/{user}/invite', [AdminPeopleController::class, 'invite'])
+            ->name('tenants.people.invite');
+        Route::patch('tenants/{tenant}/people/{user}/role', [AdminPeopleController::class, 'changeRole'])
+            ->name('tenants.people.role');
 
         /*
          * The three that change what an account has. Each one requires a
