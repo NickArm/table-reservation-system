@@ -44,15 +44,15 @@
         <section class="card stack">
             <div class="card__head"><h2 class="h2">The basics</h2></div>
 
-            <div class="field">
-                <label for="name">Name</label>
-                <input id="name" type="text" name="name" required maxlength="80"
+            <div class="form-row">
+                <label class="label" for="name">Name</label>
+                <input class="field" id="name" type="text" name="name" required maxlength="80"
                        value="{{ old('name', $plan->name) }}">
             </div>
 
-            <div class="field">
-                <label for="slug">Slug</label>
-                <input id="slug" type="text" name="slug" maxlength="80"
+            <div class="form-row">
+                <label class="label" for="slug">Slug</label>
+                <input class="field" id="slug" type="text" name="slug" maxlength="80"
                        value="{{ old('slug', $plan->slug) }}">
                 <small class="muted">
                     How the code finds this plan. Leave it blank and it comes from the
@@ -61,16 +61,16 @@
                 </small>
             </div>
 
-            <div class="field">
-                <label for="description">What it says on the billing page</label>
-                <textarea id="description" name="description" rows="3"
+            <div class="form-row">
+                <label class="label" for="description">What it says on the billing page</label>
+                <textarea class="field" id="description" name="description" rows="3"
                           maxlength="500">{{ old('description', $plan->description) }}</textarea>
             </div>
 
             <div class="row">
-                <div class="field">
-                    <label for="price">Price, in euros</label>
-                    <input id="price" type="number" name="price" step="0.01" min="0" required
+                <div class="form-row">
+                    <label class="label" for="price">Price, in euros</label>
+                    <input class="field" id="price" type="number" name="price" step="0.01" min="0" required
                            value="{{ old('price', $plan->exists ? number_format((int) $plan->price_cents / 100, 2, '.', '') : '70.00') }}">
                     <small class="muted">
                         Accounts already on this plan keep the price they signed at until
@@ -78,9 +78,9 @@
                     </small>
                 </div>
 
-                <div class="field">
-                    <label for="billing_period">Period</label>
-                    <select id="billing_period" name="billing_period">
+                <div class="form-row">
+                    <label class="label" for="billing_period">Period</label>
+                    <select class="field" id="billing_period" name="billing_period">
                         @foreach (\App\Enums\BillingPeriod::cases() as $period)
                             <option value="{{ $period->value }}"
                                 @selected(old('billing_period', $plan->billing_period?->value) === $period->value)>
@@ -90,9 +90,9 @@
                     </select>
                 </div>
 
-                <div class="field">
-                    <label for="trial_days">Trial days</label>
-                    <input id="trial_days" type="number" name="trial_days" min="0" max="365" required
+                <div class="form-row">
+                    <label class="label" for="trial_days">Trial days</label>
+                    <input class="field" id="trial_days" type="number" name="trial_days" min="0" max="365" required
                            value="{{ old('trial_days', $plan->trial_days ?? config('tenancy.trial_days')) }}">
                 </div>
             </div>
@@ -111,16 +111,16 @@
             </p>
 
             <div class="row">
-                <div class="field">
-                    <label for="stripe_price_id">Stripe price id</label>
-                    <input id="stripe_price_id" type="text" name="stripe_price_id" maxlength="120"
+                <div class="form-row">
+                    <label class="label" for="stripe_price_id">Stripe price id</label>
+                    <input class="field" id="stripe_price_id" type="text" name="stripe_price_id" maxlength="120"
                            placeholder="price_…"
                            value="{{ old('stripe_price_id', $plan->stripe_price_id) }}">
                 </div>
 
-                <div class="field">
-                    <label for="paypal_plan_id">PayPal plan id</label>
-                    <input id="paypal_plan_id" type="text" name="paypal_plan_id" maxlength="120"
+                <div class="form-row">
+                    <label class="label" for="paypal_plan_id">PayPal plan id</label>
+                    <input class="field" id="paypal_plan_id" type="text" name="paypal_plan_id" maxlength="120"
                            placeholder="P-…"
                            value="{{ old('paypal_plan_id', $plan->paypal_plan_id) }}">
                 </div>
@@ -134,9 +134,9 @@
 
             <div class="row">
                 @foreach (\App\Enums\PlanLimit::cases() as $limit)
-                    <div class="field">
-                        <label for="limit-{{ $limit->value }}">{{ $limit->label() }}</label>
-                        <input id="limit-{{ $limit->value }}" type="number" min="0"
+                    <div class="form-row">
+                        <label class="label" for="limit-{{ $limit->value }}">{{ $limit->label() }}</label>
+                        <input class="field" id="limit-{{ $limit->value }}" type="number" min="0"
                                name="limits[{{ $limit->value }}]"
                                value="{{ old('limits.'.$limit->value, $limits[$limit->value] ?? null) }}">
                     </div>
@@ -166,9 +166,9 @@
         <section class="card stack">
             <div class="card__head"><h2 class="h2">Who sees it</h2></div>
 
-            <div class="field">
-                <label for="custom_for_tenant_id">Written for one account</label>
-                <select id="custom_for_tenant_id" name="custom_for_tenant_id">
+            <div class="form-row">
+                <label class="label" for="custom_for_tenant_id">Written for one account</label>
+                <select class="field" id="custom_for_tenant_id" name="custom_for_tenant_id">
                     <option value="">Nobody in particular</option>
                     @foreach ($tenants as $account)
                         <option value="{{ $account->id }}"
@@ -198,9 +198,9 @@
                 </label>
             </div>
 
-            <div class="field">
-                <label for="sort_order">Order on the page</label>
-                <input id="sort_order" type="number" name="sort_order" min="0" max="1000" required
+            <div class="form-row">
+                <label class="label" for="sort_order">Order on the page</label>
+                <input class="field" id="sort_order" type="number" name="sort_order" min="0" max="1000" required
                        value="{{ old('sort_order', $plan->sort_order ?? 10) }}">
             </div>
         </section>

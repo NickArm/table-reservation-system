@@ -48,9 +48,9 @@
         <section class="card stack">
             <div class="card__head"><h2 class="h2">The text</h2></div>
 
-            <div class="field">
-                <label for="version">Version</label>
-                <input id="version" type="text" name="version" required maxlength="32"
+            <div class="form-row">
+                <label class="label" for="version">Version</label>
+                <input class="field" id="version" type="text" name="version" required maxlength="32"
                        value="{{ old('version', $isDraft ? $document?->version : '') }}"
                        placeholder="1.0">
                 <small class="muted">
@@ -59,9 +59,9 @@
                 </small>
             </div>
 
-            <div class="field">
-                <label for="content">Content</label>
-                <textarea id="content" name="content" rows="28" required
+            <div class="form-row">
+                <label class="label" for="content">Content</label>
+                <textarea class="field" id="content" name="content" rows="28" required
                           style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px"
                 >{{ old('content', $document?->content) }}</textarea>
                 <small class="muted">
@@ -75,9 +75,9 @@
         <section class="card stack">
             <div class="card__head"><h2 class="h2">Telling accounts about it</h2></div>
 
-            <div class="field">
-                <label for="change_summary">What changed, in one line</label>
-                <input id="change_summary" type="text" name="change_summary" maxlength="255"
+            <div class="form-row">
+                <label class="label" for="change_summary">What changed, in one line</label>
+                <input class="field" id="change_summary" type="text" name="change_summary" maxlength="255"
                        value="{{ old('change_summary') }}"
                        placeholder="Added a clause about seasonal suspension">
                 <small class="muted">

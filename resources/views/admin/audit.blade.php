@@ -18,9 +18,9 @@
     </div>
 
     <form method="GET" action="{{ route('admin.audit') }}" class="filters" style="margin-bottom:24px">
-        <div class="field">
-            <label for="action">What happened</label>
-            <select id="action" name="action">
+        <div class="form-row">
+            <label class="label" for="action">What happened</label>
+            <select class="field" id="action" name="action">
                 <option value="">Anything</option>
                 @foreach (\App\Enums\AuditAction::cases() as $case)
                     <option value="{{ $case->value }}" @selected($action === $case)>
@@ -30,9 +30,9 @@
             </select>
         </div>
 
-        <div class="field">
-            <label for="tenant">Account</label>
-            <select id="tenant" name="tenant">
+        <div class="form-row">
+            <label class="label" for="tenant">Account</label>
+            <select class="field" id="tenant" name="tenant">
                 <option value="">Any</option>
                 @foreach ($tenants as $account)
                     <option value="{{ $account->id }}" @selected($tenantId === (int) $account->id)>
@@ -45,54 +45,56 @@
         <button type="submit" class="btn btn--ghost">Filter</button>
     </form>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>When</th>
-                <th>What</th>
-                <th>Account</th>
-                <th>Who</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($entries as $entry)
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
                 <tr>
-                    <td><small class="muted">{{ $entry->occurred_at->format('j M Y, H:i') }}</small></td>
-                    <td>
-                        <strong>{{ $entry->action->label() }}</strong>
-                        <br>
-                        <small class="muted">{{ $entry->summary }}</small>
-                        @if (filled($entry->reason))
-                            <br><small class="muted">{{ $entry->reason }}</small>
-                        @endif
-                    </td>
-                    <td>
-                        @if ($entry->affected_tenant_id !== null && $entry->affectedTenant !== null)
-                            <a href="{{ route('admin.tenants.show', $entry->affectedTenant) }}">
-                                {{ $entry->affected_tenant_name }}
-                            </a>
-                        @else
-                            {{--
-                                The name without a link: the account has been
-                                purged (§29) and the line still has to read.
-                            --}}
-                            <small class="muted">{{ $entry->affected_tenant_name ?? '—' }}</small>
-                        @endif
-                    </td>
-                    <td>
-                        <small class="muted">{{ $entry->who() }}</small>
-                        @if (filled($entry->ip))
-                            <br><small class="muted">{{ $entry->ip }}</small>
-                        @endif
-                    </td>
+                    <th>When</th>
+                    <th>What</th>
+                    <th>Account</th>
+                    <th>Who</th>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="4"><p class="empty">Nothing matches that.</p></td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($entries as $entry)
+                    <tr>
+                        <td><small class="muted">{{ $entry->occurred_at->format('j M Y, H:i') }}</small></td>
+                        <td>
+                            <strong>{{ $entry->action->label() }}</strong>
+                            <br>
+                            <small class="muted">{{ $entry->summary }}</small>
+                            @if (filled($entry->reason))
+                                <br><small class="muted">{{ $entry->reason }}</small>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($entry->affected_tenant_id !== null && $entry->affectedTenant !== null)
+                                <a href="{{ route('admin.tenants.show', $entry->affectedTenant) }}">
+                                    {{ $entry->affected_tenant_name }}
+                                </a>
+                            @else
+                                {{--
+                                    The name without a link: the account has been
+                                    purged (§29) and the line still has to read.
+                                --}}
+                                <small class="muted">{{ $entry->affected_tenant_name ?? '—' }}</small>
+                            @endif
+                        </td>
+                        <td>
+                            <small class="muted">{{ $entry->who() }}</small>
+                            @if (filled($entry->ip))
+                                <br><small class="muted">{{ $entry->ip }}</small>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4"><p class="empty">Nothing matches that.</p></td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
     {{ $entries->links() }}
 @endsection

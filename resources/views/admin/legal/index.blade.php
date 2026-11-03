@@ -24,58 +24,60 @@
         one is kept.
     </p>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Document</th>
-                <th>Live version</th>
-                <th>Address</th>
-                <th>State</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($types as $type)
-                @php
-                    $live = $current[$type->value] ?? null;
-                    $draft = $drafts[$type->value] ?? null;
-                @endphp
-
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>
-                        <a href="{{ route('admin.legal.edit', $type->path()) }}">
-                            <strong>{{ $type->title() }}</strong>
-                        </a>
-                        <br>
-                        <small class="muted">{{ $type->who() }}</small>
-                    </td>
-                    <td>
-                        @if ($live !== null)
-                            <strong>{{ $live->version }}</strong><br>
-                            <small class="muted">{{ $live->published_at?->format('j M Y') }}</small>
-                        @else
-                            <span class="muted">—</span>
-                        @endif
-                    </td>
-                    <td>
-                        <a href="{{ route('legal', $type->path()) }}" target="_blank" rel="noopener">
-                            /{{ $type->path() }}
-                        </a>
-                    </td>
-                    <td>
-                        @if ($live === null)
-                            <span class="pill pill--warn">nothing published</span>
-                        @elseif ($live->isPlaceholder())
-                            <span class="pill pill--warn">placeholder</span>
-                        @else
-                            <span class="pill pill--ok">live</span>
-                        @endif
-
-                        @if ($draft !== null)
-                            <span class="pill pill--muted">draft {{ $draft->version }}</span>
-                        @endif
-                    </td>
+                    <th>Document</th>
+                    <th>Live version</th>
+                    <th>Address</th>
+                    <th>State</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach ($types as $type)
+                    @php
+                        $live = $current[$type->value] ?? null;
+                        $draft = $drafts[$type->value] ?? null;
+                    @endphp
+
+                    <tr>
+                        <td>
+                            <a href="{{ route('admin.legal.edit', $type->path()) }}">
+                                <strong>{{ $type->title() }}</strong>
+                            </a>
+                            <br>
+                            <small class="muted">{{ $type->who() }}</small>
+                        </td>
+                        <td>
+                            @if ($live !== null)
+                                <strong>{{ $live->version }}</strong><br>
+                                <small class="muted">{{ $live->published_at?->format('j M Y') }}</small>
+                            @else
+                                <span class="muted">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('legal', $type->path()) }}" target="_blank" rel="noopener">
+                                /{{ $type->path() }}
+                            </a>
+                        </td>
+                        <td>
+                            @if ($live === null)
+                                <span class="pill pill--warn">nothing published</span>
+                            @elseif ($live->isPlaceholder())
+                                <span class="pill pill--warn">placeholder</span>
+                            @else
+                                <span class="pill pill--ok">live</span>
+                            @endif
+
+                            @if ($draft !== null)
+                                <span class="pill pill--muted">draft {{ $draft->version }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 @endsection

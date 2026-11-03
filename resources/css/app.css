@@ -27,7 +27,18 @@
 
     --accent: #0e6e6e;
     --accent-ink: #ffffff;
-    --accent-soft: #f3faf9;
+
+    /*
+     * Mixed from the accent rather than written down beside it.
+     *
+     * The accent arrives on <html> as an inline style — the venue's own
+     * colour, the admin area's indigo — but this tint was a fixed teal, so
+     * every notice, every soft panel and every quiet pill stayed the colour
+     * of the *default* accent. A gold beach bar got teal panels under gold
+     * buttons and the page looked borrowed from somebody else, which is the
+     * one thing the token note above promises it will not do.
+     */
+    --accent-soft: color-mix(in srgb, var(--accent) 7%, var(--bg));
 
     --ok: #15803d;
     --warn: #b45309;
@@ -59,7 +70,7 @@
         --muted: #a8a29e;
         --faint: #78716c;
 
-        --accent-soft: #10312f;
+        --accent-soft: color-mix(in srgb, var(--accent) 22%, var(--bg));
         --warn-soft: #2a2110;
         --warn-line: #5c4418;
 
@@ -78,7 +89,7 @@
     --muted: #a8a29e;
     --faint: #78716c;
 
-    --accent-soft: #10312f;
+    --accent-soft: color-mix(in srgb, var(--accent) 22%, var(--bg));
     --warn-soft: #2a2110;
     --warn-line: #5c4418;
 
@@ -202,6 +213,98 @@ a:focus-visible {
     padding-left: 18px;
     color: var(--danger);
     font-size: var(--step--1);
+}
+
+/* --- One line of a form -------------------------------------------------
+ *
+ * `.field` above is the **control**: the box you type in. What never existed
+ * was the thing that holds a control together with its label and its help
+ * text — so every form in the application invented one by putting `.field`
+ * on a div, which put the control's own border around the label, the input
+ * and the hint all at once and let the three of them wrap into each other.
+ * It is the kind of fault no test can see and every user can.
+ *
+ * So: `.form-row` wraps, `.field` is worn by the input, the select or the
+ * textarea, and the hint sits underneath where a hint belongs.
+ */
+.form-row {
+    display: grid;
+    gap: 6px;
+}
+
+/* The label already carries its own bottom margin for older markup. */
+.form-row > .label {
+    margin-bottom: 0;
+}
+
+.form-row__help {
+    color: var(--muted);
+    font-size: var(--step--2);
+    line-height: 1.45;
+}
+
+.form-row__error {
+    color: var(--danger);
+    font-size: var(--step--2);
+}
+
+/*
+ * Two to a line where the pair belongs together — a price and its period, a
+ * date and its reason. One to a line as soon as there is no room, which on a
+ * phone is immediately.
+ */
+.form-grid {
+    display: grid;
+    gap: 12px 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 2px;
+}
+
+/*
+ * A select and a textarea are the same control as an input and should not
+ * look like two other applications. The arrow is drawn rather than left to
+ * the platform, because the platform's own is a different size and colour in
+ * every browser and sits against a border we chose.
+ */
+select.field {
+    appearance: none;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='%2378716c' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+
+textarea.field {
+    min-height: 150px;
+    padding: 11px 14px;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.field::placeholder {
+    color: var(--faint);
+}
+
+.field:hover:not(:disabled) {
+    border-color: var(--muted);
+}
+
+.field:disabled {
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+/* Laravel's own `@error` sets this, so a wrong field says so on the field. */
+.field[aria-invalid='true'] {
+    border-color: var(--danger);
 }
 
 /* --- Public booking page ------------------------------------------------ */
@@ -935,6 +1038,31 @@ details.advanced.card[open] > summary {
     font-size: var(--step-0);
 }
 
+/*
+ * A choice with a box to tick is a row, not a column.
+ *
+ * The column above is right for the kind that is a whole card of its own
+ * with a heading and a description. Stacked, a checkbox has nothing beside
+ * it to be stretched against, so it drifted to the middle of its own line
+ * and sat above the sentence it belongs to — a tick mark floating over its
+ * own label.
+ */
+.choice:has(> input[type='checkbox']),
+.choice:has(> input[type='radio']) {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.choice > input[type='checkbox'],
+.choice > input[type='radio'] {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
 /* --- The bookings list --------------------------------------------------- */
 
 .bookings {
@@ -1199,6 +1327,37 @@ details.advanced.card[open] > summary {
 .facts dd small {
     display: block;
     font-size: var(--step--2);
+}
+
+/*
+ * Labelled values that are not a definition list.
+ *
+ * `.facts` above is a fixed 90px column built for `dt`/`dd`, which is right
+ * for a voucher where every label is one short word. Several screens wanted
+ * the same idea with longer labels — "Bounced confirmations, last month" —
+ * and reached for `.facts` with divs and spans, which dropped each pair into
+ * a cell meant for one half of it. This is that idea, named: label above
+ * value, as many to a row as fit.
+ */
+.keyvals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px 20px;
+}
+
+.keyvals > div {
+    display: grid;
+    gap: 1px;
+    align-content: start;
+}
+
+.keyvals .label {
+    margin-bottom: 0;
+}
+
+.keyvals strong {
+    font-size: var(--step-0);
+    font-variant-numeric: tabular-nums;
 }
 
 .phone {
@@ -2437,28 +2596,90 @@ details.advanced.card[open] > summary {
     font-size: var(--step--2);
 }
 
+/*
+ * A table somebody reads down a column of.
+ *
+ * The frame is on a wrapper rather than the table, because a border on the
+ * table itself cannot be rounded without the first and last cells poking
+ * out of the corners — and the wrapper is what scrolls sideways on a phone,
+ * so a six-column ledger stays a table instead of becoming a wall.
+ */
+.table-wrap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--bg);
+    overflow-x: auto;
+}
+
 .table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: var(--step--1);
 }
 
 .table th,
 .table td {
-    padding: 8px 10px;
+    padding: 11px 14px;
     text-align: left;
     border-bottom: 1px solid var(--line);
 }
 
+/*
+ * The header reads as a header rather than as a quieter first row: tinted,
+ * smaller, spaced out. Without that the eye finds the top row by position
+ * alone, which stops working the moment the list is longer than the window.
+ */
 .table th {
+    background: var(--surface);
     color: var(--muted);
     font-size: var(--step--2);
     font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: top;
+}
+
+/* The wrapper draws the bottom edge, so the last row must not draw it twice. */
+.table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.table tbody tr:hover td {
+    background: var(--surface);
+}
+
+/*
+ * Money and counts line up on the right with figures of one width, so that
+ * the column can be compared by eye instead of read.
+ */
+/*
+ * `th` and `td` are spelled out, because `.table th` outranks a lone class
+ * and the column would quietly stay left-aligned.
+ */
+.table th.table__num,
+.table td.table__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.table__quiet {
+    color: var(--muted);
 }
 
 .table td code {
     font-family: ui-monospace, 'SF Mono', Menlo, monospace;
     font-size: var(--step--2);
+}
+
+/* A table's own empty state has no rows to sit in, so it sits in a cell. */
+.table .empty {
+    margin: 0;
+    border: 0;
 }
 
 .pill--warn {

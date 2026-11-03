@@ -29,7 +29,7 @@
                 <h2 class="h2">This account</h2>
             </div>
 
-            <div class="facts">
+            <div class="keyvals">
                 <div>
                     <span class="label">Venue</span>
                     <strong>{{ $tenant->name }}</strong>
@@ -169,17 +169,17 @@
                               class="stack">
                             @csrf
 
-                            <div class="field">
-                                <label for="confirm">
+                            <div class="form-row">
+                                <label class="label" for="confirm">
                                     Type <strong>{{ $tenant->name }}</strong> to confirm
                                 </label>
-                                <input id="confirm" type="text" name="confirm" required
+                                <input class="field" id="confirm" type="text" name="confirm" required
                                        autocomplete="off" placeholder="{{ $tenant->name }}">
                             </div>
 
-                            <div class="field">
-                                <label for="password">Your password</label>
-                                <input id="password" type="password" name="password" required
+                            <div class="form-row">
+                                <label class="label" for="password">Your password</label>
+                                <input class="field" id="password" type="password" name="password" required
                                        autocomplete="current-password">
                             </div>
 

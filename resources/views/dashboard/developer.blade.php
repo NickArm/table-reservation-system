@@ -208,30 +208,32 @@
                     @endforeach
                 </ul>
 
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Endpoint</th>
-                            <th scope="col">Calls</th>
-                            <th scope="col">Refused</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($endpoints as $row)
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td><code>{{ $row->endpoint }}</code></td>
-                                <td>{{ number_format((int) $row->calls) }}</td>
-                                <td>
-                                    @if ((int) $row->rejected > 0)
-                                        <span class="pill pill--warn">{{ (int) $row->rejected }}</span>
-                                    @else
-                                        <span class="muted">—</span>
-                                    @endif
-                                </td>
+                                <th scope="col">Endpoint</th>
+                                <th scope="col">Calls</th>
+                                <th scope="col">Refused</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach ($endpoints as $row)
+                                <tr>
+                                    <td><code>{{ $row->endpoint }}</code></td>
+                                    <td>{{ number_format((int) $row->calls) }}</td>
+                                    <td>
+                                        @if ((int) $row->rejected > 0)
+                                            <span class="pill pill--warn">{{ (int) $row->rejected }}</span>
+                                        @else
+                                            <span class="muted">—</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
         </section>
     </div>

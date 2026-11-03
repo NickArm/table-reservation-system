@@ -47,6 +47,23 @@ need the reasoning.
   has always been: the subscription, the people and the suspension all belong
   to the account, and the venue is one of the things on it. The venues are now
   a section of their own, which is where a second one will go.
+- **A venue's own colour now tints its own panels.** The accent has always
+  been set per venue; the soft tint beside it was written down once and
+  stayed, so a gold beach bar got teal notices under gold buttons. It is now
+  mixed from whatever the accent is.
+- The tables have room to breathe, a header that reads as a header, a row
+  that answers the pointer, money that lines up on the right, and a frame
+  that keeps a wide one from becoming a wall on a phone.
+
+### Fixed
+- **Every form on the platform screens was laid out wrongly.** The label, the
+  box you type in and the hint underneath were all inside the border meant
+  for the box alone, wrapping into one another. The same fault was on the
+  venue's own profile, appearance and settings screens.
+- A tick box sits beside the sentence it belongs to, instead of floating
+  above the middle of it.
+- Three screens of figures had each label in the cell meant for its own
+  value, so a long label wrapped over three lines beside a short number.
 
 ---
 

@@ -38,59 +38,61 @@
             <span class="muted">All of them run from one cron: <code>schedule:run</code></span>
         </div>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Command</th>
-                    <th>Last ran</th>
-                    <th>What it did</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($scheduled as $command => $about)
-                    @php
-                        $run = $runs[$command] ?? null;
-                        $late = $run === null || $run->isOverdue($about['every']);
-                    @endphp
-
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>
-                            <code>{{ $command }}</code>
-                            <br>
-                            <small class="muted">
-                                every {{ $about['every'] === 24 ? 'day' : 'hour' }}
-                            </small>
-                        </td>
-                        <td>
-                            @if ($run === null)
-                                {{-- Never, which on a server that has been up a
-                                     while means the cron was never added. --}}
-                                <span class="pill pill--warn">never</span>
-                            @else
-                                <span class="pill {{ $late || ! $run->ok ? 'pill--warn' : 'pill--ok' }}">
-                                    {{ $run->ranAt()->diffForHumans() }}
-                                </span>
-                                @unless ($run->ok)
-                                    <br><small class="muted">it threw</small>
-                                @endunless
-                            @endif
-                        </td>
-                        <td>
-                            @if ($run !== null && filled($run->summary))
-                                <small class="muted">{{ $run->summary }}</small>
-                            @endif
-
-                            @if ($late)
-                                {{-- Why it matters, said where the problem is,
-                                     because "tenants:purge is late" means
-                                     nothing on its own. --}}
-                                <p class="muted" style="margin:4px 0 0">{{ $about['matters'] }}</p>
-                            @endif
-                        </td>
+                        <th>Command</th>
+                        <th>Last ran</th>
+                        <th>What it did</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach ($scheduled as $command => $about)
+                        @php
+                            $run = $runs[$command] ?? null;
+                            $late = $run === null || $run->isOverdue($about['every']);
+                        @endphp
+
+                        <tr>
+                            <td>
+                                <code>{{ $command }}</code>
+                                <br>
+                                <small class="muted">
+                                    every {{ $about['every'] === 24 ? 'day' : 'hour' }}
+                                </small>
+                            </td>
+                            <td>
+                                @if ($run === null)
+                                    {{-- Never, which on a server that has been up a
+                                         while means the cron was never added. --}}
+                                    <span class="pill pill--warn">never</span>
+                                @else
+                                    <span class="pill {{ $late || ! $run->ok ? 'pill--warn' : 'pill--ok' }}">
+                                        {{ $run->ranAt()->diffForHumans() }}
+                                    </span>
+                                    @unless ($run->ok)
+                                        <br><small class="muted">it threw</small>
+                                    @endunless
+                                @endif
+                            </td>
+                            <td>
+                                @if ($run !== null && filled($run->summary))
+                                    <small class="muted">{{ $run->summary }}</small>
+                                @endif
+
+                                @if ($late)
+                                    {{-- Why it matters, said where the problem is,
+                                         because "tenants:purge is late" means
+                                         nothing on its own. --}}
+                                    <p class="muted" style="margin:4px 0 0">{{ $about['matters'] }}</p>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <section class="card stack" style="margin-bottom:24px">
@@ -98,7 +100,7 @@
             <h2 class="h2">Queue</h2>
         </div>
 
-        <div class="facts">
+        <div class="keyvals">
             <div>
                 <span class="label">Waiting</span>
                 <strong>{{ $health->pendingJobs() }}</strong>
@@ -150,7 +152,7 @@
             <h2 class="h2">Payments and delivery</h2>
         </div>
 
-        <div class="facts">
+        <div class="keyvals">
             <div>
                 <span class="label">Waiting on a webhook</span>
                 <strong>{{ $health->stalePendingPayments() }}</strong>

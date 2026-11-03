@@ -64,31 +64,35 @@
                 <h2 class="h2">Where they stand</h2>
             </div>
 
-            <div class="facts">
-                <div>
-                    <span class="label">Plan</span>
-                    <strong>{{ $subscription?->plan?->name ?? 'None' }}</strong>
+            {{--
+                Figure first, then what it is, on one line each (§27). The
+                four of these used to be handed to `.facts`, which is a
+                90px two-column grid built for `dt`/`dd` — so each pair fell
+                into a cell meant for one thing and "Period ends" wrapped
+                over three lines beside a date.
+            --}}
+            <div class="stat-grid" style="margin-bottom:0">
+                <div class="stat">
+                    <b>{{ $subscription?->plan?->name ?? 'None' }}</b>
+                    <span class="muted">Plan</span>
                 </div>
-                <div>
-                    <span class="label">Paying</span>
-                    <strong>
-                        {{ $subscription?->price() ?? '—' }}
-                        <small class="muted">{{ $subscription?->plan?->billing_period->per() }}</small>
-                    </strong>
+                <div class="stat">
+                    <b>{{ $subscription?->price() ?? '—' }}</b>
+                    <span class="muted">{{ $subscription?->plan?->billing_period->per() ?? 'Not paying' }}</span>
                 </div>
-                <div>
-                    <span class="label">
-                        {{ $tenant->isOnTrial() ? 'Trial ends' : 'Period ends' }}
-                    </span>
-                    <strong>
+                <div class="stat">
+                    <b>
                         {{ $tenant->isOnTrial()
                             ? $tenant->trial_ends_at?->format('j M Y')
                             : ($subscription?->current_period_end?->format('j M Y') ?? '—') }}
-                    </strong>
+                    </b>
+                    <span class="muted">
+                        {{ $tenant->isOnTrial() ? 'Trial ends' : 'Period ends' }}
+                    </span>
                 </div>
-                <div>
-                    <span class="label">Through</span>
-                    <strong>{{ $subscription?->provider?->label() ?? '—' }}</strong>
+                <div class="stat">
+                    <b>{{ $subscription?->provider?->label() ?? '—' }}</b>
+                    <span class="muted">Paid through</span>
                 </div>
             </div>
 
@@ -130,18 +134,18 @@
                 <h2 class="h2">What they are using</h2>
             </div>
 
-            <div class="facts">
-                <div>
-                    <span class="label">Tables / sunbeds</span>
-                    <strong>{{ $usage['resources'] }}</strong>
+            <div class="stat-grid" style="margin-bottom:0">
+                <div class="stat">
+                    <b>{{ $usage['resources'] }}</b>
+                    <span class="muted">Tables and sunbeds</span>
                 </div>
-                <div>
-                    <span class="label">Bookings this month</span>
-                    <strong>{{ $usage['reservations_this_month'] }}</strong>
+                <div class="stat">
+                    <b>{{ $usage['reservations_this_month'] }}</b>
+                    <span class="muted">Bookings this month</span>
                 </div>
-                <div>
-                    <span class="label">Bookings all time</span>
-                    <strong>{{ $usage['reservations_total'] }}</strong>
+                <div class="stat">
+                    <b>{{ $usage['reservations_total'] }}</b>
+                    <span class="muted">Bookings all time</span>
                 </div>
             </div>
         </section>
@@ -274,9 +278,11 @@
                                 @csrf
                                 @method('PATCH')
 
-                                <div class="field">
-                                    <label for="role-{{ $person->id }}">Role on this account</label>
-                                    <select id="role-{{ $person->id }}" name="role">
+                                <div class="form-row">
+                                    <label class="label" for="role-{{ $person->id }}">
+                                        Role on this account
+                                    </label>
+                                    <select class="field" id="role-{{ $person->id }}" name="role">
                                         @foreach (\App\Enums\TenantRole::cases() as $option)
                                             <option value="{{ $option->value }}"
                                                 @selected($role === $option)>
@@ -284,10 +290,10 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="muted">
+                                    <p class="form-row__help">
                                         Staff run the floor. They never see the payment settings
                                         or the subscription.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <button type="submit" class="btn btn--ghost btn--small">Save the role</button>
@@ -323,26 +329,28 @@
                           class="stack">
                         @csrf
 
-                        <div class="field">
-                            <label for="until">New period end</label>
-                            <input id="until" type="date" name="until" required
+                        <div class="form-row">
+                            <label class="label" for="until">New period end</label>
+                            <input class="field" id="until" type="date" name="until" required
                                    min="{{ now()->addDay()->format('Y-m-d') }}"
                                    value="{{ old('until', $subscription->current_period_end?->addMonth()->format('Y-m-d')) }}">
                         </div>
 
-                        <div class="field">
-                            <label for="extend-reason">Why</label>
-                            <input id="extend-reason" type="text" name="reason" required
-                                   maxlength="500"
+                        <div class="form-row">
+                            <label class="label" for="extend-reason">Why</label>
+                            <input class="field" id="extend-reason" type="text" name="reason"
+                                   required maxlength="500"
                                    placeholder="Paid by transfer, invoice 2026-114"
                                    value="{{ old('reason') }}">
-                            <small class="muted">
+                            <p class="form-row__help">
                                 Goes in the log with your name on it, and in their billing
                                 history.
-                            </small>
+                            </p>
                         </div>
 
-                        <button type="submit" class="btn">Extend</button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Extend</button>
+                        </div>
                     </form>
                 @endif
             </details>
@@ -361,15 +369,17 @@
                       class="stack">
                     @csrf
 
-                    <div class="field">
-                        <label for="impersonate-reason">Why</label>
-                        <input id="impersonate-reason" type="text" name="reason" required
-                               maxlength="500"
+                    <div class="form-row">
+                        <label class="label" for="impersonate-reason">Why</label>
+                        <input class="field" id="impersonate-reason" type="text" name="reason"
+                               required maxlength="500"
                                placeholder="Can't find a booking they rang about"
                                value="{{ old('reason') }}">
                     </div>
 
-                    <button type="submit" class="btn">Sign in as {{ $tenant->name }}</button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Sign in as {{ $tenant->name }}</button>
+                    </div>
                 </form>
             </details>
 
@@ -387,13 +397,15 @@
                           class="stack">
                         @csrf
 
-                        <div class="field">
-                            <label for="restore-reason">Why (optional)</label>
-                            <input id="restore-reason" type="text" name="reason" maxlength="500"
-                                   placeholder="Dispute resolved">
+                        <div class="form-row">
+                            <label class="label" for="restore-reason">Why (optional)</label>
+                            <input class="field" id="restore-reason" type="text" name="reason"
+                                   maxlength="500" placeholder="Dispute resolved">
                         </div>
 
-                        <button type="submit" class="btn">Restore</button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Restore</button>
+                        </div>
                     </form>
                 </details>
             @else
@@ -412,14 +424,16 @@
                           class="stack">
                         @csrf
 
-                        <div class="field">
-                            <label for="suspend-reason">Why</label>
-                            <input id="suspend-reason" type="text" name="reason" required
-                                   maxlength="500" placeholder="Chargeback dispute"
+                        <div class="form-row">
+                            <label class="label" for="suspend-reason">Why</label>
+                            <input class="field" id="suspend-reason" type="text" name="reason"
+                                   required maxlength="500" placeholder="Chargeback dispute"
                                    value="{{ old('reason') }}">
                         </div>
 
-                        <button type="submit" class="btn">Suspend</button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Suspend</button>
+                        </div>
                     </form>
                 </details>
             @endif

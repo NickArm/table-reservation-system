@@ -54,11 +54,11 @@
                     </p>
                 @endif
 
-                <div class="field">
-                    <label for="{{ $kind->value }}">
+                <div class="form-row">
+                    <label class="label" for="{{ $kind->value }}">
                         {{ $current === null ? 'Choose a file' : 'Replace it' }}
                     </label>
-                    <input id="{{ $kind->value }}" type="file" name="{{ $kind->value }}"
+                    <input class="field" id="{{ $kind->value }}" type="file" name="{{ $kind->value }}"
                            accept="image/jpeg,image/png,image/webp">
                     <small class="muted">
                         JPG, PNG or WebP, up to 8 MB. It is resized and stripped of
@@ -83,9 +83,9 @@
             </div>
 
             <div class="row">
-                <div class="field">
-                    <label for="accent_color">Accent</label>
-                    <input id="accent_color" type="color" name="accent_color"
+                <div class="form-row">
+                    <label class="label" for="accent_color">Accent</label>
+                    <input class="field" id="accent_color" type="color" name="accent_color"
                            value="{{ old('accent_color', $venue->accent_color ?? '#0e6e6e') }}">
                     <small class="muted">
                         Used for buttons and links on your booking page. One colour,
@@ -93,9 +93,9 @@
                     </small>
                 </div>
 
-                <div class="field">
-                    <label for="hero_overlay">Shade over the photograph</label>
-                    <input id="hero_overlay" type="number" name="hero_overlay"
+                <div class="form-row">
+                    <label class="label" for="hero_overlay">Shade over the photograph</label>
+                    <input class="field" id="hero_overlay" type="number" name="hero_overlay"
                            min="0" max="80" step="5"
                            value="{{ old('hero_overlay', $venue->hero_overlay ?? 30) }}">
                     <small class="muted">
